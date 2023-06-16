@@ -4,7 +4,6 @@
 
 DEVKIT := docker run -v $$PWD:$$PWD -w $$PWD -it -e LOCAL_IDF_PATH=$$IDF_PATH \
 	  -e LOCAL_IDF_TOOLS_PATH=$${IDF_TOOLS_PATH:-~/.espressif} \
-	  -v $$(dirname $$PWD)/display:$$(dirname $$PWD)/display \
 	  kywy/devkit:latest
 
 .PHONY: license
