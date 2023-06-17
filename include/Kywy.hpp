@@ -11,6 +11,8 @@
 #include "kywy/Events.hpp"
 #include "kywy/HAL.hpp"
 #include "kywy/Input.hpp"
+#include "kywy/Sprite.hpp"
+#include "kywy/SpriteSheet.hpp"
 
 namespace Kywy {
 

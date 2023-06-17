@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Kywy.hpp"
-#include "kywy/Events.hpp"
 
 Kywy::Engine engine;
 

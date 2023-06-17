@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 DEVKIT := docker run -v $$PWD:$$PWD -w $$PWD -it -e LOCAL_IDF_PATH=$$IDF_PATH \
-	  -e LOCAL_IDF_TOOLS_PATH=$${IDF_TOOLS_PATH:-~/.espressif} \
+	  -e LOCAL_IDF_TOOLS_PATH=$${IDF_TOOLS_PATH:-~/.espressif} -e SDKCONFIG_DEFAULTS \
 	  kywy/devkit:latest
 
 .PHONY: license
@@ -12,7 +12,7 @@ license:
 
 .PHONY: flash-server
 flash-server:
-	@if [ -n $$IDF_PORT ]; then \
+	@if [ -z $$IDF_PORT ]; then \
 		echo "IDF_PORT is required but not set"; exit 1; \
 	fi
 	esp_rfc2217_server.py -v -p 4000 $$IDF_PORT
