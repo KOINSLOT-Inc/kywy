@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Kywy ESP-IDF Component CI
+on: pull_request
+jobs:
+  lint:
+    uses: KOINSLOT-Inc/devkit/.github/workflows/lint_component.reusable.yaml@main
+  test:
+    needs: lint
+    uses: KOINSLOT-Inc/devkit/.github/workflows/test_component.reusable.yaml@main
