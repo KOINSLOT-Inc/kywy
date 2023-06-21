@@ -29,11 +29,11 @@
 #endif
 
 #ifndef HAL_BUTTON_LEFT_PIN
-#define HAL_BUTTON_LEFT_PIN -1
+#define HAL_BUTTON_LEFT_PIN 15
 #endif
 
 #ifndef HAL_BUTTON_RIGHT_PIN
-#define HAL_BUTTON_RIGHT_PIN 0
+#define HAL_BUTTON_RIGHT_PIN 3
 #endif
 
 #ifndef HAL_D_PAD_LEFT_PIN
@@ -41,15 +41,15 @@
 #endif
 
 #ifndef HAL_D_PAD_RIGHT_PIN
-#define HAL_D_PAD_RIGHT_PIN 1
+#define HAL_D_PAD_RIGHT_PIN 2
 #endif
 
 #ifndef HAL_D_PAD_UP_PIN
-#define HAL_D_PAD_UP_PIN 2
+#define HAL_D_PAD_UP_PIN 1
 #endif
 
 #ifndef HAL_D_PAD_DOWN_PIN
-#define HAL_D_PAD_DOWN_PIN 3
+#define HAL_D_PAD_DOWN_PIN 0
 #endif
 
 #ifndef HAL_LED_PIN

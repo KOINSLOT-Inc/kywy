@@ -30,6 +30,9 @@ void Engine::start() {
   input.start();
 
   display.setup();
+#ifndef CONFIG_IDF_TARGET_LINUX
+  display.setRotation(Display::Rotation::CLOCKWISE_180);
+#endif
 }
 
 void Engine::initialize() {}
