@@ -19,7 +19,7 @@ void Engine::start() {
            .mosi = HAL_DISPLAY_PIN_SPI_MOSI,
        }});
 #else
-  displayDriver = new Display::Driver::SERIAL_64X64_DRIVER();
+  displayDriver = new Display::Driver::SERIAL_128X128_DRIVER();
 #endif
 
   display = Display::Display(displayDriver);

@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "sdkconfig.h"
-
 #include "Actor.hpp"
 #include "kywy/HAL.hpp"
 
@@ -18,7 +16,6 @@ void getInputsCallback(TimerHandle_t timer);
 
 class Input : public Actor::Actor {
 private:
-#ifndef CONFIG_IDF_TARGET_LINUX
 #if HAL_BUTTON_LEFT_PIN >= 0
   bool buttonLeftPressed;
 #endif
@@ -38,7 +35,6 @@ private:
 #if HAL_D_PAD_DOWN_PIN >= 0
   bool dPadDownPressed;
 #endif
-#endif
 
   // FreeRTOS ticks between each GET_INPUTS event
   int pollingPeriod = pdMS_TO_TICKS(50);
@@ -56,6 +52,9 @@ public:
 
   // Sets the milliseconds between each GET_INPUTS event
   void setPollingPeriod(int milliseconds);
+
+private:
+  bool isTTY = false; // used for running vs testing on host
 };
 
 } // namespace Kywy
