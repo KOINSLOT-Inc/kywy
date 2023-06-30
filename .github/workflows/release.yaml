@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: write
 
-  deploy documentation:
+  deploy-documentation:
     if: github.event.pull_request.merged == true
     needs: version
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
 
   release:
     if: github.event.pull_request.merged == true
-    needs: deploy documentation
+    needs: deploy-documentation
     uses: KOINSLOT-Inc/devkit/.github/workflows/release.reusable.yaml@main
     secrets: inherit
     permissions:
