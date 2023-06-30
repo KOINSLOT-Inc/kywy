@@ -18,5 +18,5 @@ flash-server:
 	esp_rfc2217_server.py -v -p 4000 $$IDF_PORT
 
 # combine targets and forward into devkit container to avoid duplicate container startup costs
-.PHONY: build lint test clean compile_commands.json
+.PHONY: build lint test clean compile_commands.json docs
 $(eval $(firstword $(filter-out flash-server license fonts,$(MAKECMDGOALS))):; $$(DEVKIT) sh -c 'make --file /devkit/Makefile $(MAKECMDGOALS)')

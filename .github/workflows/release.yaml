@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Version, Publish, Release
+on:
+  pull_request:
+    types:
+    - closed
+    branches:
+    - main
+jobs:
+
+  version:
+    if: github.event.pull_request.merged == true
+    uses: KOINSLOT-Inc/devkit/.github/workflows/version.reusable.yaml@main
+    secrets: inherit
+    permissions:
+      contents: write
+
+  deploy documentation:
+    if: github.event.pull_request.merged == true
+    needs: version
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: documentation 
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+
+    - name: check out repository
+      uses: actions/checkout@v3
+
+    - name: build documentation
+      run: docker run -v $PWD:$PWD -w $PWD -e SDKCONFIG_DEFAULTS='sdkconfig.ci' kywy/devkit:latest sh -c 'make --file /devkit/Makefile docs'
+
+    - name: create github pages artifact
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: docs/build/
+
+    - name: deploy github pages artifact
+      id: deployment
+      uses: actions/deploy-pages@v2
+
+  release:
+    if: github.event.pull_request.merged == true
+    needs: deploy documentation
+    uses: KOINSLOT-Inc/devkit/.github/workflows/release.reusable.yaml@main
+    secrets: inherit
+    permissions:
+      contents: write

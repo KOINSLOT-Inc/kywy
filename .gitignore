@@ -18,6 +18,7 @@ sdkconfig.old
 dependencies.lock
 compile_commands.json
 managed_components/
+docs/build/
 
 # test files
 test.log
