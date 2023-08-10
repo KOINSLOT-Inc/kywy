@@ -477,7 +477,7 @@ EXTRACT_ALL            = YES
 # be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PRIVATE        = NO
+EXTRACT_PRIVATE        = YES
 
 # If the EXTRACT_PRIV_VIRTUAL tag is set to YES, documented private virtual
 # methods of a class will be included in the documentation.
@@ -836,6 +836,13 @@ WARN_LOGFILE           =
 INPUT                  = src \
 			 include \
 			 include/kywy \
+			 examples/minimal/managed_components/kywy__actor/src \
+			 examples/minimal/managed_components/kywy__actor/include \
+			 examples/minimal/managed_components/kywy__display/src \
+			 examples/minimal/managed_components/kywy__display/src/drivers \
+			 examples/minimal/managed_components/kywy__display/src/generated \
+			 examples/minimal/managed_components/kywy__display/include \
+			 examples/minimal/managed_components/kywy__display/include/generated
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
