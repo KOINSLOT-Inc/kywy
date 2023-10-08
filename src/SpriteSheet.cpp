@@ -4,7 +4,7 @@
 
 #include "kywy/SpriteSheet.hpp"
 
-SpriteSheet::SpriteSheet(const uint8_t *sheet, int8_t sheetWidth, int8_t sheetHeight, uint16_t numFrames)
+SpriteSheet::SpriteSheet(const uint8_t *sheet, int16_t sheetWidth, int16_t sheetHeight, uint16_t numFrames)
     : sheet(sheet), sheetWidth(sheetWidth), sheetHeight(sheetHeight), numFrames(numFrames) {
   frames = new const uint8_t *[numFrames];
 }
@@ -17,7 +17,7 @@ SpriteSheet::~SpriteSheet() {
 
 void SpriteSheet::addFrame(uint16_t x, uint16_t y, uint16_t frameWidth, uint16_t frameHeight) {
   // TODO: this'll probably break if (width * height) isn't divisible by 8
-  uint8_t bytes = frameWidth * frameHeight / 8;
+  uint16_t bytes = frameWidth * frameHeight / 8;
   uint8_t *frame = new uint8_t[bytes];
 
   // create a cursor to track where in the array we want to pull from since

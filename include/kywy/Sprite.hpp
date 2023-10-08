@@ -15,7 +15,7 @@ class Sprite : public GraphicsObject {
 public:
   ~Sprite();
 
-  Sprite(const uint8_t *frames[], uint8_t numFrames, int8_t width, int8_t height);
+  Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width, int16_t height);
 
   void setFrame(uint16_t frame);
 
@@ -27,14 +27,14 @@ public:
   void incrementFrame();
   void decrementFrame();
 
-  void advanceFrame(uint16_t startFrame, uint16_t endFrame, uint8_t ticksPerFrame, FrameLoopMode mode);
+  void advanceFrame(uint16_t startFrame, uint16_t endFrame, uint16_t ticksPerFrame, FrameLoopMode mode);
 
   void (*tick)(Sprite *sprite);
 
   uint16_t frame = 0;
 
-  int8_t width;
-  int8_t height;
+  int16_t width;
+  int16_t height;
 
   const uint8_t **frames;
 
@@ -43,10 +43,10 @@ protected:
   void erase(int16_t lastRenderedX, int16_t lastRenderedY);
 
 private:
-  uint8_t numFrames;
+  uint16_t numFrames;
 
   uint16_t lastRenderedFrame = 0;
 
   bool boomerangReverseDirection = false;
-  uint8_t ticksSinceLastAdvance = 1;
+  uint16_t ticksSinceLastAdvance = 1;
 };

@@ -8,7 +8,7 @@
 
 class SpriteSheet {
 public:
-  SpriteSheet(const uint8_t *sheet, int8_t sheetWidth, int8_t sheetHeight, uint16_t numFrames);
+  SpriteSheet(const uint8_t *sheet, int16_t sheetWidth, int16_t sheetHeight, uint16_t numFrames);
   ~SpriteSheet();
 
   // Specifies a frame on the sprite sheet
@@ -21,7 +21,7 @@ public:
   const uint8_t *sheet;
   const uint8_t **frames;
 
-  int8_t sheetWidth, sheetHeight;
+  int16_t sheetWidth, sheetHeight;
   uint16_t numFrames;
 
 private:

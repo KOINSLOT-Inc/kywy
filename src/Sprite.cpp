@@ -8,10 +8,11 @@
 
 Sprite::~Sprite() { delete[] frames; };
 
-Sprite::Sprite(const uint8_t *frames[], uint8_t numFrames, int8_t width, int8_t height) : width(width), height(height) {
+Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width, int16_t height)
+    : width(width), height(height) {
   this->numFrames = numFrames;
   this->frames = new const uint8_t *[numFrames];
-  for (uint8_t i = 0; i < numFrames; i++) {
+  for (uint16_t i = 0; i < numFrames; i++) {
     this->frames[i] = frames[i];
   }
 };
@@ -40,7 +41,7 @@ void Sprite::incrementFrame() { this->setFrame(this->frame + 1); };
 
 void Sprite::decrementFrame() { this->setFrame(this->frame - 1); };
 
-void Sprite::advanceFrame(uint16_t startFrame, uint16_t endFrame, uint8_t ticksPerFrame, FrameLoopMode mode) {
+void Sprite::advanceFrame(uint16_t startFrame, uint16_t endFrame, uint16_t ticksPerFrame, FrameLoopMode mode) {
   if (this->ticksSinceLastAdvance != ticksPerFrame) {
     this->ticksSinceLastAdvance++;
     return;
