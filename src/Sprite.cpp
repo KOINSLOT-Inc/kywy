@@ -8,8 +8,9 @@
 
 Sprite::~Sprite() { delete[] frames; };
 
-Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width, int16_t height)
-    : width(width), height(height) {
+Sprite::Sprite(const uint8_t *frames[], Display::Bitmap::BitmapFormat format, uint16_t numFrames, int16_t width,
+               int16_t height)
+    : width(width), height(height), format(format) {
   this->numFrames = numFrames;
   this->frames = new const uint8_t *[numFrames];
   for (uint16_t i = 0; i < numFrames; i++) {
@@ -20,14 +21,22 @@ Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width, int16
 void Sprite::setFrame(uint16_t frame) { this->frame = frame; }
 
 void Sprite::draw() {
-  display->drawBitmap(Display::Origin::Object2D::TOP_LEFT, x, y, width, height, Display::Bitmap::MONOCHROME,
-                      (void *)frames[frame], 0xf, {.transparent = true});
+  display->drawBitmap(Display::Origin::Object2D::TOP_LEFT, x, y, width, height, format, (void *)frames[frame], 0xf,
+                      {.transparent = true});
   lastRenderedFrame = frame;
 }
 
 void Sprite::erase(int16_t lastRenderedX, int16_t lastRenderedY) {
-  display->drawBitmap(Display::Origin::Object2D::TOP_LEFT, lastRenderedX, lastRenderedY, width, height,
-                      Display::Bitmap::MONOCHROME, (void *)frames[lastRenderedFrame], 0x0, {.transparent = true});
+  switch (format) {
+  case Display::Bitmap::MONOCHROME:
+    display->drawBitmap(Display::Origin::Object2D::TOP_LEFT, lastRenderedX, lastRenderedY, width, height, format,
+                        (void *)frames[lastRenderedFrame], 0x0, {.transparent = true});
+    break;
+  case Display::Bitmap::GRAYSCALE_4_BIT:
+    display->drawBitmap(Display::Origin::Object2D::TOP_LEFT, lastRenderedX, lastRenderedY, width, height, format,
+                        (void *)frames[lastRenderedFrame], 0x0, {.transparent = true, .erase = true});
+    break;
+  }
 }
 
 void Sprite::translate(int16_t x, int16_t y) { this->setPosition(this->x + x, this->y + y); };

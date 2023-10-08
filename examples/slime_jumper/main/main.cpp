@@ -34,9 +34,9 @@ const static uint8_t spriteSheetData[] = {
     0x00, 0x7f, 0xfe, 0x00};
 
 // define slime sprite
-SpriteSheet slimeSheet = ::SpriteSheet(spriteSheetData, 96, 32, 3);
+SpriteSheet slimeSheet = ::SpriteSheet(spriteSheetData, Display::Bitmap::MONOCHROME, 96, 32, 3);
 const uint8_t *slimeFrames[] = {};
-Sprite slime(slimeFrames, 3, 32, 32);
+Sprite slime(slimeFrames, Display::Bitmap::MONOCHROME, 3, 32, 32);
 
 // define game specific events
 typedef enum : uint16_t {

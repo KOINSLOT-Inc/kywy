@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+CONFIG_IDF_TARGET="linux"
+CONFIG_ESP_TASK_WDT_EN=n

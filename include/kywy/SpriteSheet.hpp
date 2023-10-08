@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include "Display.hpp"
 #include "esp_types.h"
 
 class SpriteSheet {
 public:
-  SpriteSheet(const uint8_t *sheet, int16_t sheetWidth, int16_t sheetHeight, uint16_t numFrames);
+  SpriteSheet(const uint8_t *sheet, Display::Bitmap::BitmapFormat format, int16_t sheetWidth, int16_t sheetHeight,
+              uint16_t numFrames);
   ~SpriteSheet();
 
   // Specifies a frame on the sprite sheet
@@ -20,6 +22,8 @@ public:
 
   const uint8_t *sheet;
   const uint8_t **frames;
+
+  Display::Bitmap::BitmapFormat format;
 
   int16_t sheetWidth, sheetHeight;
   uint16_t numFrames;
