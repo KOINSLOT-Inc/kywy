@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+version: "0.0.1"
+description: "Promo movie example using the Kywy game engine"
+url: "https://github.com/KOINSLOT-Inc/kywy/blob/main/examples/promo_clip"
+dependencies:
+  idf:
+    version: ">5.0.0"
+  kywy/kywy:
+    version: "0.0.1"
+    override_path: "../../../"
