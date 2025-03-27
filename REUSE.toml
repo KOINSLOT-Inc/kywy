@@ -1,0 +1,5 @@
+version = 1
+SPDX-PackageName = "Kywy"
+SPDX-PackageSupplier = "KOINSLOT, Inc. <contact@kywy.io>"
+SPDX-PackageDownloadLocation = "https://koinslotkywy.com"
+annotations = []
