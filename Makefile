@@ -8,7 +8,7 @@ $(PYTHON_DEV_TOOLS):
 	@touch $(PYTHON_DEV_TOOLS)
 
 
-# update licenses with
+# update licenses with: (change year if necessary)
 # pipenv run reuse annotate \
 #     --copyright "KOINSLOT, Inc." \
 #     --year 2025 \
