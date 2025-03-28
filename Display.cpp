@@ -242,6 +242,7 @@ void MBED_SPI_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
 void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
                                           uint16_t height, uint8_t *bitmap,
                                           BitmapOptions options) {
+
   // we can write from an arbitrary chunk of the bitmap to an arbitrary chunk of
   // the screen buffer
   uint16_t bitmapX = 0, bitmapY = 0, bitmapWidth = width;
@@ -292,10 +293,15 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
     while (bitsLeftToWrite) {
       uint8_t byteToWrite;
       uint8_t bitsWritten;
+      uint8_t mask; // identifies the part of the byte column we want to write
 
       byteToWrite =
           ((*(bitmap + (bitmapBitIndex / 8)) << (bitmapBitIndex % 8)) |
            (*(bitmap + (bitmapBitIndex / 8) + 1) >> (8 - bitmapBitIndex % 8)));
+
+      if (options.getNegative()) {
+        byteToWrite = ~byteToWrite;
+      }
 
       // we're only writing a single partial column and need to mask both sides
       // of the byteToWrite
@@ -305,11 +311,13 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
             bufferBitsNotToWriteToInLeftByteColumn; // shift starting bitmap bit
                                                     // to match starting bit of
                                                     // buffer byte column
-        byteToWrite &=
-            0xff
+
+        mask = 0xff >> bufferBitsNotToWriteToInLeftByteColumn;  // mask of left side since this is a partial column
+        mask &= 0xff
             << (8 -
                 (bufferBitsNotToWriteToInLeftByteColumn +
-                 width)); // mask off right side since this is a partial column
+                 width)); // mask off right side since this is a partial column 
+
         bitsWritten = width;
 
         // we're on the leftmost column
@@ -319,29 +327,34 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
             bufferBitsNotToWriteToInLeftByteColumn; // shift starting bitmap bit
                                                     // to match starting bit of
                                                     // buffer byte column
+
+        mask = 0xff >> bufferBitsNotToWriteToInLeftByteColumn; // mask off left side
+
         bitsWritten = bufferBitsToWriteToInLeftByteColumn;
 
         // we're writing an inner column
       } else if (bitsLeftToWrite >= 8) {
+        mask = 0xff; // don't mask off anything
+
         bitsWritten = 8;
 
         // we're writing the rightmost column
       } else if (bitsLeftToWrite > 0 & bitsLeftToWrite < 8) {
-        byteToWrite &=
-            0xff << (8 -
-                     bitsLeftToWrite); // zero out bits we don't want to write
+        mask = 0xff
+          << (8 - bitsLeftToWrite); // mask off right side
+
         bitsWritten = bitsLeftToWrite;
       }
 
       // actually do the writing
       if (!options.getOpaque()) {
-        if (options.getNegative()) {
-          *buffer |= ~byteToWrite;
+        if (options.getColor()) {
+          *buffer |= (~byteToWrite) & mask;
         } else {
-          *buffer &= byteToWrite;
+          *buffer &= byteToWrite | (~mask);
         }
       } else {
-        if (options.getNegative()) {
+        if (options.getColor()) {
           *buffer = ~byteToWrite;
         } else {
           *buffer = byteToWrite;

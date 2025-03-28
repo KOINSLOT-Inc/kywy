@@ -22,17 +22,18 @@ Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width,
 void Sprite::setFrame(uint16_t frame) { this->frame = frame; }
 
 void Sprite::setNegative(bool negative) { this->negative = negative; }
+void Sprite::setColor(uint16_t color) { this->color = color ? 0xff : 0x00; }
 
 void Sprite::draw() {
   display->drawBitmap(x, y, width, height, (uint8_t *)frames[frame],
-                      Display::BitmapOptions().negative(negative));
+                      Display::BitmapOptions().negative(negative).color(color));
   lastRenderedFrame = frame;
 }
 
 void Sprite::erase(int16_t lastRenderedX, int16_t lastRenderedY) {
   display->drawBitmap(lastRenderedX, lastRenderedY, width, height,
                       (uint8_t *)frames[lastRenderedFrame],
-                      Display::BitmapOptions().negative(!negative));
+                      Display::BitmapOptions().negative(negative).color(!color));
 }
 
 void Sprite::translate(int16_t x, int16_t y) {

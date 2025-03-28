@@ -17,7 +17,9 @@ void Input::initialize() {
   pinMode(KYWY_D_PAD_CENTER, INPUT_PULLUP);
 
   inputMessage.signal = Events::KywyEvents::INPUT;
+  inputPressedMessage.signal = Events::KywyEvents::INPUT_PRESSED;
   dPadMessage.signal = Events::KywyEvents::D_PAD;
+  dPadPressedMessage.signal = Events::KywyEvents::D_PAD_PRESSED;
 
   buttonLeftPressedMessage.signal = Events::KywyEvents::BUTTON_LEFT_PRESSED;
   buttonLeftReleasedMessage.signal = Events::KywyEvents::BUTTON_LEFT_RELEASED;
@@ -39,17 +41,24 @@ void Input::handle(::Actor::Message *message) {
   switch (message->signal) {
   case Events::TICK: {
     bool inputEvent = false, dPadEvent = false;
+    bool inputPressedEvent = false, dPadPressedEvent = false;
 
     if ((digitalRead(KYWY_LEFT_BUTTON) == LOW) != buttonLeftPressed) {
       buttonLeftPressed = !buttonLeftPressed;
       publish(buttonLeftPressed ? &buttonLeftPressedMessage : &buttonLeftReleasedMessage);
       inputEvent = true;
+      if (buttonLeftPressed) {
+        inputPressedEvent = true;
+      }
     }
 
     if ((digitalRead(KYWY_RIGHT_BUTTON) == LOW) != buttonRightPressed) {
       buttonRightPressed = !buttonRightPressed;
       publish(buttonRightPressed ? &buttonRightPressedMessage : &buttonRightReleasedMessage);
       inputEvent = true;
+      if (buttonRightPressed) {
+        inputPressedEvent = true;
+      }
     }
 
     if ((digitalRead(KYWY_D_PAD_LEFT) == LOW) != dPadLeftPressed) {
@@ -57,6 +66,10 @@ void Input::handle(::Actor::Message *message) {
       publish(dPadLeftPressed ? &dPadLeftPressedMessage : &dPadLeftReleasedMessage);
       inputEvent = true;
       dPadEvent = true;
+      if (dPadLeftPressed) {
+        inputPressedEvent = true;
+        dPadPressedEvent = true;
+      }
     }
 
     if ((digitalRead(KYWY_D_PAD_RIGHT) == LOW) != dPadRightPressed) {
@@ -64,6 +77,10 @@ void Input::handle(::Actor::Message *message) {
       publish(dPadRightPressed ? &dPadRightPressedMessage : &dPadRightReleasedMessage);
       inputEvent = true;
       dPadEvent = true;
+      if (dPadRightPressed) {
+        inputPressedEvent = true;
+        dPadPressedEvent = true;
+      }
     }
 
     if ((digitalRead(KYWY_D_PAD_UP) == LOW) != dPadUpPressed) {
@@ -71,6 +88,10 @@ void Input::handle(::Actor::Message *message) {
       publish(dPadUpPressed ? &dPadUpPressedMessage : &dPadUpReleasedMessage);
       inputEvent = true;
       dPadEvent = true;
+      if (dPadUpPressed) {
+        inputPressedEvent = true;
+        dPadPressedEvent = true;
+      }
     }
 
     if ((digitalRead(KYWY_D_PAD_DOWN) == LOW) != dPadDownPressed) {
@@ -78,6 +99,10 @@ void Input::handle(::Actor::Message *message) {
       publish(dPadDownPressed ? &dPadDownPressedMessage : &dPadDownReleasedMessage);
       inputEvent = true;
       dPadEvent = true;
+      if (dPadDownPressed) {
+        inputPressedEvent = true;
+        dPadPressedEvent = true;
+      }
     }
 
     if ((digitalRead(KYWY_D_PAD_CENTER) == LOW) != dPadCenterPressed) {
@@ -85,14 +110,26 @@ void Input::handle(::Actor::Message *message) {
       publish(dPadCenterPressed ? &dPadCenterPressedMessage : &dPadCenterReleasedMessage);
       inputEvent = true;
       dPadEvent = true;
+      if (dPadCenterPressed) {
+        inputPressedEvent = true;
+        dPadPressedEvent = true;
+      }
     }
 
     if (inputEvent) {
       publish(&inputMessage);
     }
 
+    if (inputPressedEvent) {
+      publish(&inputPressedMessage);
+    }
+
     if (dPadEvent) {
       publish(&dPadMessage);
+    }
+
+    if (dPadPressedEvent) {
+      publish(&dPadPressedMessage);
     }
 
     break;

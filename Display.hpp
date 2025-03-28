@@ -61,15 +61,9 @@ enum class Text {
 };
 } // namespace Origin
 
-// NOTE: DEFAULT VALUES MUST BE TYPE DEFAULTS
-//
-// in order to use these options structs with aggregate initialization (e.g. {
-// .color = 0xff }) the structs CANNOT have default values set (that aren't the
-// type defaults)
-
 struct Object1DOptions {
-  uint16_t _color;
-  Origin::Object1D _origin;
+  uint16_t _color = 0x00;
+  Origin::Object1D _origin = Origin::Object1D::ENDPOINT;
 
   Object1DOptions color(uint16_t setColor) {
     _color = setColor;
@@ -85,8 +79,8 @@ struct Object1DOptions {
 };
 
 struct Object2DOptions {
-  uint16_t _color;
-  Origin::Object2D _origin;
+  uint16_t _color = 0x00;
+  Origin::Object2D _origin = Origin::Object2D::TOP_LEFT;
 
   Object2DOptions color(uint16_t setColor) {
     _color = setColor;
@@ -102,10 +96,10 @@ struct Object2DOptions {
 };
 
 struct TextOptions {
-  uint16_t _color;
-  Origin::Text _origin;
-  uint8_t *_font;
-  bool _opaque;
+  uint16_t _color = 0x00;
+  Origin::Text _origin = Origin::Text::TOP_LEFT;
+  uint8_t *_font = nullptr;
+  bool _opaque = false;
 
   TextOptions color(uint16_t setColor) {
     _color = setColor;
@@ -133,9 +127,16 @@ struct TextOptions {
 };
 
 struct BitmapOptions {
-  bool _negative;
-  Origin::Object2D _origin;
-  bool _opaque;
+  uint16_t _color = 0x00;
+  bool _negative = false;
+  Origin::Object2D _origin = Origin::Object2D::TOP_LEFT;
+  bool _opaque = false;
+
+  BitmapOptions color(uint16_t setColor) {
+    _color = setColor;
+    return *this;
+  };
+  uint16_t getColor() { return _color; };
 
   BitmapOptions negative(bool setNegative) {
     _negative = setNegative;
