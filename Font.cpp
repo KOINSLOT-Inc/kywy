@@ -213,7 +213,7 @@ void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
   }
 
   // we need to draw text in transparent mode so that diacritical marks aren't
-  // overridden, to simulate non-transparent text we instead draw a white
+  // overridden, to simulate non-transparent text we instead draw a
   // rectangle over the area the text covers
   if (options.getOpaque()) {
     fillRectangle(originX - originXOffset, originY - originYOffset, width,
@@ -231,8 +231,8 @@ void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
                currentChar.bbxWidth + (8 - currentChar.bbxWidth % 8),
                currentChar.bbxHeight, currentChar.bitmap,
                BitmapOptions()
-                   .opaque(options.getOpaque())
-                   .negative(options.getColor() ? false : true)
+                   .negative(true) // serialized format is 1==black, 0==white, but we need to flip that
+                   .color(options.getColor())
                    .origin(Origin::Object2D::BOTTOM_LEFT));
 
     originX += currentChar.deviceWidthX;

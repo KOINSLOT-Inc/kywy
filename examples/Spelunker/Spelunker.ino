@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+// SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -301,7 +301,8 @@ public:
     spelunkerSprite.setDisplay(&engine.display);
     spelunkerSprite.setPosition(xPosition, yPosition);
     spelunkerSprite.setVisible(true);
-    spelunkerSprite.setColor(0xff);
+    spelunkerSprite.setNegative(true);
+    spelunkerSprite.setColor(WHITE);
     spelunkerSprite.render();
   }
 
@@ -389,11 +390,11 @@ public:
       for (int i = 0; i < (numColumns + 1); i++) {
         int columnIndex = (startIndex + i) % (numColumns + 1);
 
-        engine.display.fillRectangle(i * columnWidth - offset, 0, columnWidth, topColumns[columnIndex], WHITE);
+        engine.display.fillRectangle(i * columnWidth - offset, 0, columnWidth, topColumns[columnIndex], Display::Object2DOptions().color(WHITE));
         
         engine.display.fillRectangle(i * columnWidth - offset, topColumns[columnIndex], columnWidth, DISPLAY_HEIGHT - bottomColumns[columnIndex] - topColumns[columnIndex]);
 
-        engine.display.fillRectangle(i * columnWidth - offset, DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], WHITE);
+        engine.display.fillRectangle(i * columnWidth - offset, DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
       }
 
       // record height of the most recently created column
@@ -467,11 +468,11 @@ public:
 
   bool inMenu = true;
 
-  void drawScore(uint16_t color) {
+  void drawScore() {
     char msg[16];
     snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
-    engine.display.fillRectangle(DISPLAY_WIDTH - 40, 0, 40, 14);
-    engine.display.drawText(DISPLAY_WIDTH - 33, 3, msg, color = color);
+    engine.display.fillRectangle(DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
+    engine.display.drawText(DISPLAY_WIDTH - 33, 3, msg);
   }
 
   void initialize() {}
@@ -492,9 +493,8 @@ public:
       if (inMenu)
         break;
 
-      drawScore(BLACK);
       score += 1;
-      drawScore(WHITE);
+      drawScore();
 
       unsigned long updateStart = millis();
       engine.display.update();
@@ -513,17 +513,14 @@ public:
 
       engine.display.clear();
 
-      char gameOver[] = "GAME OVER";
-      engine.display.drawText(5, 5, gameOver);
+      engine.display.drawText(5, 5, "GAME OVER");
       char msg[32];
       snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
       engine.display.drawText(5, 15, msg);
       snprintf(msg, sizeof(msg), "High Score: %d", highScore);
       engine.display.drawText(5, 25, msg);
-      char pressLeftButton[] = "Press left button";
-      engine.display.drawText(5, 45, pressLeftButton);
-      char toTryAgain[] = "to try again.";
-      engine.display.drawText(5, 55, toTryAgain);
+      engine.display.drawText(5, 45, "Press left button");
+      engine.display.drawText(5, 55, "to try again.");
       engine.display.update();
       break;
     }
@@ -539,7 +536,7 @@ public:
 
       score = 0;
 
-      engine.display.fillRectangle(Display::Origin::Object2D::TOP_LEFT, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, BLACK);
+      engine.display.fillRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
       columnManager.subscribe(&engine.clock);
       spelunkerManager.subscribe(&engine.clock);
@@ -553,18 +550,18 @@ public:
 void setup() {
   engine.start();
 
-  // make sure column manager subscribes to the ticker before the spelunkerManager so that the display.clear that's
-  // called during the columnManager tick doesn't overwrite the spelunker sprite.
+  // make sure column manager subscribes to the ticker before the spelunkerManager so that 
+  // the columns don't override the spelunker sprite
   columnManager.subscribe(&engine.clock);
 
   spelunkerManager.subscribe(&engine.input);
   spelunkerManager.subscribe(&engine.clock);
 
-  spelunkerManager.start();
-  columnManager.start();
-
   gameManager.subscribe(&columnManager);
-  gameManager.subscribe(&engine.clock);
+  gameManager.subscribe(&engine.clock); // sub to clock last so score is written last over top of everything
+  
+  columnManager.start();
+  spelunkerManager.start();
   gameManager.start();
 
   ::Actor::Message message(START_SCREEN);

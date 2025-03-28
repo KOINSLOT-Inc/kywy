@@ -45,6 +45,9 @@ public:
   bool negative = false;
   void setNegative(bool negative);
 
+  uint16_t color = 0x00;
+  void setColor(uint16_t color);
+
 protected:
   void draw();
   void erase(int16_t lastRenderedX, int16_t lastRenderedY);
