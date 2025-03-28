@@ -23,6 +23,11 @@
 #define KYWY_DISPLAY_CS 17
 #define KYWY_DISPLAY_DISP 22
 
+#define KYWI_DISPLAY_WIDTH 144
+#define KYWI_DISPLAY_HEIGHT 168
+#define BLACK 0x00
+#define WHITE 0x00
+
 namespace Display {
 
 enum class Rotation {

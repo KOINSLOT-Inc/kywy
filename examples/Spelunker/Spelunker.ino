@@ -6,11 +6,6 @@
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH  144
-#define DISPLAY_HEIGHT 168
-#define BLACK          0x0
-#define WHITE          0xf
-
 typedef enum : uint16_t {
   START_SCREEN = Kywy::Events::USER_EVENTS,
   GAME_OVER,
@@ -325,8 +320,8 @@ public:
         yVelocity = 0;
       }
 
-      if (yPosition > DISPLAY_HEIGHT - 8)
-        yPosition = DISPLAY_HEIGHT - 8;
+      if (yPosition > KYWY_DISPLAY_HEIGHT - 8)
+        yPosition = KYWY_DISPLAY_HEIGHT - 8;
 
       // gravity
       if (yVelocity < 7 && !buttonPressed)
@@ -349,7 +344,7 @@ public:
   const char *getName() { return "columnManager"; };
 
   static const uint8_t numColumns = 16;
-  static const uint8_t columnWidth = DISPLAY_WIDTH / numColumns;
+  static const uint8_t columnWidth = KYWY_DISPLAY_WIDTH / numColumns;
 
   uint8_t topColumns[(numColumns + 1)];
   uint8_t bottomColumns[(numColumns + 1)];
@@ -392,9 +387,9 @@ public:
 
         engine.display.fillRectangle(i * columnWidth - offset, 0, columnWidth, topColumns[columnIndex], Display::Object2DOptions().color(WHITE));
         
-        engine.display.fillRectangle(i * columnWidth - offset, topColumns[columnIndex], columnWidth, DISPLAY_HEIGHT - bottomColumns[columnIndex] - topColumns[columnIndex]);
+        engine.display.fillRectangle(i * columnWidth - offset, topColumns[columnIndex], columnWidth, KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex] - topColumns[columnIndex]);
 
-        engine.display.fillRectangle(i * columnWidth - offset, DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
+        engine.display.fillRectangle(i * columnWidth - offset, KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
       }
 
       // record height of the most recently created column
@@ -424,10 +419,10 @@ public:
         } else {
           newColumnHeight = lastColumnHeight - 6;
         }
-        newColumnHeight = fmin(DISPLAY_HEIGHT - 72, fmax(0, newColumnHeight));
+        newColumnHeight = fmin(KYWY_DISPLAY_HEIGHT - 72, fmax(0, newColumnHeight));
 
         topColumns[newColumnIndex] = newColumnHeight;
-        bottomColumns[newColumnIndex] = DISPLAY_HEIGHT - 72 - newColumnHeight; // pin tunnel width at 72
+        bottomColumns[newColumnIndex] = KYWY_DISPLAY_HEIGHT - 72 - newColumnHeight; // pin tunnel width at 72
       }
 
       // check for collisions
@@ -446,7 +441,7 @@ public:
         // collisions with bottom columns
         //
         // `+ 5` because bottom pixels of 8x8 spelunker sprite are on the sixth row
-        if ((spelunkerManager.yPosition + 5) > (DISPLAY_HEIGHT - bottomColumns[columnIndex]))
+        if ((spelunkerManager.yPosition + 5) > (KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex]))
           collided = true;
       }
 
@@ -471,8 +466,8 @@ public:
   void drawScore() {
     char msg[16];
     snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
-    engine.display.fillRectangle(DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
-    engine.display.drawText(DISPLAY_WIDTH - 33, 3, msg);
+    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
+    engine.display.drawText(KYWY_DISPLAY_WIDTH - 33, 3, msg);
   }
 
   void initialize() {}
@@ -536,7 +531,7 @@ public:
 
       score = 0;
 
-      engine.display.fillRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+      engine.display.fillRectangle(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT);
 
       columnManager.subscribe(&engine.clock);
       spelunkerManager.subscribe(&engine.clock);

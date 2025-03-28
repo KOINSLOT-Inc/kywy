@@ -6,11 +6,6 @@
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH  144
-#define DISPLAY_HEIGHT 168
-#define BLACK          0x0
-#define WHITE          0xf
-
 const uint8_t slimeJumperSplashScreenBMP[] = {
   0x55, 0x69, 0x3f, 0xfe, 0x35, 0x60, 0xa9, 0x7a, 0xf5, 0x7a, 0xe3, 0x53,
   0xff, 0xff, 0x95, 0x49, 0x26, 0xa5, 0xa4, 0xa6, 0x7f, 0xff, 0x34, 0x8d,
@@ -369,8 +364,8 @@ public:
       if (xPosition < padding)
 	xPosition = padding;
 
-      if (xPosition > DISPLAY_WIDTH - 32 - padding)
-	xPosition = DISPLAY_WIDTH - 32 - padding;
+      if (xPosition > KYWY_DISPLAY_WIDTH - 32 - padding)
+	xPosition = KYWY_DISPLAY_WIDTH - 32 - padding;
 
       // falling
       yPosition += yVelocity;
@@ -378,7 +373,7 @@ public:
 	yVelocity += 1;
 
       // jumping
-      if (yPosition > DISPLAY_HEIGHT - 18) {
+      if (yPosition > KYWY_DISPLAY_HEIGHT - 18) {
 	publish(&gameOverMessage);
       }
 
@@ -417,15 +412,15 @@ public:
 
   void initialize() {
     for (int i = 0; i < numPlatforms; i++) {
-      platforms[i] = Platform{.x = (int)fmax(5, fmin(random(DISPLAY_WIDTH), DISPLAY_WIDTH - 5 - platformWidth)),
-			      .y = DISPLAY_HEIGHT - 18 - (50 * i),
+      platforms[i] = Platform{.x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth)),
+			      .y = KYWY_DISPLAY_HEIGHT - 18 - (50 * i),
 			      .width = platformWidth};
     }
   }
 
   void drawPlatforms(uint16_t color) {
     for (int i = 0; i < numPlatforms; i++) {
-      if (platforms[i].y >= 0 && platforms[i].y <= DISPLAY_HEIGHT) {
+      if (platforms[i].y >= 0 && platforms[i].y <= KYWY_DISPLAY_HEIGHT) {
 	      engine.display.drawLine(platforms[i].x, platforms[i].y, int16_t(platforms[i].x + platforms[i].width), int16_t(platforms[i].y), Display::Object1DOptions().color(color));
       }
     }
@@ -470,9 +465,9 @@ public:
       for (int i = 0; i < numPlatforms; i++) {
 	platforms[i].y += yVelocity;
 
-	if (platforms[i].y > DISPLAY_HEIGHT + 25) {
+	if (platforms[i].y > KYWY_DISPLAY_HEIGHT + 25) {
 	  platforms[i].y = -5;
-	  platforms[i].x = (int)fmax(5, fmin(random(DISPLAY_WIDTH), DISPLAY_WIDTH - 5 - platformWidth));
+	  platforms[i].x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth));
 	}
       }
 

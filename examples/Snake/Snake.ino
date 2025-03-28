@@ -6,11 +6,6 @@
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH  144
-#define DISPLAY_HEIGHT 168
-#define BLACK          0x0
-#define WHITE          0xf
-
 const uint8_t splashScreen[] = {
     0x3f, 0x7c, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xc9, 0xf9, 0xf2, 0x3e, 0x79, 0x3e, 0xfb, 0x7d, 0xb6,
@@ -286,8 +281,8 @@ public:
 
   static const int screenBorder = 2;
   static const int blockSize = sectionSize + sectionSeparation;
-  static const int rows = DISPLAY_HEIGHT / blockSize;
-  static const int columns = DISPLAY_WIDTH / blockSize;
+  static const int rows = KYWY_DISPLAY_HEIGHT / blockSize;
+  static const int columns = KYWY_DISPLAY_WIDTH / blockSize;
   static const int numBlocks = rows * columns;
   static const int minBlockX = screenBorder;
   static const int minBlockY = screenBorder;
@@ -429,7 +424,7 @@ public:
 
   void initialize() {
     gameOver = true;
-    engine.display.drawBitmap(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, (uint8_t *)splashScreen);
+    engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
     engine.display.update();
     subscribe(&engine.input);
   }

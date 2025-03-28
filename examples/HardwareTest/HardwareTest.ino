@@ -6,9 +6,6 @@
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH 144
-#define DISPLAY_HEIGHT 168
-
 class hardwareTester : public Actor::Actor {
 public:
   const char *getName() {
@@ -126,15 +123,15 @@ public:
           break;
         }
 
-        drawButtonStatus(padding + buttonRadius, DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, buttonLeftPressed, buttonLeftReleased);
-        drawButtonStatus(DISPLAY_WIDTH - padding - buttonRadius, DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, buttonRightPressed, buttonRightReleased);
+        drawButtonStatus(padding + buttonRadius, KYWY_DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, buttonLeftPressed, buttonLeftReleased);
+        drawButtonStatus(KYWY_DISPLAY_WIDTH - padding - buttonRadius, KYWY_DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, buttonRightPressed, buttonRightReleased);
 
-        drawButtonStatus(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - padding - buttonRadius, dPadDownPressed, dPadDownReleased);
-        drawButtonStatus(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, dPadCenterPressed, dPadCenterReleased);
-        drawButtonStatus(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonDiameter - padding - buttonRadius, dPadUpPressed, dPadUpReleased);
+        drawButtonStatus(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT - padding - buttonRadius, dPadDownPressed, dPadDownReleased);
+        drawButtonStatus(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, dPadCenterPressed, dPadCenterReleased);
+        drawButtonStatus(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonDiameter - padding - buttonRadius, dPadUpPressed, dPadUpReleased);
 
-        drawButtonStatus(DISPLAY_WIDTH / 2 - buttonRadius - padding - buttonRadius, DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, dPadLeftPressed, dPadLeftReleased);
-        drawButtonStatus(DISPLAY_WIDTH / 2 + buttonRadius + padding + buttonRadius, DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, dPadRightPressed, dPadRightReleased);
+        drawButtonStatus(KYWY_DISPLAY_WIDTH / 2 - buttonRadius - padding - buttonRadius, KYWY_DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, dPadLeftPressed, dPadLeftReleased);
+        drawButtonStatus(KYWY_DISPLAY_WIDTH / 2 + buttonRadius + padding + buttonRadius, KYWY_DISPLAY_HEIGHT - padding - buttonDiameter - padding - buttonRadius, dPadRightPressed, dPadRightReleased);
 
         if (!batteryNotChargingDetected && !engine.battery.isCharging()) {
           batteryNotChargingDetected = true;
