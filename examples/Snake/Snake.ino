@@ -313,7 +313,7 @@ public:
   };  
 
   void eraseTail() {
-    engine.display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize, WHITE);
+    engine.display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize, Display::Object2DOptions().color(WHITE));
   };
 
   void shiftSectionLists() {
@@ -348,17 +348,14 @@ public:
         highScore = fmax(length, highScore);
         unsubscribe(&engine.clock);
         engine.display.clear();
-        char gameOver[] = "GAME OVER";
-        engine.display.drawText(5, 5, gameOver);
+        engine.display.drawText(5, 5, "GAME OVER");
         char msg[32];
         snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)length);
         engine.display.drawText(5, 15, msg);
         snprintf(msg, sizeof(msg), "High Score: %d", highScore);
         engine.display.drawText(5, 25, msg);
-        char pressLeftButton[] = "Press left button";
-        char toTryAgain[] = "to try again.";
-        engine.display.drawText(5, 45, pressLeftButton);
-        engine.display.drawText(5, 55, toTryAgain);
+        engine.display.drawText(5, 45, "Press left button");
+        engine.display.drawText(5, 55, "to try again.");
         engine.display.update();
         return;
       }
@@ -412,6 +409,8 @@ public:
     ticksSinceLastMove = 0;
     xDirection = 1;
     yDirection = 0;
+    newXDirection = 1;
+    newYDirection = 0;
 
     // set up initial head and tail
     sectionX[0] = screenBorder; // tail
@@ -480,7 +479,12 @@ public:
       engine.display.clear();
       startGame();
       subscribe(&engine.clock);
-    case Kywy::Events::INPUT:
+      break;
+    case Kywy::Events::INPUT_PRESSED:
+      if (!startScreen) {
+        break;
+      }
+      
       startScreen = false;
       engine.display.clear();
       startGame();

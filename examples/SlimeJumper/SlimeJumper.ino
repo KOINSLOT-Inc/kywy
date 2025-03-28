@@ -326,7 +326,7 @@ public:
   void initialize() {
     slime.setPosition(xPosition, yPosition);
     slime.setVisible(true);
-    slime.render();
+    slime.setNegative(true);
   }
 
   void handle(::Actor::Message *message) {
@@ -425,9 +425,9 @@ public:
 
   void drawPlatforms(uint16_t color) {
     for (int i = 0; i < numPlatforms; i++) {
-      if (platforms[i].y >= 0 && platforms[i].y <= DISPLAY_HEIGHT)
-	engine.display.drawLine(platforms[i].x, platforms[i].y, platforms[i].x + platforms[i].width, platforms[i].y,
-				color);
+      if (platforms[i].y >= 0 && platforms[i].y <= DISPLAY_HEIGHT) {
+	      engine.display.drawLine(platforms[i].x, platforms[i].y, int16_t(platforms[i].x + platforms[i].width), int16_t(platforms[i].y), Display::Object1DOptions().color(color));
+      }
     }
   }
 
@@ -492,7 +492,7 @@ public:
   void drawScore(uint16_t color) {
     char msg[16];
     snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
-    engine.display.drawText(5, 5, msg, color);
+    engine.display.drawText(5, 5, msg, Display::TextOptions().color(color));
   }
 
   void initialize() {}
@@ -526,21 +526,18 @@ public:
 	highScore = score;
 
       engine.display.clear();
-      char gameOver[] = "GAME OVER";
-      engine.display.drawText(5, 5, gameOver);
+      engine.display.drawText(5, 5, "GAME OVER");
       char msg[32];
       snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
       engine.display.drawText(5, 15, msg);
       snprintf(msg, sizeof(msg), "High Score: %d", highScore);
       engine.display.drawText(5, 25, msg);
-      char pressLeftButton[] = "Press any button";
-      char toTryAgain[] = "to try again.";
-      engine.display.drawText(5, 45, pressLeftButton);
-      engine.display.drawText(5, 55, toTryAgain);
+      engine.display.drawText(5, 45, "Press any button");
+      engine.display.drawText(5, 55, "to try again.");
       engine.display.update();
       break;
     }
-    case Kywy::Events::INPUT: {
+    case Kywy::Events::INPUT_PRESSED: {
       unsubscribe(&engine.input);
 
       platformManager.initialize();

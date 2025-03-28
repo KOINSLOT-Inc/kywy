@@ -32,7 +32,9 @@ public:
   void handle(::Actor::Message *message);
 
   ::Actor::Message inputMessage;
+  ::Actor::Message inputPressedMessage;
   ::Actor::Message dPadMessage;
+  ::Actor::Message dPadPressedMessage;
 
   ::Actor::Message buttonLeftPressedMessage;
   ::Actor::Message buttonLeftReleasedMessage;
