@@ -12,7 +12,7 @@ Kywy::Engine engine;
 #define BLACK          0x0
 #define WHITE          0xf
 
-const uint8_t galagaSplashScreen[] = {
+const uint8_t asteroidSplashScreen[] = {
      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -294,7 +294,7 @@ const uint8_t spriteSheetData[] = {
 ::SpriteSheet spriteSheet = ::SpriteSheet(spriteSheetData, 96, 32, 3);
 
 const uint8_t *frames[] = {};
-Sprite ship(frames,3,28,28);
+Sprite ship(frames,3,32,32);
 
 typedef enum : uint16_t {
   START_SCREEN = Kywy::Events::USER_EVENTS,
@@ -362,7 +362,7 @@ public:
     case START_SCREEN: {
       shipManager.unsubscribe(&engine.clock);
       unsubscribe(&engine.clock);
-      engine.display.drawBitmap(Display::Origin::Object2D::TOP_LEFT, 0, 0, 144, 168, (uint8_t *)galagaSplashScreen, 0xff);
+      engine.display.drawBitmap(Display::Origin::Object2D::TOP_LEFT, 0, 0, 144, 168, (uint8_t *)asteroidSplashScreen, 0xff);
       engine.display.update();
       subscribe(&engine.input);
       break;
