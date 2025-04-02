@@ -319,7 +319,7 @@ public:
   const float friction = 0.99f;
 
   float shipAngle = 0.0f;
-  const float rotationSpeed = 1.0f;
+  const float rotationSpeed = 5.0f;
 
   float xVelocity = 0.0f;
   float yVelocity = 0.0f;
