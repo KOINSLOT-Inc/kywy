@@ -327,7 +327,9 @@ public:
   int xPosition = 84;
   int yPosition = 72;
   
-  int acceleration = 1;
+  int decelerationCounterx = 0;
+  int decelerationCountery = 0;
+  const int decelerationRate = 3;
 
   int xMaxVelocity = 5;
   int xVelocity = 0;
@@ -339,7 +341,7 @@ public:
 
 
   int currentFrame = 0; 
-  const int totalFrames = 3;
+  const int totalFrames = 4;
 
   int frameDelay = 5; //5 ideal
   int frameCounter = 0;
@@ -362,22 +364,22 @@ public:
 
       case Kywy::Events::D_PAD_LEFT_PRESSED:
         buttonLeftPressed = true;
-        xVelocity += -1 * acceleration;
+        xVelocity = -5;
         break;
 
       case Kywy::Events::D_PAD_RIGHT_PRESSED:
         buttonRightPressed = true;
-        xVelocity += acceleration;
+        xVelocity = 5;
         break;
 
       case Kywy::Events::D_PAD_UP_PRESSED:
         buttonUpPressed = true;
-        yVelocity = yMaxVelocity;
+        yVelocity = -5;
         break;
 
       case Kywy::Events::D_PAD_DOWN_PRESSED:
         buttonDownPressed = true;
-        yVelocity = -1*yMaxVelocity;
+        yVelocity = 5;
         break;
 
       case Kywy::Events::D_PAD_LEFT_RELEASED:
@@ -390,23 +392,39 @@ public:
 
       case Kywy::Events::D_PAD_UP_RELEASED:
         buttonUpPressed = false;
-        yVelocity = 0;
         break;
 
       case Kywy::Events::D_PAD_DOWN_RELEASED:
         buttonDownPressed = false;
-        yVelocity = 0;
         break;
 
       case Kywy::Events::TICK:
+      // Smooth deceleration
+      if (!buttonRightPressed && !buttonLeftPressed) {
+        if (decelerationCounterx % decelerationRate == 0) { 
+          if (xVelocity > 0) {
+            xVelocity--;
+          } else if (xVelocity < 0) {
+            xVelocity++;
+          }
+        }
+        decelerationCounterx++;
+      }
+
+      if (!buttonUpPressed && !buttonDownPressed) {
+        if (decelerationCountery % decelerationRate == 0) { 
+          if (yVelocity > 0) {
+            yVelocity--;
+          } else if (yVelocity < 0) {
+            yVelocity++;
+          }
+        }
+        decelerationCountery++;
+      }
+
       xPosition += xVelocity;
       yPosition += yVelocity;
-      // if (xVelocity > 0) {
-      //   xVelocity += -1 * acceleration;
-      // }
-      // if (xVelocity < 0) {
-      //   xVelocity += acceleration;;
-      // }
+
       if (xPosition < -1*spriteWidth){
         xPosition = DISPLAY_WIDTH;
       }
@@ -423,7 +441,7 @@ public:
       frameCounter++;
       //frame rotate
       if (frameCounter >= frameDelay) {
-        frameCounter = 0; // Reset counter
+        frameCounter = 0;
 
       if (buttonRightPressed or buttonUpPressed){ 
         currentFrame = (currentFrame + 1) % totalFrames; 
