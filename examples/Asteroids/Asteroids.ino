@@ -478,12 +478,12 @@ class AsteroidManager : public Actor::Actor {
 public:
   const char *getName() { return "platformManager"; };
 
-  const static int numAsteroids = 1;
+  const static int numAsteroids = 6;
 
   int xVelocityMax = 2;
   int yVelocityMax = 2;
   //Casting vel into int so speed is either 1 or 2. Need to fix this but anything above 2 is too hard to dodge
-  int radius = 15;
+  int radius = 3;
 
   Asteroid asteroids[numAsteroids];
 
