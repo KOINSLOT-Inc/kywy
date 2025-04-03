@@ -305,9 +305,11 @@ Sprite ship(frames,numFrames,spriteWidth,spriteHeight);
 
 typedef enum : uint16_t {
   START_SCREEN = Kywy::Events::USER_EVENTS,
-  GAME_OVER,
+  ASTEROID_COLLISION,
+  GAME_OVER
 } AsteroidBlasterSignal;
 
+::Actor::Message asteroidCollisionMessage = ::Actor::Message(ASTEROID_COLLISION);
 ::Actor::Message gameOverMessage = ::Actor::Message(GAME_OVER);
 
 class ShipManager : public Actor::Actor {
@@ -447,18 +449,18 @@ public:
       engine.display.drawLine(xPosition,yPosition,-20.0,(shipAngle+15)*M_PI/180.0f);
 
 
+//Debug draw angle and vels 
+      // char msg[16];
+      // snprintf(msg, sizeof(msg), "%.2f", shipAngle);
+      // engine.display.drawText(5, 5, msg, Display::TextOptions().color(BLACK));
 
-      char msg[16];
-      snprintf(msg, sizeof(msg), "%.2f", shipAngle);
-      engine.display.drawText(5, 5, msg, Display::TextOptions().color(BLACK));
+      // char msg2[16];
+      // snprintf(msg2, sizeof(msg2), "%.2f", xVelocity);
+      // engine.display.drawText(5, 15, msg2, Display::TextOptions().color(BLACK));
 
-      char msg2[16];
-      snprintf(msg2, sizeof(msg2), "%.2f", xVelocity);
-      engine.display.drawText(5, 15, msg2, Display::TextOptions().color(BLACK));
-
-      char msg3[16];
-      snprintf(msg3, sizeof(msg3), "%.2f", yVelocity);
-      engine.display.drawText(5, 25, msg3, Display::TextOptions().color(BLACK));
+      // char msg3[16];
+      // snprintf(msg3, sizeof(msg3), "%.2f", yVelocity);
+      // engine.display.drawText(5, 25, msg3, Display::TextOptions().color(BLACK));
 
       engine.display.update();
       // ship.render();
@@ -476,11 +478,12 @@ class AsteroidManager : public Actor::Actor {
 public:
   const char *getName() { return "platformManager"; };
 
-  const static int numAsteroids = 6;
+  const static int numAsteroids = 1;
 
   int xVelocityMax = 2;
   int yVelocityMax = 2;
-  int radius = 3;
+  //Casting vel into int so speed is either 1 or 2. Need to fix this but anything above 2 is too hard to dodge
+  int radius = 15;
 
   Asteroid asteroids[numAsteroids];
 
@@ -506,7 +509,31 @@ public:
   void handle(::Actor::Message *message) {
     switch (message->signal) {
     case Kywy::Events::TICK:
-    
+
+    // static int tickCounter = 0;
+    // tickCounter++;
+
+    // if (tickCounter % 2 == 0) { //Not the most elegant solution, makes the frames choppy
+    //   for (int i = 0; i < numAsteroids; i++) {
+    //     asteroids[i].x += asteroids[i].xVel;
+    //     asteroids[i].y += asteroids[i].yVel;
+
+    //     if (asteroids[i].x < 0){
+    //       asteroids[i].x = DISPLAY_WIDTH;
+    //     }
+    //     if (asteroids[i].x > DISPLAY_WIDTH){
+    //       asteroids[i].x = 0;
+    //     }
+    //     if (asteroids[i].y < 0){
+    //       asteroids[i].y = DISPLAY_HEIGHT;
+    //     }
+    //     if (asteroids[i].y > DISPLAY_HEIGHT){
+    //       asteroids[i].y = 0;
+    //     }
+    //   }
+    // }
+
+    //Move asteroids
     for (int i = 0; i < numAsteroids; i++) {
       asteroids[i].x += asteroids[i].xVel;
       asteroids[i].y += asteroids[i].yVel;
@@ -524,6 +551,13 @@ public:
         asteroids[i].y = 0;
       }
     }
+    //Collision
+    for (int i = 0; i < numAsteroids; i++) {
+      if((abs(asteroids[i].x-ship.x) < asteroids[i].radius) or(abs(asteroids[i].y-ship.y) < asteroids[i].radius)){
+        publish(&gameOverMessage);
+      }
+    }
+
 
     drawAsteroids();
     }
@@ -567,8 +601,7 @@ public:
       unsubscribe(&engine.clock);
       subscribe(&engine.input);
 
-      if (score > highScore)
-	highScore = score;
+      if (score > highScore) highScore = score;
 
       engine.display.clear();
       engine.display.drawText(5, 5, "GAME OVER");
@@ -610,6 +643,7 @@ void setup() {
 
   shipManager.subscribe(&engine.input);
   shipManager.subscribe(&engine.clock);
+  shipManager.subscribe(&asteroidManager);
   shipManager.start();
 
   asteroidManager.subscribe(&engine.clock);
