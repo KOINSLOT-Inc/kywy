@@ -381,6 +381,11 @@ public:
         buttonDownPressed = false;
         break;
 
+      // case Kywy::Events::BUTTON_LEFT_PRESSED:
+      //   // engine.display.drawCircle(xPosition,yPosition,10);
+      //   break;
+
+
       case Kywy::Events::TICK:
       if (buttonUpPressed){
         xVelocity += acceleration * cos(shipAngle * 3.14159265358979323846/180.0f);
@@ -432,10 +437,16 @@ public:
       }
       ship.setPosition(xPosition,yPosition);
       engine.display.clear();
-      engine.display.drawLine(xPosition,yPosition,20.0,shipAngle*M_PI/180.0f);
-      int width = 20;
-      int height = 20;
-      engine.display.fillRectangle(xPosition-width/2,yPosition-height/2,width,height);
+      
+      // engine.display.drawLine(xPosition,yPosition,-10.0,(shipAngle+15)*M_PI/180.0f);
+      // engine.display.drawLine(xPosition,yPosition,+10.0,(shipAngle+15)*M_PI/180.0f);
+      // engine.display.drawLine(xPosition,yPosition+5,-10.0,(shipAngle-15)*M_PI/180.0f);
+      // engine.display.drawLine(xPosition,yPosition+5,+10.0,(shipAngle-15)*M_PI/180.0f);
+      // engine.display.fillCircle(xPosition, yPosition, 5);
+      engine.display.drawLine(xPosition,yPosition,-20.0,(shipAngle-15)*M_PI/180.0f);
+      engine.display.drawLine(xPosition,yPosition,-20.0,(shipAngle+15)*M_PI/180.0f);
+
+
 
       char msg[16];
       snprintf(msg, sizeof(msg), "%.2f", shipAngle);
@@ -457,6 +468,68 @@ public:
   }
 } shipManager;
 
+typedef struct Asteroid {
+  int x, y, radius,xVel,yVel;
+} Asteroid;
+
+class AsteroidManager : public Actor::Actor {
+public:
+  const char *getName() { return "platformManager"; };
+
+  const static int numAsteroids = 6;
+
+  int xVelocityMax = 2;
+  int yVelocityMax = 2;
+  int radius = 3;
+
+  Asteroid asteroids[numAsteroids];
+
+  void initialize() {
+    for (int i = 0; i < numAsteroids; i++) {
+      asteroids[i] = Asteroid{
+            .x = (int)random(DISPLAY_WIDTH),
+            .y = (int)random(DISPLAY_HEIGHT),
+            .radius = radius,
+            .xVel = random(-xVelocityMax,xVelocityMax),
+            .yVel = random(-yVelocityMax,yVelocityMax)};
+    }
+    
+  }
+  void drawAsteroids() {
+    for (int i = 0; i < numAsteroids; i++) {
+      if (asteroids[i].y >= 0 && asteroids[i].y <= DISPLAY_HEIGHT) {
+        engine.display.drawCircle(asteroids[i].x, asteroids[i].y, 2 * asteroids[i].radius);
+      }
+    }
+  }
+
+  void handle(::Actor::Message *message) {
+    switch (message->signal) {
+    case Kywy::Events::TICK:
+    
+    for (int i = 0; i < numAsteroids; i++) {
+      asteroids[i].x += asteroids[i].xVel;
+      asteroids[i].y += asteroids[i].yVel;
+
+      if (asteroids[i].x < 0){
+        asteroids[i].x = DISPLAY_WIDTH;
+      }
+      if (asteroids[i].x > DISPLAY_WIDTH){
+        asteroids[i].x = 0;
+      }
+      if (asteroids[i].y < 0){
+        asteroids[i].y = DISPLAY_HEIGHT;
+      }
+      if (asteroids[i].y > DISPLAY_HEIGHT){
+        asteroids[i].y = 0;
+      }
+    }
+
+    drawAsteroids();
+    }
+  }
+} asteroidManager;
+
 class GameManager : public Actor::Actor {
 public:
   const char *getName() { return "gameManager"; };
@@ -476,6 +549,7 @@ public:
     switch (message->signal) {
     case START_SCREEN: {
       shipManager.unsubscribe(&engine.clock);
+      asteroidManager.unsubscribe(&engine.clock);
       unsubscribe(&engine.clock);
       engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)asteroidSplashScreen);
       engine.display.update();
@@ -489,6 +563,7 @@ public:
       break;
     case GAME_OVER: {
       shipManager.unsubscribe(&engine.clock);
+      asteroidManager.unsubscribe(&engine.clock);
       unsubscribe(&engine.clock);
       subscribe(&engine.input);
 
@@ -510,6 +585,7 @@ public:
     case Kywy::Events::INPUT_PRESSED: {
       unsubscribe(&engine.input);
 
+      asteroidManager.initialize();
       ship.setPosition(84, 72);
 
       score = 0;
@@ -517,6 +593,7 @@ public:
       engine.display.clear();
 
       shipManager.subscribe(&engine.clock);
+      asteroidManager.subscribe(&engine.clock);
       subscribe(&engine.clock);
       break;
     }
@@ -534,6 +611,9 @@ void setup() {
   shipManager.subscribe(&engine.input);
   shipManager.subscribe(&engine.clock);
   shipManager.start();
+
+  asteroidManager.subscribe(&engine.clock);
+  asteroidManager.start();
 
   gameManager.subscribe(&shipManager);
   gameManager.subscribe(&engine.clock);
