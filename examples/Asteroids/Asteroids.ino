@@ -408,34 +408,34 @@ public:
       xVelocity *= friction;
       yVelocity *= friction;
 
-      if (xPosition < -1*spriteWidth){
+      if (xPosition < 0){
         xPosition = DISPLAY_WIDTH;
       }
       if (xPosition > DISPLAY_WIDTH){
-        xPosition = -1*spriteWidth;
-        }
+        xPosition = DISPLAY_WIDTH;
+      }
       if (yPosition > DISPLAY_HEIGHT){
         yPosition = 0;
-        }
+      }
       if (yPosition < 0){
         yPosition = DISPLAY_HEIGHT;
-        }
+      }
       
       frameCounter++;
       //frame rotate
       if (frameCounter >= frameDelay) {
         frameCounter = 0;
 
-      if (buttonRightPressed or buttonUpPressed){ 
-        currentFrame = (currentFrame + 1) % totalFrames; 
-        ship.setFrame(currentFrame);
-        // ship.render();
-      }
-      if (buttonLeftPressed or buttonDownPressed){ 
-        currentFrame = (currentFrame - 1 + totalFrames) % totalFrames; 
-        ship.setFrame(currentFrame);
-        // ship.render();
-      }
+        if (buttonRightPressed or buttonUpPressed){ 
+          currentFrame = (currentFrame + 1) % totalFrames; 
+          ship.setFrame(currentFrame);
+          // ship.render();
+        }
+        if (buttonLeftPressed or buttonDownPressed){ 
+          currentFrame = (currentFrame - 1 + totalFrames) % totalFrames; 
+          ship.setFrame(currentFrame);
+          // ship.render();
+        }
       }
       ship.setPosition(xPosition,yPosition);
       engine.display.clear();
@@ -463,7 +463,7 @@ public:
       // engine.display.drawText(5, 25, msg3, Display::TextOptions().color(BLACK));
 
       engine.display.update();
-      // ship.render();
+      ship.render();
       break;
 
     }
@@ -483,7 +483,7 @@ public:
   int xVelocityMax = 2;
   int yVelocityMax = 2;
   //Casting vel into int so speed is either 1 or 2. Need to fix this but anything above 2 is too hard to dodge
-  int radius = 3;
+  int radius = 10;
 
   Asteroid asteroids[numAsteroids];
 
@@ -553,7 +553,12 @@ public:
     }
     //Collision
     for (int i = 0; i < numAsteroids; i++) {
-      if((abs(asteroids[i].x-ship.x) < asteroids[i].radius) or(abs(asteroids[i].y-ship.y) < asteroids[i].radius)){
+
+      char msg2[16];
+      snprintf(msg2, sizeof(msg2), "%.2f", ship.x);
+      engine.display.drawText(5, 15, msg2, Display::TextOptions().color(BLACK));
+
+      if((abs(asteroids[i].x-ship.x) < asteroids[i].radius) or (abs(asteroids[i].y-ship.y) < asteroids[i].radius)){
         publish(&gameOverMessage);
       }
     }
