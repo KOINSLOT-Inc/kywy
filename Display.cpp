@@ -111,137 +111,10 @@ bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
   return true;
 }
 
-void MBED_SPI_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
-                                     uint16_t height, uint16_t color) {
-  if (!cropBlock(x, y, width, height))
-    return; // no overlap between block and screen
-
-  // top left corner of the cropped block
-  uint8_t *buffer = MBED_SPI_DRIVER_BUFFER + (18 * y) + (x / 8);
-  int bit = x % 8;
-
-  //                                   bitmap width
-  //                   |-------------------------------------------|
-  //    buffer ->  ________ ________ ________ ________ ________ ________
-  //
-  //                   |--| |---------------------------------| |--|
-  //                    ^                                         ^
-  //  splitLeft = true _|             innerBytes = 4              |_ splitRight
-  //  = true
-
-  int splitLeftBits =
-      8 - x % 8; // how many bits of the left most byte column need to be filled
-  splitLeftBits =
-      splitLeftBits == 8
-          ? 0
-          : splitLeftBits; // if we have a whole column on the left just include
-                           // it as part of the inner bytes
-  int splitRightBits =
-      (x + width) %
-      8; // how many bits of the right most byte column need to be filled
-  uint16_t innerBytes =
-      (width - splitLeftBits - splitRightBits) /
-      8; // how many bytes are between the right and left column
-
-  // special case where the block only takes up a single column, e.g.
-  // 0b00000000
-  // 0b00011100
-  // 0b00011100
-  // 0b00011100
-  // 0b00000000
-  bool singleColumn = width <= (8 - bit);
-
-  // precompute colors
-  uint8_t leftColumnColor, innerColor, rightColumnColor;
-  if (color) {
-    leftColumnColor =
-        0xff >> (8 - splitLeftBits); // OR mask, e.g. if splitLeftBits == 2 then
-                                     // leftColumnColor == 0b00000011
-    innerColor = 0xff;
-    rightColumnColor =
-        0xff << (8 - splitRightBits); // OR mask, e.g. if splitRightBits == 2
-                                      // then rightColumnColor == 0b11000000
-
-    if (singleColumn) {
-      innerColor = (splitLeftBits == 0 ? 0xff : leftColumnColor) &
-                   (splitRightBits == 0 ? 0xff : rightColumnColor);
-    }
-  } else {
-    leftColumnColor =
-        0xff << splitLeftBits; // AND mask, e.g. if splitLeftBits == 2 then
-                               // leftColumnColor == 0b11111100
-    innerColor = 0x00;
-    rightColumnColor =
-        0xff >> splitRightBits; // AND mask, e.g. if splitRightBits == 2 then
-                                // rightColumnColor == 0b00111111
-
-    if (singleColumn) {
-      innerColor = (splitLeftBits == 0 ? 0x00 : leftColumnColor) |
-                   (splitRightBits == 0 ? 0x00 : rightColumnColor);
-    }
-  }
-
-  // distance to increment buffer to wrap from end of block to beginning of
-  // block on next line
-  uint16_t wrapDistance =
-      18 - innerBytes - (splitLeftBits ? 1 : 0) - (splitRightBits ? 1 : 0);
-
-  if (color) {
-    for (int16_t j = 0; j < height; j++) {
-      if (singleColumn) {
-        *buffer = *buffer | innerColor;
-        buffer += wrapDistance + 1;
-        continue;
-      }
-
-      if (splitLeftBits) { // fill left edge
-        *buffer = *buffer | leftColumnColor;
-        buffer++;
-      }
-
-      if (innerBytes) {
-        memset(buffer, 0xff, innerBytes);
-        buffer += innerBytes;
-      }
-
-      if (splitRightBits) { // fill right edge
-        *buffer = *buffer | rightColumnColor;
-        buffer++;
-      }
-
-      buffer += wrapDistance;
-    }
-  } else {
-    for (int16_t j = 0; j < height; j++) {
-      if (singleColumn) {
-        *buffer = *buffer & innerColor;
-        buffer += wrapDistance + 1;
-        continue;
-      }
-
-      if (splitLeftBits) { // fill left edge
-        *buffer = *buffer & leftColumnColor;
-        buffer++;
-      }
-
-      if (innerBytes) {
-        memset(buffer, 0x00, innerBytes);
-        buffer += innerBytes;
-      }
-
-      if (splitRightBits) { // fill right edge
-        *buffer = *buffer & rightColumnColor;
-        buffer++;
-      }
-
-      buffer += wrapDistance;
-    }
-  }
-}
-
-void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
-                                          uint16_t height, uint8_t *bitmap,
-                                          BitmapOptions options) {
+void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t width,
+                                                 uint16_t height, uint8_t *bitmap,
+                                                 BitmapOptions options,
+                                                 bool block, uint16_t blockColor) {
 
   // we can write from an arbitrary chunk of the bitmap to an arbitrary chunk of
   // the screen buffer
@@ -295,9 +168,13 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
       uint8_t bitsWritten;
       uint8_t mask; // identifies the part of the byte column we want to write
 
-      byteToWrite =
-          ((*(bitmap + (bitmapBitIndex / 8)) << (bitmapBitIndex % 8)) |
-           (*(bitmap + (bitmapBitIndex / 8) + 1) >> (8 - bitmapBitIndex % 8)));
+      if (block) {
+        byteToWrite = blockColor;
+      } else {
+        byteToWrite =
+            ((*(bitmap + (bitmapBitIndex / 8)) << (bitmapBitIndex % 8)) |
+             (*(bitmap + (bitmapBitIndex / 8) + 1) >> (8 - bitmapBitIndex % 8)));
+      }
 
       if (options.getNegative()) {
         byteToWrite = ~byteToWrite;
@@ -355,9 +232,9 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
         }
       } else {
         if (options.getColor()) {
-          *buffer = ~byteToWrite;
+          *buffer = (*buffer & ~mask) | (~byteToWrite & mask);
         } else {
-          *buffer = byteToWrite;
+          *buffer = (*buffer & ~mask) | (byteToWrite & mask);
         }
       }
 
@@ -371,6 +248,16 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
     bitmapBitIndex += bitmapWidth - width;
     buffer += bufferWrapDistance;
   }
+}
+
+void MBED_SPI_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color) {
+  writeBitmapOrBlockToBuffer(x, y, width, height, nullptr, BitmapOptions().opaque(true), true, color);
+}
+
+void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
+                                                 uint16_t height, uint8_t *bitmap,
+                                                 BitmapOptions options) {
+  writeBitmapOrBlockToBuffer(x, y, width, height, bitmap, options, false, 0x00);
 }
 
 } // namespace Driver

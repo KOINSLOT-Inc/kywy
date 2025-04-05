@@ -6,13 +6,8 @@
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH  144
-#define DISPLAY_HEIGHT 168
-#define BLACK          0x0
-#define WHITE          0xf
-
 const uint8_t splashScreen[] = {
-    0x3f, 0x7c, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0x3f, 0x7c, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xc9, 0xf9, 0xf2, 0x3e, 0x79, 0x3e, 0xfb, 0x7d, 0xb6,
   0xdb, 0x6d, 0xb6, 0xdb, 0xf6, 0xfe, 0xdb, 0x6f, 0x7b, 0xcf, 0xf8, 0xdb,
   0x7c, 0xf2, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xdf,
@@ -286,31 +281,29 @@ public:
 
   static const int screenBorder = 2;
   static const int blockSize = sectionSize + sectionSeparation;
-  static const int rows = DISPLAY_HEIGHT / blockSize;
-  static const int columns = DISPLAY_WIDTH / blockSize;
+  static const int rows = KYWY_DISPLAY_HEIGHT / blockSize;
+  static const int columns = KYWY_DISPLAY_WIDTH / blockSize;
   static const int numBlocks = rows * columns;
   static const int minBlockX = screenBorder;
   static const int minBlockY = screenBorder;
   static const int maxBlockX = screenBorder + blockSize * (columns - 1);
   static const int maxBlockY = screenBorder + blockSize * (rows - 1);
 
-  int sectionX[numBlocks + 1] = {0};
-  int sectionY[numBlocks + 1] = {0};
+  int sectionX[numBlocks + 1] = { 0 };
+  int sectionY[numBlocks + 1] = { 0 };
 
   int foodX = 0;
   int foodY = 0;
 
   int length = 2;
 
-  const char *getName() { return "gameManager"; };
-
   void drawHead() {
     engine.display.fillRectangle(sectionX[length - 1], sectionY[length - 1], sectionSize, sectionSize);
   };
-  
+
   void drawTail() {
     engine.display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize);
-  };  
+  };
 
   void eraseTail() {
     engine.display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize, Display::Object2DOptions().color(WHITE));
@@ -327,14 +320,14 @@ public:
     // add new head
     sectionX[length] = sectionX[length - 1] + blockSize * xDirection;
     sectionY[length] = sectionY[length - 1] + blockSize * yDirection;
-        
+
     // handle wrap around
     if (sectionX[length] > maxBlockX) {
       sectionX[length] = screenBorder;
     } else if (sectionX[length] < minBlockX) {
       sectionX[length] = maxBlockX;
     }
-    
+
     if (sectionY[length] > maxBlockY) {
       sectionY[length] = screenBorder;
     } else if (sectionY[length] < minBlockY) {
@@ -413,9 +406,9 @@ public:
     newYDirection = 0;
 
     // set up initial head and tail
-    sectionX[0] = screenBorder; // tail
+    sectionX[0] = screenBorder;  // tail
     sectionY[0] = screenBorder;
-    sectionX[1] = screenBorder + blockSize; // head
+    sectionX[1] = screenBorder + blockSize;  // head
     sectionY[1] = screenBorder;
 
     length = 2;
@@ -429,67 +422,67 @@ public:
 
   void initialize() {
     gameOver = true;
-    engine.display.drawBitmap(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, (uint8_t *)splashScreen);
+    engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
     engine.display.update();
     subscribe(&engine.input);
   }
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case Kywy::Events::D_PAD_LEFT_PRESSED:
-      if (xDirection != 1) {
-        newXDirection = -1;
-        newYDirection = 0;
-      }
-      break;
-    case Kywy::Events::D_PAD_RIGHT_PRESSED:
-      if (xDirection != -1) {
-        newXDirection = 1;
-        newYDirection = 0;
-      }
-      break;
-    case Kywy::Events::D_PAD_UP_PRESSED:
-      if (yDirection != 1) {
-        newXDirection = 0;
-        newYDirection = -1;
-      }
-      break;
-    case Kywy::Events::D_PAD_DOWN_PRESSED:
-      if (yDirection != -1) {
-        newXDirection = 0;
-        newYDirection = 1;
-      }
-      break;
-    case Kywy::Events::TICK:
-      ticksSinceLastMove++;
+      case Kywy::Events::D_PAD_LEFT_PRESSED:
+        if (xDirection != 1) {
+          newXDirection = -1;
+          newYDirection = 0;
+        }
+        break;
+      case Kywy::Events::D_PAD_RIGHT_PRESSED:
+        if (xDirection != -1) {
+          newXDirection = 1;
+          newYDirection = 0;
+        }
+        break;
+      case Kywy::Events::D_PAD_UP_PRESSED:
+        if (yDirection != 1) {
+          newXDirection = 0;
+          newYDirection = -1;
+        }
+        break;
+      case Kywy::Events::D_PAD_DOWN_PRESSED:
+        if (yDirection != -1) {
+          newXDirection = 0;
+          newYDirection = 1;
+        }
+        break;
+      case Kywy::Events::TICK:
+        ticksSinceLastMove++;
 
-      if (ticksSinceLastMove >= ticksPerMove) {
-        xDirection = newXDirection;
-        yDirection = newYDirection;
-        moveSnake();
-        ticksSinceLastMove = 0;
-        engine.display.update();
-      }
-      break;
-    case Kywy::Events::BUTTON_LEFT_PRESSED:
-      if (!gameOver) {
+        if (ticksSinceLastMove >= ticksPerMove) {
+          xDirection = newXDirection;
+          yDirection = newYDirection;
+          moveSnake();
+          ticksSinceLastMove = 0;
+          engine.display.update();
+        }
         break;
-      }      
-      
-      engine.display.clear();
-      startGame();
-      subscribe(&engine.clock);
-      break;
-    case Kywy::Events::INPUT_PRESSED:
-      if (!startScreen) {
+      case Kywy::Events::BUTTON_LEFT_PRESSED:
+        if (!gameOver) {
+          break;
+        }
+
+        engine.display.clear();
+        startGame();
+        subscribe(&engine.clock);
         break;
-      }
-      
-      startScreen = false;
-      engine.display.clear();
-      startGame();
-      subscribe(&engine.clock);
-      break;
+      case Kywy::Events::INPUT_PRESSED:
+        if (!startScreen) {
+          break;
+        }
+
+        startScreen = false;
+        engine.display.clear();
+        startGame();
+        subscribe(&engine.clock);
+        break;
     }
   }
 

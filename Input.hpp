@@ -19,17 +19,13 @@ namespace Kywy {
 
 class Input : public Actor::Actor {
 private:
-  bool buttonLeftPressed;
-  bool buttonRightPressed;
-  bool dPadLeftPressed;
-  bool dPadRightPressed;
-  bool dPadUpPressed;
-  bool dPadDownPressed;
-  bool dPadCenterPressed;
-
-public:
-  void initialize();
-  void handle(::Actor::Message *message);
+  bool _buttonLeftPressed;
+  bool _buttonRightPressed;
+  bool _dPadLeftPressed;
+  bool _dPadRightPressed;
+  bool _dPadUpPressed;
+  bool _dPadDownPressed;
+  bool _dPadCenterPressed;
 
   ::Actor::Message inputMessage;
   ::Actor::Message inputPressedMessage;
@@ -50,6 +46,18 @@ public:
   ::Actor::Message dPadDownReleasedMessage;
   ::Actor::Message dPadCenterPressedMessage;
   ::Actor::Message dPadCenterReleasedMessage;
+
+public:
+  void initialize();
+  void handle(::Actor::Message *message);
+
+  bool buttonLeftPressed;
+  bool buttonRightPressed;
+  bool dPadLeftPressed;
+  bool dPadRightPressed;
+  bool dPadUpPressed;
+  bool dPadDownPressed;
+  bool dPadCenterPressed;
 };
 
 } // namespace Kywy
