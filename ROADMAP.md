@@ -74,6 +74,7 @@ Items:
   * also linking for any other file types we have
 * (L) Build & Test Locally and in Pipelines
   * (L) runners with Kywy hardware
+* (M) Local developer workflow: how to easily update the engine and examples without lots of copying back and forth
 * (M) Get library added to Arduino IDE for trivial installs
 * (L) UAT & Address Feedback
 * (S) Sync practices in examples to make sure we have a consistent style
