@@ -23,10 +23,10 @@
 #define KYWY_DISPLAY_CS 17
 #define KYWY_DISPLAY_DISP 22
 
-#define KYWI_DISPLAY_WIDTH 144
-#define KYWI_DISPLAY_HEIGHT 168
+#define KYWY_DISPLAY_WIDTH 144
+#define KYWY_DISPLAY_HEIGHT 168
 #define BLACK 0x00
-#define WHITE 0x00
+#define WHITE 0xff
 
 namespace Display {
 
@@ -220,9 +220,16 @@ public:
   void setRotation(Rotation rotation);
 
   void setBufferPixel(int16_t x, int16_t y, uint16_t color);
+
+  void writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t width,
+                           uint16_t height, uint8_t *bitmap,
+                           BitmapOptions options = BitmapOptions(),
+                           bool block = false, uint16_t blockColor = 0x00);
+
+
+  // inherits from the utility function above
   void setBufferBlock(int16_t x, int16_t y, uint16_t width, uint16_t height,
                       uint16_t color);
-
   void writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
                            uint16_t height, uint8_t *bitmap,
                            BitmapOptions options = BitmapOptions());
