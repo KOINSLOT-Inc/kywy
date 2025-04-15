@@ -8,17 +8,17 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: arduino/arduino-lint-action@v2
-        with:
-          compliance: strict
-          recursive: true
+    - uses: actions/checkout@v4
+    - uses: arduino/arduino-lint-action@v2
+      with:
+        compliance: strict
+        recursive: true
   compile-sketches:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: arduino/compile-sketches@v1
-        with:
-          fqbn: "arduino:mbed_rp2040:pico"
-          enable-warnings-report: true
-          enable-deltas-report: true
+    - uses: actions/checkout@v4
+    - uses: arduino/compile-sketches@v1
+      with:
+        fqbn: "arduino:mbed_rp2040:pico"
+        enable-warnings-report: true
+        enable-deltas-report: true

@@ -22,3 +22,16 @@ IDE for formatting files (`<cmd/ctrl-T>`) and the IDE's built in LSP for easy co
 
 You are also welcome to use whatever text editor you prefer for editing library files. We recommend the IDE here only
 because it requires the fewest external dependencies/installs to get editor tooling.
+
+## Releases
+
+Tagging and releases are automatically managed by workflows and happen every time a PR is made.
+
+Tagging is managed by: https://github.com/anothrNick/github-tag-action
+
+Notes:
+* defaults to a minor bump
+* can select major, minor, patch, or no bump by including `#major`, `#minor`, `#patch`, or `#none` respectively in a
+  commit message.
+
+Releases created automatically after tags.

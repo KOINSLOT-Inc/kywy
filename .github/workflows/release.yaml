@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Release
+on:
+  pull_request:
+    types:
+    - closed
+    branches:
+    - main
+jobs:
+  version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+    - name: check out with tags
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.merge_commit_sha }}
+        fetch-depth: '0'
+    - name: bump version
+      uses: anothrNick/github-tag-action@1.71.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        INITIAL_VERSION: 1.0.0
+
+  release:
+    if: github.event.pull_request.merged == true && (jobs.version.outputs.new_tag != jobs.version.outputs.old_tag)
+    needs: version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: check out with tags
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: create release
+      uses: marvinpinto/action-automatic-releases@v1.2.1
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        prerelease: false
+        automatic_release_tag: ${{ jobs.version.outputs.new_tag }}
