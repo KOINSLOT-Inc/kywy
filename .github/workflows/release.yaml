@@ -29,8 +29,8 @@ jobs:
         INITIAL_VERSION: 1.0.0
 
   release:
-    if: github.event.pull_request.merged == true && (jobs.version.outputs.new_tag != jobs.version.outputs.old_tag)
     needs: version
+    if: github.event.pull_request.merged == true && (needs.version.outputs.new_tag != needs.version.outputs.old_tag)
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,4 +44,4 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         prerelease: false
-        automatic_release_tag: ${{ jobs.version.outputs.new_tag }}
+        automatic_release_tag: ${{ needs.version.outputs.new_tag }}
