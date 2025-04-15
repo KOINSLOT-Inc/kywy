@@ -487,7 +487,6 @@ public:
           score += 1;
           drawScore();
 
-          unsigned long updateStart = millis();
           engine.display.update();
 
           break;

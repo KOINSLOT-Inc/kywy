@@ -20,5 +20,5 @@ jobs:
       - uses: arduino/compile-sketches@v1
         with:
           fqbn: "arduino:mbed_rp2040:pico"
-          libraries: |
-            - source-path: ./
+          enable-warnings-report: true
+          enable-deltas-report: true
