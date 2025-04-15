@@ -71,7 +71,7 @@ that it is enjoyable to learn and use.
 Items:
 * (M) Formatting/Linting: Arduino has a [lint action](https://github.com/arduino/arduino-lint-action) we can use in
   pipelines and an [LSP](https://github.com/arduino/arduino-language-server) we can use locally.
-  * also linking for any other file types we have
+  * also linting for any other file types we have
 * (L) Build & Test Locally and in Pipelines
   * (L) runners with Kywy hardware
 * (M) Local developer workflow: how to easily update the engine and examples without lots of copying back and forth
