@@ -5,6 +5,8 @@
 #ifndef KYWY_LIB_CLOCK
 #define KYWY_LIB_CLOCK 1
 
+#include <chrono>
+
 #include "Actor.hpp"
 
 namespace Kywy {
@@ -12,7 +14,7 @@ namespace Kywy {
 class Clock : public Actor::Actor {
 private:
   // The number of ms between a Clock tick
-  int tickDuration = 33;
+  std::chrono::milliseconds tickDuration = std::chrono::milliseconds(33);
 
   // Software queue used to trigger ticks periodically
   events::EventQueue clock;

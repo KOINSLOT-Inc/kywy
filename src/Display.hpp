@@ -176,6 +176,7 @@ class Driver {
 public:
   Driver() {};
   Driver(PinMap pins) : pins(pins) {};
+  virtual ~Driver() {};
 
   PinMap pins;
   virtual uint16_t getWidth() = 0;
@@ -222,10 +223,10 @@ public:
   void setBufferPixel(int16_t x, int16_t y, uint16_t color);
 
   void writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t width,
-                           uint16_t height, uint8_t *bitmap,
-                           BitmapOptions options = BitmapOptions(),
-                           bool block = false, uint16_t blockColor = 0x00);
-
+                                  uint16_t height, uint8_t *bitmap,
+                                  BitmapOptions options = BitmapOptions(),
+                                  bool block = false,
+                                  uint16_t blockColor = 0x00);
 
   // inherits from the utility function above
   void setBufferBlock(int16_t x, int16_t y, uint16_t width, uint16_t height,
@@ -287,9 +288,9 @@ public:
   void drawBitmap(int16_t x, int16_t y, uint16_t width, uint16_t height,
                   uint8_t *bitmap, BitmapOptions options = BitmapOptions());
 
-  void drawText(int16_t x, int16_t y, char *text,
+  void drawText(int16_t x, int16_t y, const char *text,
                 TextOptions options = TextOptions());
-  void getTextSize(char *text, uint16_t &width, uint16_t &height,
+  void getTextSize(const char *text, uint16_t &width, uint16_t &height,
                    TextOptions options = TextOptions());
   void setFont(uint8_t *font);
 
@@ -312,11 +313,11 @@ private:
 
   // read the first UTF-8 character from a string and advance the string pointer
   // however many bytes the character spans
-  uint16_t readUTF8Char(char *&string);
+  uint16_t readUTF8Char(const char *&string);
 
   // also sets the font origin X and Y offset from the top left corner of the
   // string bounding box
-  void getTextSize(uint8_t *fontData, char *text, uint16_t &width,
+  void getTextSize(uint8_t *fontData, const char *text, uint16_t &width,
                    uint16_t &height, int16_t &originXOffset,
                    int16_t &originYOffset, uint16_t &baselineLength);
 };

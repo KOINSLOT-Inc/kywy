@@ -4,3 +4,8 @@
 
 .DS_Store
 .gitconfig
+.venv
+.cache
+.gitconfig
+.development
+src/src.ino
