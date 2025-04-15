@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -487,7 +487,6 @@ public:
           score += 1;
           drawScore();
 
-          unsigned long updateStart = millis();
           engine.display.update();
 
           break;

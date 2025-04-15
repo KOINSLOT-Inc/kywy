@@ -64,7 +64,7 @@ Character Font::getCharacter(uint16_t character) {
 
 } // namespace Font
 
-uint16_t Display::readUTF8Char(char *&string) {
+uint16_t Display::readUTF8Char(const char *&string) {
   uint16_t firstByte = string[0];
 
   // end of string
@@ -97,7 +97,7 @@ uint16_t Display::readUTF8Char(char *&string) {
   return firstByte;
 };
 
-void Display::getTextSize(uint8_t *font, char *text, uint16_t &width,
+void Display::getTextSize(uint8_t *font, const char *text, uint16_t &width,
                           uint16_t &height, int16_t &originXOffset,
                           int16_t &originYOffset, uint16_t &baselineLength) {
   width = 0;
@@ -151,7 +151,7 @@ void Display::getTextSize(uint8_t *font, char *text, uint16_t &width,
 
 void Display::setFont(uint8_t *font) { defaultFont = font; }
 
-void Display::getTextSize(char *text, uint16_t &width, uint16_t &height,
+void Display::getTextSize(const char *text, uint16_t &width, uint16_t &height,
                           TextOptions options) {
   if (options.getFont() == nullptr) {
     options = options.font(defaultFont);
@@ -163,7 +163,8 @@ void Display::getTextSize(char *text, uint16_t &width, uint16_t &height,
               originYOffset, baselineLength);
 };
 
-void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
+void Display::drawText(int16_t x, int16_t y, const char *text,
+                       TextOptions options) {
   if (options.getFont() == nullptr) {
     options = options.font(defaultFont);
   }
@@ -231,7 +232,8 @@ void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
                currentChar.bbxWidth + (8 - currentChar.bbxWidth % 8),
                currentChar.bbxHeight, currentChar.bitmap,
                BitmapOptions()
-                   .negative(true) // serialized format is 1==black, 0==white, but we need to flip that
+                   .negative(true) // serialized format is 1==black, 0==white,
+                                   // but we need to flip that
                    .color(options.getColor())
                    .origin(Origin::Object2D::BOTTOM_LEFT));
 

@@ -111,10 +111,9 @@ bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
   return true;
 }
 
-void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t width,
-                                                 uint16_t height, uint8_t *bitmap,
-                                                 BitmapOptions options,
-                                                 bool block, uint16_t blockColor) {
+void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
+    int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
+    BitmapOptions options, bool block, uint16_t blockColor) {
 
   // we can write from an arbitrary chunk of the bitmap to an arbitrary chunk of
   // the screen buffer
@@ -139,9 +138,6 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t 
   uint8_t bufferBitsNotToWriteToInLeftByteColumn = x % 8;
   uint8_t bufferBitsToWriteToInLeftByteColumn = 8 - x % 8;
 
-  uint8_t bitmapBitsNotToWriteInLeftByteColumn = bitmapX % 8;
-  uint8_t bitmapBitsToWriteInLeftByteColumn = 8 - bitmapX % 8;
-
   // buffer wrap distance calculation
   int splitLeftBits =
       8 - x % 8; // how many bits of the left most byte column need to be filled
@@ -165,15 +161,17 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t 
 
     while (bitsLeftToWrite) {
       uint8_t byteToWrite;
-      uint8_t bitsWritten;
-      uint8_t mask; // identifies the part of the byte column we want to write
+      uint8_t bitsWritten = 0;
+      uint8_t mask =
+          0x00; // identifies the part of the byte column we want to write
 
       if (block) {
         byteToWrite = blockColor;
       } else {
         byteToWrite =
             ((*(bitmap + (bitmapBitIndex / 8)) << (bitmapBitIndex % 8)) |
-             (*(bitmap + (bitmapBitIndex / 8) + 1) >> (8 - bitmapBitIndex % 8)));
+             (*(bitmap + (bitmapBitIndex / 8) + 1) >>
+              (8 - bitmapBitIndex % 8)));
       }
 
       if (options.getNegative()) {
@@ -189,11 +187,15 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t 
                                                     // to match starting bit of
                                                     // buffer byte column
 
-        mask = 0xff >> bufferBitsNotToWriteToInLeftByteColumn;  // mask of left side since this is a partial column
-        mask &= 0xff
+        mask =
+            0xff >>
+            bufferBitsNotToWriteToInLeftByteColumn; // mask of left side since
+                                                    // this is a partial column
+        mask &=
+            0xff
             << (8 -
                 (bufferBitsNotToWriteToInLeftByteColumn +
-                 width)); // mask off right side since this is a partial column 
+                 width)); // mask off right side since this is a partial column
 
         bitsWritten = width;
 
@@ -205,7 +207,8 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t 
                                                     // to match starting bit of
                                                     // buffer byte column
 
-        mask = 0xff >> bufferBitsNotToWriteToInLeftByteColumn; // mask off left side
+        mask = 0xff >>
+               bufferBitsNotToWriteToInLeftByteColumn; // mask off left side
 
         bitsWritten = bufferBitsToWriteToInLeftByteColumn;
 
@@ -216,9 +219,8 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t 
         bitsWritten = 8;
 
         // we're writing the rightmost column
-      } else if (bitsLeftToWrite > 0 & bitsLeftToWrite < 8) {
-        mask = 0xff
-          << (8 - bitsLeftToWrite); // mask off right side
+      } else if ((bitsLeftToWrite > 0) & (bitsLeftToWrite < 8)) {
+        mask = 0xff << (8 - bitsLeftToWrite); // mask off right side
 
         bitsWritten = bitsLeftToWrite;
       }
@@ -250,13 +252,15 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(int16_t x, int16_t y, uint16_t 
   }
 }
 
-void MBED_SPI_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color) {
-  writeBitmapOrBlockToBuffer(x, y, width, height, nullptr, BitmapOptions().opaque(true), true, color);
+void MBED_SPI_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
+                                     uint16_t height, uint16_t color) {
+  writeBitmapOrBlockToBuffer(x, y, width, height, nullptr,
+                             BitmapOptions().opaque(true), true, color);
 }
 
 void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
-                                                 uint16_t height, uint8_t *bitmap,
-                                                 BitmapOptions options) {
+                                          uint16_t height, uint8_t *bitmap,
+                                          BitmapOptions options) {
   writeBitmapOrBlockToBuffer(x, y, width, height, bitmap, options, false, 0x00);
 }
 
