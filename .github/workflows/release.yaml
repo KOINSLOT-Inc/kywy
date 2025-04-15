@@ -30,7 +30,7 @@ jobs:
 
   release:
     needs: version
-    if: github.event.pull_request.merged == true && (jobs.version.outputs.new_tag != jobs.version.outputs.old_tag)
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
