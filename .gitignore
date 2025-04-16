@@ -9,3 +9,4 @@
 .gitconfig
 .development
 src/src.ino
+.nvim.lua
