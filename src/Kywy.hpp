@@ -28,11 +28,11 @@ public:
   Input input;
   Display::Display display;
   Battery battery;
-  
+
 private:
   Display::Driver::Driver *displayDriver;
 };
 
-} // namespace Kywy
+}  // namespace Kywy
 
 #endif

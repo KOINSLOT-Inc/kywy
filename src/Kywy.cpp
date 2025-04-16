@@ -11,10 +11,10 @@ void Engine::start() {
   display = Display::Display(displayDriver);
 
   Actor::Actor::start();
-  
+
   clock.start();
-  
-  input.subscribe(&clock); // get inputs for every tick
+
+  input.subscribe(&clock);  // get inputs for every tick
   input.start();
 
   display.setup();
@@ -31,12 +31,13 @@ void Engine::handle(::Actor::Message *message) {
   }
 
   switch (message->signal) {
-  default: { // forward to subcomponent actors
-    clock.dispatch(message);
-    input.dispatch(message);
-    break;
-  }
+    default:
+      {  // forward to subcomponent actors
+        clock.dispatch(message);
+        input.dispatch(message);
+        break;
+      }
   }
 };
 
-} // namespace Kywy
+}  // namespace Kywy

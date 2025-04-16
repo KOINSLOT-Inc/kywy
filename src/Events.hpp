@@ -13,10 +13,10 @@ typedef enum : int {
   SET_TICK_DURATION,
 
   // Input Events
-  INPUT, // used for "any button" interactions
-  INPUT_PRESSED, // used for "any button pressed" interactions (not released)
-  D_PAD, // used for "any d-pad" interactions
-  D_PAD_PRESSED, // used for "any d-pad pressed" interactions (not released)
+  INPUT,          // used for "any button" interactions
+  INPUT_PRESSED,  // used for "any button pressed" interactions (not released)
+  D_PAD,          // used for "any d-pad" interactions
+  D_PAD_PRESSED,  // used for "any d-pad pressed" interactions (not released)
   BUTTON_LEFT_PRESSED,
   BUTTON_LEFT_RELEASED,
   BUTTON_RIGHT_PRESSED,
@@ -37,6 +37,6 @@ typedef enum : int {
 
 } KywyEvents;
 
-} // namespace Kywy::Events
+}  // namespace Kywy::Events
 
 #endif

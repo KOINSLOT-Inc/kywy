@@ -14,8 +14,12 @@ void Battery::setup() {
   pinMode(KYWY_BATTERY_VOLTAGE, INPUT);
 }
 
-bool Battery::isCharging() { return !digitalRead(KYWY_BATTERY_CHARGING); }
-bool Battery::isCharged() { return !digitalRead(KYWY_BATTERY_CHARGED); }
+bool Battery::isCharging() {
+  return !digitalRead(KYWY_BATTERY_CHARGING);
+}
+bool Battery::isCharged() {
+  return !digitalRead(KYWY_BATTERY_CHARGED);
+}
 
 int Battery::percentCharged() {
   if (isCharged()) { return 100; }
@@ -35,7 +39,7 @@ int Battery::percentCharged() {
     voltage = (0.00722 * rawVoltagePinReading) - 0.474;
 
     minVoltage = 3.8;
-    maxVoltage = 4.16; // shift down a bit so we don't flip flop between 100 and less than 100
+    maxVoltage = 4.16;  // shift down a bit so we don't flip flop between 100 and less than 100
   } else {
     // values derived from linear regression of the following collected data with R^2 = 0.999
     // mins	voltage	reading
@@ -48,7 +52,7 @@ int Battery::percentCharged() {
     voltage = (0.00611 * rawVoltagePinReading) + 0.24;
 
     minVoltage = 3.54;
-    maxVoltage = 4.14; // shift down a bit so we don't fip flob between 100 and less than 100
+    maxVoltage = 4.14;  // shift down a bit so we don't fip flob between 100 and less than 100
   }
 
   int percentCharged = (int)(100.0 * ((voltage - minVoltage) / (maxVoltage - minVoltage)));
@@ -66,4 +70,4 @@ int Battery::percentCharged() {
   return percentCharged;
 }
 
-} // namespace Kywy
+}  // namespace Kywy

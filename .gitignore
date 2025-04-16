@@ -9,3 +9,6 @@
 .gitconfig
 .development
 src/src.ino
+.nvim.lua
+.envrc
+.clang-format

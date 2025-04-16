@@ -22,7 +22,9 @@ private:
   rtos::Thread clockThread;
 
 public:
-  const char *getName() { return "clock"; };
+  const char *getName() {
+    return "clock";
+  };
   void initialize();
   void handle(::Actor::Message *message);
 
@@ -38,6 +40,6 @@ public:
 // Tick callback that publishes the tick event to subscribers
 void clockTickCallback(Clock *clock);
 
-} // namespace Kywy
+}  // namespace Kywy
 
 #endif
