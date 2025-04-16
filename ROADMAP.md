@@ -6,7 +6,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Engine Roadmap
 
-_last updated: april 5th, 2025_
+_last updated: april 15th, 2025_
 
 _current state: draft_
 
@@ -31,32 +31,32 @@ solely on help from the Discord server.
 *Primary Goal: A Kywy user should be able to go from zero knowledge to a functional game using only our documentation.*
 
 Items:
-* (S) `README.md` for the repo that gives an overview, links to Kywy website/socials/store, and links to further
+* [ ] (S) `README.md` for the repo that gives an overview, links to Kywy website/socials/store, and links to further
   documentation.
-* (M) Spike: Documentation Hosting. Where should we host docs? GitHub Wiki, hosted static site, markdown in repo?
-* (M) Automated API Documentation. Use a tool like `doxygen` to generate API docs for us, or see if there's a tool
+* [ ] (M) Spike: Documentation Hosting. Where should we host docs? GitHub Wiki, hosted static site, markdown in repo?
+* [ ] (M) Automated API Documentation. Use a tool like `doxygen` to generate API docs for us, or see if there's a tool
   typically used by Arduino libraries.
-* (M) Getting Started Guide: Should walk through from scratch to uploading a `Hello, World!` program to the Kywy.
-* (M) Engine Overview Guide: Should walk through all the features of the engine at a high level, and also talk about the
+* [ ] (M) Getting Started Guide: Should walk through from scratch to uploading a `Hello, World!` program to the Kywy.
+* [ ] (M) Engine Overview Guide: Should walk through all the features of the engine at a high level, and also talk about the
   engine design philosophy and an opinionated way to make games with it.
-* (M) Actor Guide
-* (M) State Machine Guide
-* (M) FAQ Page
-* Tutorials:
-  * (S) Writing to the screen
-  * (S) Reading button input
-  * (S) Using the clock
-  * (S) Bouncing Ball - walk through how to use the previous three to create a bouncing ball that you can move left and
+* [ ] (M) Actor Guide
+* [ ] (M) State Machine Guide
+* [ ] (M) FAQ Page
+* [ ] Tutorials:
+  * [ ] (S) Writing to the screen
+  * [ ] (S) Reading button input
+  * [ ] (S) Using the clock
+  * [ ] (S) Bouncing Ball - walk through how to use the previous three to create a bouncing ball that you can move left and
     right (without actors)
-  * (S) Bouncing Ball w/ Actors - convert the previous tutorial code to one with actors, add a second ball using a
+  * [ ] (S) Bouncing Ball w/ Actors - convert the previous tutorial code to one with actors, add a second ball using a
     second actor that can move independently (e.g. 1 uses d-pad, one uses L/R buttons).
-  * (M) Some tutorial about adding a state machine to this, need a clean way to transition from the previous tutorial to
+  * [ ] (M) Some tutorial about adding a state machine to this, need a clean way to transition from the previous tutorial to
     this one
-* (L) Documentation System: A way to automatically lint and/or update docs so that as we update the engine we can
+* [ ] (L) Documentation System: A way to automatically lint and/or update docs so that as we update the engine we can
   propagate changes to a growing codebase
-* (L) Example walk-through for each example, better comments for examples so they're readable
-* (L) Building a game from start to finish
-* (M) Community showcase: with permission granted, incorporate exemplary community projects into our codebase with an
+* [ ] (L) Example walk-through for each example, better comments for examples so they're readable
+* [ ] (L) Building a game from start to finish
+* [ ] (M) Community showcase: with permission granted, incorporate exemplary community projects into our codebase with an
   overview and annotations written by us. These should be hosted/owned by us so that they cannot be changed underneath
   us though.
 
@@ -69,23 +69,23 @@ that it is enjoyable to learn and use.
 *Primary Goal: Our codebase should be intuitive, easy to use, and reliable.*
 
 Items:
-* (M) Formatting/Linting: Arduino has a [lint action](https://github.com/arduino/arduino-lint-action) we can use in
-  pipelines and an [LSP](https://github.com/arduino/arduino-language-server) we can use locally.
-  * also linting for any other file types we have
-* (L) Build & Test Locally and in Pipelines
-  * (L) runners with Kywy hardware
-* (M) Local developer workflow: how to easily update the engine and examples without lots of copying back and forth
-* (M) Get library added to Arduino IDE for trivial installs
-* (L) UAT & Address Feedback
-* (S) Sync practices in examples to make sure we have a consistent style
-  * (M) Design and Practices Guide
-* (S) Contributing guide/working agreement for codebase contributors
-* (L) Debug Tooling
-  * Debug lines for bitmaps/sprites/text/etc.
-  * Debug logging system for actors/state machines
-  * Click-to-tick or maybe press-to-tick feature to step through frames, would be best if we could use the serial
+* [ ] (M) Formatting/Linting: Arduino has a [lint action](https://github.com/arduino/arduino-lint-action) we can use in
+  pipelines and an [LSP] (https://github.com/arduino/arduino-language-server) we can use locally.
+  * [ ] also linting for any other file types we have
+* [ ] (L) Build & Test Locally and in Pipelines
+  * [ ] (L) runners with Kywy hardware
+* [x] (M) Local developer workflow: how to easily update the engine and examples without lots of copying back and forth
+* [x] (M) Get library added to Arduino IDE for trivial installs
+* [ ] (L) UAT & Address Feedback
+* [ ] (S) Sync practices in examples to make sure we have a consistent style
+  * [ ] (M) Design and Practices Guide
+* [ ] (S) Contributing guide/working agreement for codebase contributors
+* [ ] (L) Debug Tooling
+  * [ ] Debug lines for bitmaps/sprites/text/etc.
+  * [ ] Debug logging system for actors/state machines
+  * [ ] Click-to-tick or maybe press-to-tick feature to step through frames, would be best if we could use the serial
     interface to let the user send a serial signal to advance frames so we don't have to hijack the buttons to do it
-  * Actor flow/Performance analyzer mode: review how events are flowing through actors and how much time it's taking to
+  * [ ] Actor flow/Performance analyzer mode: review how events are flowing through actors and how much time it's taking to
     handle each event
 
 ## Work Stream: New Feature Development
@@ -96,16 +96,16 @@ The new feature development work stream is third, purposefully, because the new 
 *Primary Goal: Allow easier and more advanced game development with new engine features.*
 
 Items:
-* (M) Advanced sprite sheets (named frames, animation cycles, etc)
-* (L) UI Layout Tool: easily create menus/buttons, screen overlays, etc.
-* (L) Physics: colliders and forces.
-  * (L) Particle system?
-* (L) Scene Management: Manage changes between major game states (e.g. start screen -> in game -> game over screen -> in
+* [ ] (M) Advanced sprite sheets (named frames, animation cycles, etc)
+* [ ] (L) UI Layout Tool: easily create menus/buttons, screen overlays, etc.
+* [ ] (L) Physics: colliders and forces.
+  * [ ] (L) Particle system?
+* [ ] (L) Scene Management: Manage changes between major game states (e.g. start screen -> in game -> game over screen -> in
   game), need a global actor management system for this, but brings us much closer to a clean multi-launcher. Also
   allows for much more complex games to be made (e.g. a basic RPG).
-  * (L) Update & Render Loop, don't force the user to do it
-* (M) Bitmap rotation (fun pixel interpolation with linear algebra)
-* (M) SD Card: Finish the SD Card implementation
-  * (M) Saved state system
-  * (M) Asset loading system
-* (S) `DrawBatteryIndicator` for easy display of battery level
+  * [ ] (L) Update & Render Loop, don't force the user to do it
+* [ ] (M) Bitmap rotation (fun pixel interpolation with linear algebra)
+* [ ] (M) SD Card: Finish the SD Card implementation
+  * [ ] (M) Saved state system
+  * [ ] (M) Asset loading system
+* [ ] (S) `DrawBatteryIndicator` for easy display of battery level
