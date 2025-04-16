@@ -69,10 +69,10 @@ that it is enjoyable to learn and use.
 *Primary Goal: Our codebase should be intuitive, easy to use, and reliable.*
 
 Items:
-* [ ] (M) Formatting/Linting: Arduino has a [lint action](https://github.com/arduino/arduino-lint-action) we can use in
+* [x] (M) Formatting/Linting: Arduino has a [lint action](https://github.com/arduino/arduino-lint-action) we can use in
   pipelines and an [LSP] (https://github.com/arduino/arduino-language-server) we can use locally.
   * [ ] also linting for any other file types we have
-* [ ] (L) Build & Test Locally and in Pipelines
+* [ ] (L) ~Build~ & Test Locally and in Pipelines
   * [ ] (L) runners with Kywy hardware
 * [x] (M) Local developer workflow: how to easily update the engine and examples without lots of copying back and forth
 * [x] (M) Get library added to Arduino IDE for trivial installs
