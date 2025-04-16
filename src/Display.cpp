@@ -10,8 +10,8 @@ namespace Driver {
 
 void MBED_SPI_DRIVER::initializeDisplay() {
   mbedSPI =
-      new mbed::SPI((PinName)KYWY_DISPLAY_MOSI, (PinName)KYWY_DISPLAY_MISO,
-                    (PinName)KYWY_DISPLAY_SCK);
+    new mbed::SPI((PinName)KYWY_DISPLAY_MOSI, (PinName)KYWY_DISPLAY_MISO,
+                  (PinName)KYWY_DISPLAY_SCK);
   mbedSPI->format(8, 0);
   mbedSPI->frequency(8000000);
 
@@ -30,14 +30,14 @@ void MBED_SPI_DRIVER::initializeDisplay() {
 
 void MBED_SPI_DRIVER::setRotation(Rotation rotation) {
   switch (rotation) {
-  case Rotation::DEFAULT:
-    break;
-  case Rotation::CLOCKWISE_90:
-    break;
-  case Rotation::CLOCKWISE_180:
-    break;
-  case Rotation::CLOCKWISE_270:
-    break;
+    case Rotation::DEFAULT:
+      break;
+    case Rotation::CLOCKWISE_90:
+      break;
+    case Rotation::CLOCKWISE_180:
+      break;
+    case Rotation::CLOCKWISE_270:
+      break;
   }
 }
 
@@ -50,8 +50,8 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   digitalWrite(KYWY_DISPLAY_CS, HIGH);
 
   mbedSPI->write(vcom | writeCommand);
-  vcom = vcom ? 0x00 : vcomCommand; // toggle vcom at least 1 time per second to
-                                    // prevent DC bias
+  vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom at least 1 time per second to
+                                     // prevent DC bias
 
   for (int line = 0; line < 168; line++) {
     MBED_SPI_DRIVER_LINE_BUFFER[0] = reverse(line + 1);
@@ -77,17 +77,16 @@ void MBED_SPI_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
 
   if (color) {
     MBED_SPI_DRIVER_BUFFER[index] =
-        MBED_SPI_DRIVER_BUFFER[index] | (1 << (7 - bit));
+      MBED_SPI_DRIVER_BUFFER[index] | (1 << (7 - bit));
   } else {
     MBED_SPI_DRIVER_BUFFER[index] =
-        MBED_SPI_DRIVER_BUFFER[index] & (0xff ^ (1 << (7 - bit)));
+      MBED_SPI_DRIVER_BUFFER[index] & (0xff ^ (1 << (7 - bit)));
   }
 }
 
 bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
                        uint16_t &height) {
-  if (x > (getWidth() - 1) || y > (getHeight() - 1) || x + width - 1 < 0 ||
-      y + height - 1 < 0)
+  if (x > (getWidth() - 1) || y > (getHeight() - 1) || x + width - 1 < 0 || y + height - 1 < 0)
     return false;
 
   if (x < 0) {
@@ -112,21 +111,21 @@ bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
 }
 
 void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
-    int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
-    BitmapOptions options, bool block, uint16_t blockColor) {
+  int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
+  BitmapOptions options, bool block, uint16_t blockColor) {
 
   // we can write from an arbitrary chunk of the bitmap to an arbitrary chunk of
   // the screen buffer
   uint16_t bitmapX = 0, bitmapY = 0, bitmapWidth = width;
 
   if (x < 0)
-    bitmapX += -1 * x; // left edge of bitmap is off screen
+    bitmapX += -1 * x;  // left edge of bitmap is off screen
 
   if (y < 0)
-    bitmapY += -1 * y; // top edge of bitmap is off screen
+    bitmapY += -1 * y;  // top edge of bitmap is off screen
 
   if (!cropBlock(x, y, width, height))
-    return; // no overlap between bitmap and screen
+    return;  // no overlap between bitmap and screen
 
   // get top left corner of block to write on screen
   uint8_t *buffer = MBED_SPI_DRIVER_BUFFER + (18 * y) + (x / 8);
@@ -140,20 +139,18 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
 
   // buffer wrap distance calculation
   int splitLeftBits =
-      8 - x % 8; // how many bits of the left most byte column need to be filled
+    8 - x % 8;  // how many bits of the left most byte column need to be filled
   splitLeftBits =
-      splitLeftBits == 8
-          ? 0
-          : splitLeftBits; // if we have a whole column on the left just include
-                           // it as part of the inner bytes
+    splitLeftBits == 8
+      ? 0
+      : splitLeftBits;  // if we have a whole column on the left just include
+                        // it as part of the inner bytes
   int splitRightBits =
-      (x + width) %
-      8; // how many bits of the right most byte column need to be filled
+    (x + width) % 8;  // how many bits of the right most byte column need to be filled
   uint16_t innerBytes =
-      (width - splitLeftBits - splitRightBits) /
-      8; // how many bytes are between the right and left column
+    (width - splitLeftBits - splitRightBits) / 8;  // how many bytes are between the right and left column
   uint16_t bufferWrapDistance =
-      18 - innerBytes - (splitLeftBits ? 1 : 0) - (splitRightBits ? 1 : 0);
+    18 - innerBytes - (splitLeftBits ? 1 : 0) - (splitRightBits ? 1 : 0);
 
   // iterate over each line
   for (int16_t j = 0; j < height; j++) {
@@ -163,15 +160,13 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
       uint8_t byteToWrite;
       uint8_t bitsWritten = 0;
       uint8_t mask =
-          0x00; // identifies the part of the byte column we want to write
+        0x00;  // identifies the part of the byte column we want to write
 
       if (block) {
         byteToWrite = blockColor;
       } else {
         byteToWrite =
-            ((*(bitmap + (bitmapBitIndex / 8)) << (bitmapBitIndex % 8)) |
-             (*(bitmap + (bitmapBitIndex / 8) + 1) >>
-              (8 - bitmapBitIndex % 8)));
+          ((*(bitmap + (bitmapBitIndex / 8)) << (bitmapBitIndex % 8)) | (*(bitmap + (bitmapBitIndex / 8) + 1) >> (8 - bitmapBitIndex % 8)));
       }
 
       if (options.getNegative()) {
@@ -182,45 +177,39 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
       // of the byteToWrite
       if (bufferBitsToWriteToInLeftByteColumn > width) {
         byteToWrite =
-            byteToWrite >>
-            bufferBitsNotToWriteToInLeftByteColumn; // shift starting bitmap bit
-                                                    // to match starting bit of
-                                                    // buffer byte column
+          byteToWrite >> bufferBitsNotToWriteToInLeftByteColumn;  // shift starting bitmap bit
+                                                                  // to match starting bit of
+                                                                  // buffer byte column
 
         mask =
-            0xff >>
-            bufferBitsNotToWriteToInLeftByteColumn; // mask of left side since
-                                                    // this is a partial column
+          0xff >> bufferBitsNotToWriteToInLeftByteColumn;  // mask of left side since
+                                                           // this is a partial column
         mask &=
-            0xff
-            << (8 -
-                (bufferBitsNotToWriteToInLeftByteColumn +
-                 width)); // mask off right side since this is a partial column
+          0xff
+          << (8 - (bufferBitsNotToWriteToInLeftByteColumn + width));  // mask off right side since this is a partial column
 
         bitsWritten = width;
 
         // we're on the leftmost column
       } else if (bitsLeftToWrite == width) {
         byteToWrite =
-            byteToWrite >>
-            bufferBitsNotToWriteToInLeftByteColumn; // shift starting bitmap bit
-                                                    // to match starting bit of
-                                                    // buffer byte column
+          byteToWrite >> bufferBitsNotToWriteToInLeftByteColumn;  // shift starting bitmap bit
+                                                                  // to match starting bit of
+                                                                  // buffer byte column
 
-        mask = 0xff >>
-               bufferBitsNotToWriteToInLeftByteColumn; // mask off left side
+        mask = 0xff >> bufferBitsNotToWriteToInLeftByteColumn;  // mask off left side
 
         bitsWritten = bufferBitsToWriteToInLeftByteColumn;
 
         // we're writing an inner column
       } else if (bitsLeftToWrite >= 8) {
-        mask = 0xff; // don't mask off anything
+        mask = 0xff;  // don't mask off anything
 
         bitsWritten = 8;
 
         // we're writing the rightmost column
       } else if ((bitsLeftToWrite > 0) & (bitsLeftToWrite < 8)) {
-        mask = 0xff << (8 - bitsLeftToWrite); // mask off right side
+        mask = 0xff << (8 - bitsLeftToWrite);  // mask off right side
 
         bitsWritten = bitsLeftToWrite;
       }
@@ -264,12 +253,20 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
   writeBitmapOrBlockToBuffer(x, y, width, height, bitmap, options, false, 0x00);
 }
 
-} // namespace Driver
+}  // namespace Driver
 
-void Display::setup() { driver->initializeDisplay(); }
-void Display::clear() { driver->clearBuffer(); }
-void Display::update() { driver->sendBufferToDisplay(); }
-void Display::setRotation(Rotation rotation) { driver->setRotation(rotation); }
+void Display::setup() {
+  driver->initializeDisplay();
+}
+void Display::clear() {
+  driver->clearBuffer();
+}
+void Display::update() {
+  driver->sendBufferToDisplay();
+}
+void Display::setRotation(Rotation rotation) {
+  driver->setRotation(rotation);
+}
 void Display::drawPixel(int16_t x, int16_t y, uint16_t color) {
   driver->setBufferPixel(x, y, color);
 }
@@ -278,33 +275,33 @@ void Display::shiftOrigin2DToTopLeft(Origin::Object2D origin, int16_t &x,
                                      int16_t &y, uint16_t width,
                                      uint16_t height) {
   switch (origin) {
-  case Origin::Object2D::TOP_LEFT:
-    break;
-  case Origin::Object2D::TOP_RIGHT:
-    x -= width - 1;
-    break;
-  case Origin::Object2D::BOTTOM_LEFT:
-    y -= height - 1;
-    break;
-  case Origin::Object2D::BOTTOM_RIGHT:
-    x -= width - 1;
-    y -= height - 1;
-    break;
-  case Origin::Object2D::CENTER:
-    // similarly to circles, where there is no pixel center we bias to the
-    // bottom right so that the left bound is at `x
-    // - (width / 2)` and the upper bound is at `y - (height / 2)`.
-    x -= width / 2;
-    y -= height / 2;
-    break;
+    case Origin::Object2D::TOP_LEFT:
+      break;
+    case Origin::Object2D::TOP_RIGHT:
+      x -= width - 1;
+      break;
+    case Origin::Object2D::BOTTOM_LEFT:
+      y -= height - 1;
+      break;
+    case Origin::Object2D::BOTTOM_RIGHT:
+      x -= width - 1;
+      y -= height - 1;
+      break;
+    case Origin::Object2D::CENTER:
+      // similarly to circles, where there is no pixel center we bias to the
+      // bottom right so that the left bound is at `x
+      // - (width / 2)` and the upper bound is at `y - (height / 2)`.
+      x -= width / 2;
+      y -= height / 2;
+      break;
   }
 }
 
 void Display::drawLine(int16_t xStart, int16_t yStart, int16_t xEnd,
                        int16_t yEnd, Object1DOptions options) {
-  if (yStart == yEnd) {  // horizontal line
-    if (xEnd < xStart) { // setBufferBlock draws left-to-right so make sure xEnd
-                         // is >= xStart
+  if (yStart == yEnd) {   // horizontal line
+    if (xEnd < xStart) {  // setBufferBlock draws left-to-right so make sure xEnd
+                          // is >= xStart
       std::swap(xEnd, xStart);
       std::swap(yEnd, yStart);
     }
@@ -313,9 +310,9 @@ void Display::drawLine(int16_t xStart, int16_t yStart, int16_t xEnd,
     return;
   }
 
-  if (xStart == xEnd) {  // vertical line
-    if (yEnd < yStart) { // setBufferBlock draws top-to-bottom so make sure yEnd
-                         // is >= yStart
+  if (xStart == xEnd) {   // vertical line
+    if (yEnd < yStart) {  // setBufferBlock draws top-to-bottom so make sure yEnd
+                          // is >= yStart
       std::swap(xEnd, xStart);
       std::swap(yEnd, yStart);
     }
@@ -362,18 +359,18 @@ void Display::drawLine(int16_t x, int16_t y, double length, double angle,
   // multiply y deltas by -1 since our y-axis is inverted compared to standard
   // cartesian coordinates
   switch (options.getOrigin()) {
-  case Origin::Object1D::ENDPOINT:
-    xStart = x;
-    yStart = y;
-    xEnd = round(xStart + length * cos(angle));
-    yEnd = round(yStart + -1 * length * sin(angle));
-    break;
-  case Origin::Object1D::MIDPOINT:
-    xStart = round(x - 0.5 * length * cos(angle));
-    yStart = round(y - -1 * 0.5 * length * sin(angle));
-    xEnd = round(x + 0.5 * length * cos(angle));
-    yEnd = round(y + -1 * 0.5 * length * sin(angle));
-    break;
+    case Origin::Object1D::ENDPOINT:
+      xStart = x;
+      yStart = y;
+      xEnd = round(xStart + length * cos(angle));
+      yEnd = round(yStart + -1 * length * sin(angle));
+      break;
+    case Origin::Object1D::MIDPOINT:
+      xStart = round(x - 0.5 * length * cos(angle));
+      yStart = round(y - -1 * 0.5 * length * sin(angle));
+      xEnd = round(x + 0.5 * length * cos(angle));
+      yEnd = round(y + -1 * 0.5 * length * sin(angle));
+      break;
   }
 
   drawLine(xStart, yStart, xEnd, yEnd, options);
@@ -382,12 +379,12 @@ void Display::drawLine(int16_t x, int16_t y, double length, double angle,
 void Display::drawRectangle(int16_t x, int16_t y, uint16_t width,
                             uint16_t height, Object2DOptions options) {
   shiftOrigin2DToTopLeft(options.getOrigin(), x, y, width, height);
-  driver->setBufferBlock(x, y, width, 1, options.getColor()); // top line
+  driver->setBufferBlock(x, y, width, 1, options.getColor());  // top line
   driver->setBufferBlock(x, y + height - 1, width, 1,
-                         options.getColor());                  // bottom line
-  driver->setBufferBlock(x, y, 1, height, options.getColor()); // left line
+                         options.getColor());                   // bottom line
+  driver->setBufferBlock(x, y, 1, height, options.getColor());  // left line
   driver->setBufferBlock(x + width - 1, y, 1, height,
-                         options.getColor()); // right line
+                         options.getColor());  // right line
 };
 
 void Display::fillRectangle(int16_t x, int16_t y, uint16_t width,
@@ -402,4 +399,4 @@ void Display::drawBitmap(int16_t x, int16_t y, uint16_t width, uint16_t height,
   driver->writeBitmapToBuffer(x, y, width, height, bitmap, options);
 };
 
-} // namespace Display
+}  // namespace Display

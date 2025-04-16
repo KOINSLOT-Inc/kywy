@@ -79,6 +79,6 @@ public:
   Character getCharacter(uint16_t character);
 };
 
-} // namespace Display::Font
+}  // namespace Display::Font
 
 #endif

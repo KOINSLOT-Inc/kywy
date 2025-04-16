@@ -9,13 +9,13 @@
 
 namespace Kywy {
 
-#define KYWY_LEFT_BUTTON      12
-#define KYWY_RIGHT_BUTTON      2
-#define KYWY_D_PAD_UP          9
-#define KYWY_D_PAD_DOWN        3
-#define KYWY_D_PAD_LEFT        6
-#define KYWY_D_PAD_RIGHT       7
-#define KYWY_D_PAD_CENTER      8
+#define KYWY_LEFT_BUTTON 12
+#define KYWY_RIGHT_BUTTON 2
+#define KYWY_D_PAD_UP 9
+#define KYWY_D_PAD_DOWN 3
+#define KYWY_D_PAD_LEFT 6
+#define KYWY_D_PAD_RIGHT 7
+#define KYWY_D_PAD_CENTER 8
 
 class Input : public Actor::Actor {
 private:
@@ -60,6 +60,6 @@ public:
   bool dPadCenterPressed;
 };
 
-} // namespace Kywy
+}  // namespace Kywy
 
 #endif

@@ -19,6 +19,6 @@ public:
   int percentCharged();
 };
 
-} // namespace Kywy
+}  // namespace Kywy
 
 #endif

@@ -20,7 +20,7 @@ void GraphicsObject::setDisplay(Display::Display *display) {
 };
 
 void GraphicsObject::render() {
-  if (lastRenderedVisible) { // erase current position
+  if (lastRenderedVisible) {  // erase current position
     this->erase(lastRenderedX, lastRenderedY);
     lastRenderedVisible = false;
   }
@@ -35,7 +35,9 @@ void GraphicsObject::render() {
   lastRenderedY = y;
 };
 
-bool GraphicsObject::isVisible() { return this->visible; }
+bool GraphicsObject::isVisible() {
+  return this->visible;
+}
 void GraphicsObject::setVisible(bool visible) {
   this->visible = visible;
   onSetVisible();

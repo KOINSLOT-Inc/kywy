@@ -63,6 +63,6 @@ extern uint8_t intel_one_mono_12_pt[13771];
 //   - Characters: 622
 extern uint8_t intel_one_mono_16_pt[19232];
 
-} // namespace Display::Font
+}  // namespace Display::Font
 
 #endif
