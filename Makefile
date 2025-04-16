@@ -26,12 +26,11 @@ $(ARDUINO_LINT): $(CACHE)
 	mkdir -p $(CACHE)/bin
 	curl -fsSL https://raw.githubusercontent.com/arduino/arduino-lint/main/etc/install.sh | BINDIR=$(CACHE)/bin sh
 
-CLANG_FORMAT_CONFIG := .clang-format
-$(CLANG_FORMAT_CONFIG):
+.clang-format:
 	@curl -fsSL https://raw.githubusercontent.com/arduino/tooling-project-assets/main/other/clang-format-configuration/.clang-format > .clang-format
 
 CLANG_FORMAT := $(CACHE)/.clang-format
-$(CLANG_FORMAT): $(CACHE) $(CLANG_FORMAT_CONFIG)
+$(CLANG_FORMAT): $(CACHE) .clang-format
 	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
 	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
 	@touch $(CLANG_FORMAT)
