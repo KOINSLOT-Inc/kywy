@@ -2,18 +2,24 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-name: Lint
+name: Check Pull Request
 on: pull_request
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/arduino-lint-action@v2
+    - run: make .clang-format  # get arduino .clang-format file
+    - uses: jidicula/clang-format-action@v4.15.0       # lint c++ code w/ clang-format
+      with:
+        clang-format-version: '14'
+    - uses: arduino/arduino-lint-action@v2             # lint arduino library requirements
       with:
         compliance: strict
         recursive: true
-  compile-sketches:
+        library-manager: update
+    - uses: fsfe/reuse-action@v1                       # lint license requirements
+  compile:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

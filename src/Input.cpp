@@ -39,112 +39,114 @@ void Input::initialize() {
 
 void Input::handle(::Actor::Message *message) {
   switch (message->signal) {
-  case Events::TICK: {
-    bool inputEvent = false, dPadEvent = false;
-    bool inputPressedEvent = false, dPadPressedEvent = false;
+    case Events::TICK:
+      {
+        bool inputEvent = false, dPadEvent = false;
+        bool inputPressedEvent = false, dPadPressedEvent = false;
 
-    if ((digitalRead(KYWY_LEFT_BUTTON) == LOW) != _buttonLeftPressed) {
-      _buttonLeftPressed = !_buttonLeftPressed;
-      buttonLeftPressed = _buttonLeftPressed;
-      publish(_buttonLeftPressed ? &buttonLeftPressedMessage : &buttonLeftReleasedMessage);
-      inputEvent = true;
-      if (_buttonLeftPressed) {
-        inputPressedEvent = true;
+        if ((digitalRead(KYWY_LEFT_BUTTON) == LOW) != _buttonLeftPressed) {
+          _buttonLeftPressed = !_buttonLeftPressed;
+          buttonLeftPressed = _buttonLeftPressed;
+          publish(_buttonLeftPressed ? &buttonLeftPressedMessage : &buttonLeftReleasedMessage);
+          inputEvent = true;
+          if (_buttonLeftPressed) {
+            inputPressedEvent = true;
+          }
+        }
+
+        if ((digitalRead(KYWY_RIGHT_BUTTON) == LOW) != _buttonRightPressed) {
+          _buttonRightPressed = !_buttonRightPressed;
+          buttonRightPressed = _buttonRightPressed;
+          publish(_buttonRightPressed ? &buttonRightPressedMessage : &buttonRightReleasedMessage);
+          inputEvent = true;
+          if (_buttonRightPressed) {
+            inputPressedEvent = true;
+          }
+        }
+
+        if ((digitalRead(KYWY_D_PAD_LEFT) == LOW) != _dPadLeftPressed) {
+          _dPadLeftPressed = !_dPadLeftPressed;
+          dPadLeftPressed = _dPadLeftPressed;
+          publish(_dPadLeftPressed ? &dPadLeftPressedMessage : &dPadLeftReleasedMessage);
+          inputEvent = true;
+          dPadEvent = true;
+          if (_dPadLeftPressed) {
+            inputPressedEvent = true;
+            dPadPressedEvent = true;
+          }
+        }
+
+        if ((digitalRead(KYWY_D_PAD_RIGHT) == LOW) != _dPadRightPressed) {
+          _dPadRightPressed = !_dPadRightPressed;
+          dPadRightPressed = _dPadRightPressed;
+          publish(_dPadRightPressed ? &dPadRightPressedMessage : &dPadRightReleasedMessage);
+          inputEvent = true;
+          dPadEvent = true;
+          if (_dPadRightPressed) {
+            inputPressedEvent = true;
+            dPadPressedEvent = true;
+          }
+        }
+
+        if ((digitalRead(KYWY_D_PAD_UP) == LOW) != _dPadUpPressed) {
+          _dPadUpPressed = !_dPadUpPressed;
+          dPadUpPressed = _dPadUpPressed;
+          publish(_dPadUpPressed ? &dPadUpPressedMessage : &dPadUpReleasedMessage);
+          inputEvent = true;
+          dPadEvent = true;
+          if (_dPadUpPressed) {
+            inputPressedEvent = true;
+            dPadPressedEvent = true;
+          }
+        }
+
+        if ((digitalRead(KYWY_D_PAD_DOWN) == LOW) != _dPadDownPressed) {
+          _dPadDownPressed = !_dPadDownPressed;
+          dPadDownPressed = _dPadDownPressed;
+          publish(_dPadDownPressed ? &dPadDownPressedMessage : &dPadDownReleasedMessage);
+          inputEvent = true;
+          dPadEvent = true;
+          if (_dPadDownPressed) {
+            inputPressedEvent = true;
+            dPadPressedEvent = true;
+          }
+        }
+
+        if ((digitalRead(KYWY_D_PAD_CENTER) == LOW) != _dPadCenterPressed) {
+          _dPadCenterPressed = !_dPadCenterPressed;
+          dPadCenterPressed = _dPadCenterPressed;
+          publish(_dPadCenterPressed ? &dPadCenterPressedMessage : &dPadCenterReleasedMessage);
+          inputEvent = true;
+          dPadEvent = true;
+          if (_dPadCenterPressed) {
+            inputPressedEvent = true;
+            dPadPressedEvent = true;
+          }
+        }
+
+        if (inputEvent) {
+          publish(&inputMessage);
+        }
+
+        if (inputPressedEvent) {
+          publish(&inputPressedMessage);
+        }
+
+        if (dPadEvent) {
+          publish(&dPadMessage);
+        }
+
+        if (dPadPressedEvent) {
+          publish(&dPadPressedMessage);
+        }
+
+        break;
       }
-    }
-
-    if ((digitalRead(KYWY_RIGHT_BUTTON) == LOW) != _buttonRightPressed) {
-      _buttonRightPressed = !_buttonRightPressed;
-      buttonRightPressed = _buttonRightPressed;
-      publish(_buttonRightPressed ? &buttonRightPressedMessage : &buttonRightReleasedMessage);
-      inputEvent = true;
-      if (_buttonRightPressed) {
-        inputPressedEvent = true;
+    default:
+      {
+        break;
       }
-    }
-
-    if ((digitalRead(KYWY_D_PAD_LEFT) == LOW) != _dPadLeftPressed) {
-      _dPadLeftPressed = !_dPadLeftPressed;
-      dPadLeftPressed = _dPadLeftPressed;
-      publish(_dPadLeftPressed ? &dPadLeftPressedMessage : &dPadLeftReleasedMessage);
-      inputEvent = true;
-      dPadEvent = true;
-      if (_dPadLeftPressed) {
-        inputPressedEvent = true;
-        dPadPressedEvent = true;
-      }
-    }
-
-    if ((digitalRead(KYWY_D_PAD_RIGHT) == LOW) != _dPadRightPressed) {
-      _dPadRightPressed = !_dPadRightPressed;
-      dPadRightPressed = _dPadRightPressed;
-      publish(_dPadRightPressed ? &dPadRightPressedMessage : &dPadRightReleasedMessage);
-      inputEvent = true;
-      dPadEvent = true;
-      if (_dPadRightPressed) {
-        inputPressedEvent = true;
-        dPadPressedEvent = true;
-      }
-    }
-
-    if ((digitalRead(KYWY_D_PAD_UP) == LOW) != _dPadUpPressed) {
-      _dPadUpPressed = !_dPadUpPressed;
-      dPadUpPressed = _dPadUpPressed;
-      publish(_dPadUpPressed ? &dPadUpPressedMessage : &dPadUpReleasedMessage);
-      inputEvent = true;
-      dPadEvent = true;
-      if (_dPadUpPressed) {
-        inputPressedEvent = true;
-        dPadPressedEvent = true;
-      }
-    }
-
-    if ((digitalRead(KYWY_D_PAD_DOWN) == LOW) != _dPadDownPressed) {
-      _dPadDownPressed = !_dPadDownPressed;
-      dPadDownPressed = _dPadDownPressed;
-      publish(_dPadDownPressed ? &dPadDownPressedMessage : &dPadDownReleasedMessage);
-      inputEvent = true;
-      dPadEvent = true;
-      if (_dPadDownPressed) {
-        inputPressedEvent = true;
-        dPadPressedEvent = true;
-      }
-    }
-
-    if ((digitalRead(KYWY_D_PAD_CENTER) == LOW) != _dPadCenterPressed) {
-      _dPadCenterPressed = !_dPadCenterPressed;
-      dPadCenterPressed = _dPadCenterPressed;
-      publish(_dPadCenterPressed ? &dPadCenterPressedMessage : &dPadCenterReleasedMessage);
-      inputEvent = true;
-      dPadEvent = true;
-      if (_dPadCenterPressed) {
-        inputPressedEvent = true;
-        dPadPressedEvent = true;
-      }
-    }
-
-    if (inputEvent) {
-      publish(&inputMessage);
-    }
-
-    if (inputPressedEvent) {
-      publish(&inputPressedMessage);
-    }
-
-    if (dPadEvent) {
-      publish(&dPadMessage);
-    }
-
-    if (dPadPressedEvent) {
-      publish(&dPadPressedMessage);
-    }
-
-    break;
-  }
-  default: {
-    break;
-  }
   }
 };
 
-} // namespace Kywy
+}  // namespace Kywy

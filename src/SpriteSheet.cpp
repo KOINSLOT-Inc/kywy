@@ -6,7 +6,7 @@
 
 SpriteSheet::SpriteSheet(const uint8_t *sheet, int16_t sheetWidth,
                          int16_t sheetHeight, uint16_t numFrames)
-    : sheet(sheet), sheetWidth(sheetWidth), sheetHeight(sheetHeight), numFrames(numFrames) {
+  : sheet(sheet), sheetWidth(sheetWidth), sheetHeight(sheetHeight), numFrames(numFrames) {
   frames = new const uint8_t *[numFrames];
 }
 
@@ -26,7 +26,7 @@ void SpriteSheet::addFrame(uint16_t x, uint16_t y, uint16_t frameWidth, uint16_t
   // create a cursor to track where in the array we want to pull from since
   // we're mapping a 2D sprite sheet to a 1D array which means we'll have to
   // jump around a lot.
-  int cursor = (sheetWidth * y + x) / pixelsPerByte; // start in the top left of the frame
+  int cursor = (sheetWidth * y + x) / pixelsPerByte;  // start in the top left of the frame
   uint16_t cursorX = 0;
 
   for (int i = 0; i < bytes; i++) {
@@ -55,7 +55,7 @@ void SpriteSheet::addFrames(uint16_t x, uint16_t y, uint16_t frameWidth, uint16_
 
     uint16_t newCursorX = (cursorX + frameWidth) % sheetWidth;
 
-    if (newCursorX <= cursorX) // wrap around to next line of frames
+    if (newCursorX <= cursorX)  // wrap around to next line of frames
       cursorY += frameHeight;
 
     cursorX = newCursorX;

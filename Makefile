@@ -26,6 +26,15 @@ $(ARDUINO_LINT): $(CACHE)
 	mkdir -p $(CACHE)/bin
 	curl -fsSL https://raw.githubusercontent.com/arduino/arduino-lint/main/etc/install.sh | BINDIR=$(CACHE)/bin sh
 
+.clang-format:
+	@curl -fsSL https://raw.githubusercontent.com/arduino/tooling-project-assets/main/other/clang-format-configuration/.clang-format > .clang-format
+
+CLANG_FORMAT := $(CACHE)/.clang-format
+$(CLANG_FORMAT): $(CACHE) .clang-format
+	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
+	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
+	@touch $(CLANG_FORMAT)
+
 .PHONY: check-licenses
 check-licenses:
 	@pipenv run reuse lint
@@ -42,12 +51,17 @@ update-licenses:
 	    .
 
 .PHONY: lint-arduino-code
-lint-arduino-code: $(ARDUINO_LINT)
+lint-arduino-code: $(ARDUINO_LINT) $(CLANG_FORMAT)
 	@if [ -f .development ]; then rm .development; fi; \
-		$(ARDUINO_LINT) --compliance strict --recursive; \
+		$(ARDUINO_LINT) --compliance strict --recursive --library-manager update; \
 		exit_code=$$?; \
 		touch .development; \
 		exit $$exit_code;
+	@clang-format --dry-run  **/*.cpp **/*.hpp **/*.ino
+
+.PHONY: format-arduino-code
+format-arduino-code: $(CLANG_FORMAT)
+	@clang-format -i **/*.cpp **/*.hpp **/*.ino
 
 .PHONY: compile-arduino-sketches
 compile-arduino-sketches: $(ARDUINO_CLI)
@@ -67,6 +81,9 @@ compile-arduino-sketches: $(ARDUINO_CLI)
 
 .PHONY: lint
 lint: check-licenses lint-arduino-code
+
+.PHONY: format
+format: format-arduino-code
 
 .PHONY: upload/examples/%
 upload/examples/%: $(ARDUINO_CLI)

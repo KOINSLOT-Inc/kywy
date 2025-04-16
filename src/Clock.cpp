@@ -7,9 +7,13 @@
 
 namespace Kywy {
 
-void clockTickCallback(Clock *clock) { clock->publish(&clock->tickMessage); };
+void clockTickCallback(Clock *clock) {
+  clock->publish(&clock->tickMessage);
+};
 
-int Clock::getTickDuration() { return tickDuration.count(); }
+int Clock::getTickDuration() {
+  return tickDuration.count();
+}
 
 void Clock::setTickDuration(int milliseconds) {
   tickDuration = std::chrono::milliseconds(milliseconds);
@@ -24,19 +28,21 @@ void Clock::initialize() {
   this->clock.call_every(tickDuration,
                          mbed::callback(&clockTickCallback, this));
   clockThread.start(
-      mbed::callback(&(this->clock), &events::EventQueue::dispatch_forever));
+    mbed::callback(&(this->clock), &events::EventQueue::dispatch_forever));
 }
 
 void Clock::handle(::Actor::Message *message) {
   switch (message->signal) {
-  case Events::SET_TICK_DURATION: {
-    setTickDuration(*(int *)message->data);
-    break;
-  }
-  default: {
-    break;
-  }
+    case Events::SET_TICK_DURATION:
+      {
+        setTickDuration(*(int *)message->data);
+        break;
+      }
+    default:
+      {
+        break;
+      }
   }
 };
 
-} // namespace Kywy
+}  // namespace Kywy

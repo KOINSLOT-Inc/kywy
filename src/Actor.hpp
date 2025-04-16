@@ -17,23 +17,24 @@ typedef enum : uint8_t {
 } Directive;
 
 struct Message {
-  Message() : directive(DIRECTIVE_HANDLE), signal(0), data(nullptr){};
+  Message()
+    : directive(DIRECTIVE_HANDLE), signal(0), data(nullptr){};
   Message(int signal)
-      : directive(DIRECTIVE_HANDLE), signal(signal), data(nullptr){};
+    : directive(DIRECTIVE_HANDLE), signal(signal), data(nullptr){};
   Message(int signal, void *data)
-      : directive(DIRECTIVE_HANDLE), signal(signal), data(data){};
+    : directive(DIRECTIVE_HANDLE), signal(signal), data(data){};
   Directive directive;
   int signal;
   void *data;
 };
 
-extern rtos::Mutex handlerMutex; // mutex to lock so that handler functions run from start to finish before going to another actor.
+extern rtos::Mutex handlerMutex;  // mutex to lock so that handler functions run from start to finish before going to another actor.
 
 class Actor {
 private:
   rtos::Thread thread;
   events::EventQueue queue;
-  events::Event<void(Actor*, Message*)> *event_handler;
+  events::Event<void(Actor *, Message *)> *event_handler;
 
   Actor *subscribers[MAX_SUBSCRIBERS] = {};
 
@@ -61,6 +62,6 @@ public:
 // Queue event callback that handles events, or passes them to a user defined function to handle
 void queueEventCallback(Actor *actor, Message *message);
 
-} // namespace Actor
+}  // namespace Actor
 
 #endif
