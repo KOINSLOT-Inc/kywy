@@ -26,6 +26,11 @@ $(ARDUINO_LINT): $(CACHE)
 	mkdir -p $(CACHE)/bin
 	curl -fsSL https://raw.githubusercontent.com/arduino/arduino-lint/main/etc/install.sh | BINDIR=$(CACHE)/bin sh
 
+CLANG_FORMAT := $(CACHE)/.clang-format
+$(CLANG_FORMAT): $(CACHE)
+	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
+	@touch $(CLANG_FORMAT)
+
 .PHONY: check-licenses
 check-licenses:
 	@pipenv run reuse lint
@@ -42,12 +47,17 @@ update-licenses:
 	    .
 
 .PHONY: lint-arduino-code
-lint-arduino-code: $(ARDUINO_LINT)
+lint-arduino-code: $(ARDUINO_LINT) $(CLANG_FORMAT)
 	@if [ -f .development ]; then rm .development; fi; \
 		$(ARDUINO_LINT) --compliance strict --recursive; \
 		exit_code=$$?; \
 		touch .development; \
 		exit $$exit_code;
+	@clang-format --dry-run  **/*.cpp **/*.hpp **/*.ino
+
+.PHONY: format-arduino-code
+format-arduino-code: $(CLANG_FORMAT)
+	@clang-format -i **/*.cpp **/*.hpp **/*.ino
 
 .PHONY: compile-arduino-sketches
 compile-arduino-sketches: $(ARDUINO_CLI)
@@ -67,6 +77,9 @@ compile-arduino-sketches: $(ARDUINO_CLI)
 
 .PHONY: lint
 lint: check-licenses lint-arduino-code
+
+.PHONY: format
+format: format-arduino-code
 
 .PHONY: upload/examples/%
 upload/examples/%: $(ARDUINO_CLI)

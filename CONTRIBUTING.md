@@ -67,6 +67,12 @@ so that `hpp` and `cpp` files are recognized as `arduino` files instead of `cpp`
 Uploads can be done using the `arduino-cli`. A Make target, `make upload/examples/<example>`, is available to quickly
 upload any project in the `examples/` directory.
 
+#### Formatting
+
+You can use the `make format` target to format files in the directory from the command line. Note that this requires
+some dependencies (asserted in the Makefile):
+* `clang-format` for formatting `.ino`, `.hpp`, and `.cpp` files
+
 ## Releases
 
 Tagging and releases are automatically managed by workflows and happen every time a PR is made.
