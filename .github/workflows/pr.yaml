@@ -28,3 +28,25 @@ jobs:
         fqbn: "arduino:mbed_rp2040:pico"
         enable-warnings-report: true
         enable-deltas-report: true
+  check-library-version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: check proposed version bump
+      id: tag
+      uses: anothrNick/github-tag-action@1.71.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        INITIAL_VERSION: 1.0.0
+        DRY_RUN: true
+    - name: assert version in library.properties is bumped
+      run: |
+        if [ \
+          "$(cat library.properties | grep version | sed 's/version=/v/')" \
+          != "${{ steps.tag.outputs.new_tag }}" \
+        ]; then \
+          new_tag="$(echo '${{ steps.tag.outputs.new_tag }}' | sed 's/v//')"
+          echo "bump the version in library.properties to ${new_tag}!"; \
+          exit 1; \
+        fi
