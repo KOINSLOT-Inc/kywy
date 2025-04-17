@@ -6,11 +6,6 @@
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH  144
-#define DISPLAY_HEIGHT 168
-#define BLACK          0x0
-#define WHITE          0xf
-
 const uint8_t slimeJumperSplashScreenBMP[] = {
   0x55, 0x69, 0x3f, 0xfe, 0x35, 0x60, 0xa9, 0x7a, 0xf5, 0x7a, 0xe3, 0x53,
   0xff, 0xff, 0x95, 0x49, 0x26, 0xa5, 0xa4, 0xa6, 0x7f, 0xff, 0x34, 0x8d,
@@ -267,27 +262,28 @@ const uint8_t slimeJumperSplashScreenBMP[] = {
 };
 
 const uint8_t spriteSheetData[] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-    0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
-    0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x03, 0xc0, 0x00, 0x00, 0x03, 0xc0, 0x00,
-    0x00, 0x01, 0x80, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0x02, 0x40, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x0c, 0x30,
-    0x00, 0x00, 0x02, 0x40, 0x00, 0x00, 0x03, 0xc0, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0x02,
-    0x40, 0x00, 0x00, 0x70, 0x0e, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x03, 0xc0, 0x00, 0x01, 0xc0, 0x03, 0x80, 0x00,
-    0x0c, 0x30, 0x00, 0x00, 0x07, 0xe0, 0x00, 0x07, 0x00, 0x00, 0xe0, 0x00, 0x0b, 0xd0, 0x00, 0x00, 0x05, 0xa0, 0x00,
-    0x0c, 0x02, 0x40, 0x30, 0x00, 0x1a, 0x58, 0x00, 0x00, 0x0d, 0xb0, 0x00, 0x18, 0x0e, 0x70, 0x18, 0x00, 0x36, 0x6c,
-    0x00, 0x00, 0x08, 0x10, 0x00, 0x10, 0x38, 0x1c, 0x08, 0x00, 0xe4, 0x27, 0x00, 0x00, 0x18, 0x18, 0x00, 0x10, 0x00,
-    0x00, 0x08, 0x01, 0x80, 0x01, 0x80, 0x00, 0x30, 0x0c, 0x00, 0x30, 0x00, 0x00, 0x0c, 0x01, 0x00, 0x00, 0x80, 0x00,
-    0x20, 0x04, 0x00, 0x20, 0x00, 0x00, 0x04, 0x03, 0x00, 0x00, 0xc0, 0x00, 0x60, 0x06, 0x00, 0x20, 0x00, 0x00, 0x04,
-    0x06, 0x00, 0x00, 0x60, 0x00, 0xc0, 0x03, 0x00, 0x20, 0x00, 0x00, 0x04, 0x04, 0x00, 0x00, 0x20, 0x00, 0x80, 0x01,
-    0x00, 0x20, 0x00, 0x00, 0x04, 0x0c, 0x00, 0x00, 0x30, 0x00, 0x80, 0x01, 0x00, 0x20, 0x00, 0x00, 0x04, 0x08, 0x00,
-    0x00, 0x10, 0x01, 0x80, 0x01, 0x80, 0x20, 0x00, 0x00, 0x04, 0x08, 0x00, 0x00, 0x10, 0x01, 0x00, 0x00, 0x80, 0x30,
-    0x00, 0x00, 0x0c, 0x08, 0x00, 0x00, 0x10, 0x00, 0x80, 0x01, 0x00, 0x1f, 0xff, 0xff, 0xf8, 0x07, 0xff, 0xff, 0xe0,
-    0x00, 0x7f, 0xfe, 0x00};
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+  0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
+  0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x03, 0xc0, 0x00, 0x00, 0x03, 0xc0, 0x00,
+  0x00, 0x01, 0x80, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0x02, 0x40, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x0c, 0x30,
+  0x00, 0x00, 0x02, 0x40, 0x00, 0x00, 0x03, 0xc0, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0x02,
+  0x40, 0x00, 0x00, 0x70, 0x0e, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x03, 0xc0, 0x00, 0x01, 0xc0, 0x03, 0x80, 0x00,
+  0x0c, 0x30, 0x00, 0x00, 0x07, 0xe0, 0x00, 0x07, 0x00, 0x00, 0xe0, 0x00, 0x0b, 0xd0, 0x00, 0x00, 0x05, 0xa0, 0x00,
+  0x0c, 0x02, 0x40, 0x30, 0x00, 0x1a, 0x58, 0x00, 0x00, 0x0d, 0xb0, 0x00, 0x18, 0x0e, 0x70, 0x18, 0x00, 0x36, 0x6c,
+  0x00, 0x00, 0x08, 0x10, 0x00, 0x10, 0x38, 0x1c, 0x08, 0x00, 0xe4, 0x27, 0x00, 0x00, 0x18, 0x18, 0x00, 0x10, 0x00,
+  0x00, 0x08, 0x01, 0x80, 0x01, 0x80, 0x00, 0x30, 0x0c, 0x00, 0x30, 0x00, 0x00, 0x0c, 0x01, 0x00, 0x00, 0x80, 0x00,
+  0x20, 0x04, 0x00, 0x20, 0x00, 0x00, 0x04, 0x03, 0x00, 0x00, 0xc0, 0x00, 0x60, 0x06, 0x00, 0x20, 0x00, 0x00, 0x04,
+  0x06, 0x00, 0x00, 0x60, 0x00, 0xc0, 0x03, 0x00, 0x20, 0x00, 0x00, 0x04, 0x04, 0x00, 0x00, 0x20, 0x00, 0x80, 0x01,
+  0x00, 0x20, 0x00, 0x00, 0x04, 0x0c, 0x00, 0x00, 0x30, 0x00, 0x80, 0x01, 0x00, 0x20, 0x00, 0x00, 0x04, 0x08, 0x00,
+  0x00, 0x10, 0x01, 0x80, 0x01, 0x80, 0x20, 0x00, 0x00, 0x04, 0x08, 0x00, 0x00, 0x10, 0x01, 0x00, 0x00, 0x80, 0x30,
+  0x00, 0x00, 0x0c, 0x08, 0x00, 0x00, 0x10, 0x00, 0x80, 0x01, 0x00, 0x1f, 0xff, 0xff, 0xf8, 0x07, 0xff, 0xff, 0xe0,
+  0x00, 0x7f, 0xfe, 0x00
+};
 
 ::SpriteSheet spriteSheet = ::SpriteSheet(spriteSheetData, 96, 32, 3);
 
@@ -311,8 +307,8 @@ public:
   int xVelocity = 0;
   int xPosition = 48;
 
-  int yMaxVelocity = -10; // note that origin is top left so negative velocity
-			  // is up on the screen
+  int yMaxVelocity = -10;  // note that origin is top left so negative velocity
+                           // is up on the screen
   int yVelocity = yMaxVelocity;
   int yPosition = 90;
 
@@ -320,8 +316,6 @@ public:
 
   bool buttonLeftPressed = false;
   bool buttonRightPressed = false;
-
-  const char *getName() { return "spriteManager"; };
 
   void initialize() {
     slime.setPosition(xPosition, yPosition);
@@ -331,70 +325,70 @@ public:
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case Kywy::Events::D_PAD_LEFT_PRESSED:
-      buttonLeftPressed = true;
-      xVelocity = -1 * xMaxVelocity;
-      break;
-    case Kywy::Events::D_PAD_RIGHT_PRESSED:
-      buttonRightPressed = true;
-      xVelocity = xMaxVelocity;
-      break;
-    case Kywy::Events::D_PAD_LEFT_RELEASED:
-      buttonLeftPressed = false;
-      if (buttonRightPressed) {
-	xVelocity = xMaxVelocity;
-      } else {
-	xVelocity = 0;
-      }
-      break;
-    case Kywy::Events::D_PAD_RIGHT_RELEASED:
-      buttonRightPressed = false;
-      if (buttonLeftPressed) {
-	xVelocity = -1 * xMaxVelocity;
-      } else {
-	xVelocity = 0;
-      }
-      break;
-    case PLATFORM_COLLISION:
-      if (yVelocity > 0) {
-	yVelocity = yMaxVelocity;
+      case Kywy::Events::D_PAD_LEFT_PRESSED:
+        buttonLeftPressed = true;
+        xVelocity = -1 * xMaxVelocity;
+        break;
+      case Kywy::Events::D_PAD_RIGHT_PRESSED:
+        buttonRightPressed = true;
+        xVelocity = xMaxVelocity;
+        break;
+      case Kywy::Events::D_PAD_LEFT_RELEASED:
+        buttonLeftPressed = false;
+        if (buttonRightPressed) {
+          xVelocity = xMaxVelocity;
+        } else {
+          xVelocity = 0;
+        }
+        break;
+      case Kywy::Events::D_PAD_RIGHT_RELEASED:
+        buttonRightPressed = false;
+        if (buttonLeftPressed) {
+          xVelocity = -1 * xMaxVelocity;
+        } else {
+          xVelocity = 0;
+        }
+        break;
+      case PLATFORM_COLLISION:
+        if (yVelocity > 0) {
+          yVelocity = yMaxVelocity;
 
-	publish(&jumpMessage);
-      }
-      break;
-    case Kywy::Events::TICK:
-      // side to side motion
-      xPosition += xVelocity;
+          publish(&jumpMessage);
+        }
+        break;
+      case Kywy::Events::TICK:
+        // side to side motion
+        xPosition += xVelocity;
 
-      if (xPosition < padding)
-	xPosition = padding;
+        if (xPosition < padding)
+          xPosition = padding;
 
-      if (xPosition > DISPLAY_WIDTH - 32 - padding)
-	xPosition = DISPLAY_WIDTH - 32 - padding;
+        if (xPosition > KYWY_DISPLAY_WIDTH - 32 - padding)
+          xPosition = KYWY_DISPLAY_WIDTH - 32 - padding;
 
-      // falling
-      yPosition += yVelocity;
-      if (yVelocity < 7)
-	yVelocity += 1;
+        // falling
+        yPosition += yVelocity;
+        if (yVelocity < 7)
+          yVelocity += 1;
 
-      // jumping
-      if (yPosition > DISPLAY_HEIGHT - 18) {
-	publish(&gameOverMessage);
-      }
+        // jumping
+        if (yPosition > KYWY_DISPLAY_HEIGHT - 18) {
+          publish(&gameOverMessage);
+        }
 
-      // animation
-      if (yVelocity < -5) {
-	slime.setFrame(2);
-      } else if (yVelocity < -2) {
-	slime.setFrame(1);
-      } else {
-	slime.setFrame(0);
-      }
+        // animation
+        if (yVelocity < -5) {
+          slime.setFrame(2);
+        } else if (yVelocity < -2) {
+          slime.setFrame(1);
+        } else {
+          slime.setFrame(0);
+        }
 
-      slime.setPosition(xPosition, yPosition);
+        slime.setPosition(xPosition, yPosition);
 
-      slime.render();
-      break;
+        slime.render();
+        break;
     }
   }
 
@@ -406,8 +400,6 @@ typedef struct Platform {
 
 class PlatformManager : public Actor::Actor {
 public:
-  const char *getName() { return "platformManager"; };
-
   const static int numPlatforms = 4;
 
   int yVelocity = 2;
@@ -417,66 +409,66 @@ public:
 
   void initialize() {
     for (int i = 0; i < numPlatforms; i++) {
-      platforms[i] = Platform{.x = (int)fmax(5, fmin(random(DISPLAY_WIDTH), DISPLAY_WIDTH - 5 - platformWidth)),
-			      .y = DISPLAY_HEIGHT - 18 - (50 * i),
-			      .width = platformWidth};
+      platforms[i] = Platform{ .x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth)),
+                               .y = KYWY_DISPLAY_HEIGHT - 18 - (50 * i),
+                               .width = platformWidth };
     }
   }
 
   void drawPlatforms(uint16_t color) {
     for (int i = 0; i < numPlatforms; i++) {
-      if (platforms[i].y >= 0 && platforms[i].y <= DISPLAY_HEIGHT) {
-	      engine.display.drawLine(platforms[i].x, platforms[i].y, int16_t(platforms[i].x + platforms[i].width), int16_t(platforms[i].y), Display::Object1DOptions().color(color));
+      if (platforms[i].y >= 0 && platforms[i].y <= KYWY_DISPLAY_HEIGHT) {
+        engine.display.drawLine(platforms[i].x, platforms[i].y, int16_t(platforms[i].x + platforms[i].width), int16_t(platforms[i].y), Display::Object1DOptions().color(color));
       }
     }
   }
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case Kywy::Events::TICK:
-      drawPlatforms(WHITE); // erase platforms
+      case Kywy::Events::TICK:
+        drawPlatforms(WHITE);  // erase platforms
 
-      // check for collisions
-      for (int i = 0; i < numPlatforms; i++) {
+        // check for collisions
+        for (int i = 0; i < numPlatforms; i++) {
 
-	// stupid hack because the uint y value rolls over to 65535 instead of
-	// going negative
-	int slimeY;
-	if (slime.y < 200) {
-	  slimeY = slime.y;
-	} else {
-	  slimeY = (int)slime.y - 65535;
-	}
+          // stupid hack because the uint y value rolls over to 65535 instead of
+          // going negative
+          int slimeY;
+          if (slime.y < 200) {
+            slimeY = slime.y;
+          } else {
+            slimeY = (int)slime.y - 65535;
+          }
 
-	int slimeBottom = slimeY + slime.height;
-	int slimeSide = slime.x;
+          int slimeBottom = slimeY + slime.height;
+          int slimeSide = slime.x;
 
-	if (slimeBottom > platforms[i].y + 3)
-	  continue;
+          if (slimeBottom > platforms[i].y + 3)
+            continue;
 
-	if (slimeBottom < platforms[i].y - 3)
-	  continue;
+          if (slimeBottom < platforms[i].y - 3)
+            continue;
 
-	if (slimeSide > platforms[i].x + platformWidth - 10)
-	  continue;
+          if (slimeSide > platforms[i].x + platformWidth - 10)
+            continue;
 
-	if (slimeSide < platforms[i].x - platformWidth + 10)
-	  continue;
+          if (slimeSide < platforms[i].x - platformWidth + 10)
+            continue;
 
-	publish(&platformCollisionMessage);
-      }
+          publish(&platformCollisionMessage);
+        }
 
-      // move platforms
-      for (int i = 0; i < numPlatforms; i++) {
-	platforms[i].y += yVelocity;
+        // move platforms
+        for (int i = 0; i < numPlatforms; i++) {
+          platforms[i].y += yVelocity;
 
-	if (platforms[i].y > DISPLAY_HEIGHT + 25) {
-	  platforms[i].y = -5;
-	  platforms[i].x = (int)fmax(5, fmin(random(DISPLAY_WIDTH), DISPLAY_WIDTH - 5 - platformWidth));
-	}
-      }
+          if (platforms[i].y > KYWY_DISPLAY_HEIGHT + 25) {
+            platforms[i].y = -5;
+            platforms[i].x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth));
+          }
+        }
 
-      drawPlatforms(BLACK); // draw platforms
+        drawPlatforms(BLACK);  // draw platforms
     }
   }
 
@@ -484,8 +476,6 @@ public:
 
 class GameManager : public Actor::Actor {
 public:
-  const char *getName() { return "gameManager"; };
-
   int score = 0;
   int highScore = 0;
 
@@ -499,60 +489,63 @@ public:
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case START_SCREEN: {
-      slimeManager.unsubscribe(&engine.clock);
-      platformManager.unsubscribe(&engine.clock);
-      unsubscribe(&engine.clock);
-      engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)slimeJumperSplashScreenBMP);
-      engine.display.update();
-      subscribe(&engine.input);
-      break;
-    }
-    case Kywy::Events::TICK:
-      drawScore(BLACK);
-      engine.display.update();
-      break;
-    case JUMP:
-      drawScore(WHITE);
-      score += 1;
-      break;
-    case GAME_OVER: {
-      slimeManager.unsubscribe(&engine.clock);
-      platformManager.unsubscribe(&engine.clock);
-      unsubscribe(&engine.clock);
-      subscribe(&engine.input);
+      case START_SCREEN:
+        {
+          slimeManager.unsubscribe(&engine.clock);
+          platformManager.unsubscribe(&engine.clock);
+          unsubscribe(&engine.clock);
+          engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)slimeJumperSplashScreenBMP);
+          engine.display.update();
+          subscribe(&engine.input);
+          break;
+        }
+      case Kywy::Events::TICK:
+        drawScore(BLACK);
+        engine.display.update();
+        break;
+      case JUMP:
+        drawScore(WHITE);
+        score += 1;
+        break;
+      case GAME_OVER:
+        {
+          slimeManager.unsubscribe(&engine.clock);
+          platformManager.unsubscribe(&engine.clock);
+          unsubscribe(&engine.clock);
+          subscribe(&engine.input);
 
-      if (score > highScore)
-	highScore = score;
+          if (score > highScore)
+            highScore = score;
 
-      engine.display.clear();
-      engine.display.drawText(5, 5, "GAME OVER");
-      char msg[32];
-      snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
-      engine.display.drawText(5, 15, msg);
-      snprintf(msg, sizeof(msg), "High Score: %d", highScore);
-      engine.display.drawText(5, 25, msg);
-      engine.display.drawText(5, 45, "Press any button");
-      engine.display.drawText(5, 55, "to try again.");
-      engine.display.update();
-      break;
-    }
-    case Kywy::Events::INPUT_PRESSED: {
-      unsubscribe(&engine.input);
+          engine.display.clear();
+          engine.display.drawText(5, 5, "GAME OVER");
+          char msg[32];
+          snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
+          engine.display.drawText(5, 15, msg);
+          snprintf(msg, sizeof(msg), "High Score: %d", highScore);
+          engine.display.drawText(5, 25, msg);
+          engine.display.drawText(5, 45, "Press any button");
+          engine.display.drawText(5, 55, "to try again.");
+          engine.display.update();
+          break;
+        }
+      case Kywy::Events::INPUT_PRESSED:
+        {
+          unsubscribe(&engine.input);
 
-      platformManager.initialize();
-      slime.setPosition(48, 90);
-      slimeManager.yVelocity = -12;
+          platformManager.initialize();
+          slime.setPosition(48, 90);
+          slimeManager.yVelocity = -12;
 
-      score = 0;
+          score = 0;
 
-      engine.display.clear();
+          engine.display.clear();
 
-      slimeManager.subscribe(&engine.clock);
-      platformManager.subscribe(&engine.clock);
-      subscribe(&engine.clock);
-      break;
-    }
+          slimeManager.subscribe(&engine.clock);
+          platformManager.subscribe(&engine.clock);
+          subscribe(&engine.clock);
+          break;
+        }
     }
   }
 } gameManager;

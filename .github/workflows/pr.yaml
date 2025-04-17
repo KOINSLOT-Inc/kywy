@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Check Pull Request
+on: pull_request
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: make .clang-format  # get arduino .clang-format file
+    - uses: jidicula/clang-format-action@v4.15.0       # lint c++ code w/ clang-format
+      with:
+        clang-format-version: '14'
+    - uses: arduino/arduino-lint-action@v2             # lint arduino library requirements
+      with:
+        compliance: strict
+        recursive: true
+        library-manager: update
+    - uses: fsfe/reuse-action@v1                       # lint license requirements
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/compile-sketches@v1
+      with:
+        fqbn: "arduino:mbed_rp2040:pico"
+        enable-warnings-report: true
+        enable-deltas-report: true
+  check-library-version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: check proposed version bump
+      id: tag
+      uses: anothrNick/github-tag-action@1.71.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        INITIAL_VERSION: 1.0.0
+        DRY_RUN: true
+    - name: assert version in library.properties is bumped
+      run: |
+        if [ \
+          "$(cat library.properties | grep version | sed 's/version=/v/')" \
+          != "${{ steps.tag.outputs.new_tag }}" \
+        ]; then \
+          new_tag="$(echo '${{ steps.tag.outputs.new_tag }}' | sed 's/v//')"
+          echo "bump the version in library.properties to ${new_tag}!"; \
+          exit 1; \
+        fi

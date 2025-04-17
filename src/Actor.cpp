@@ -27,7 +27,7 @@ void Actor::initialize(){};
 void Actor::teardown(){};
 
 Actor::Actor() {
-  this->event_handler = new events::Event<void(Actor*, Message*)>(&this->queue, queueEventCallback);
+  this->event_handler = new events::Event<void(Actor *, Message *)>(&this->queue, queueEventCallback);
 }
 
 Actor::~Actor() {
@@ -107,7 +107,7 @@ void Actor::unsubscribe(Actor *actor) {
 void Actor::publish(Message *message) {
   uint8_t i = 0;
   while (i < MAX_SUBSCRIBERS) {
-    
+
     if (subscribers[i] == nullptr) {
       // reached end of subscriber list,
       // no need to iterate over rest of nullptrs in the array

@@ -9,27 +9,23 @@
 
 namespace Kywy {
 
-#define KYWY_LEFT_BUTTON      12
-#define KYWY_RIGHT_BUTTON      2
-#define KYWY_D_PAD_UP          9
-#define KYWY_D_PAD_DOWN        3
-#define KYWY_D_PAD_LEFT        6
-#define KYWY_D_PAD_RIGHT       7
-#define KYWY_D_PAD_CENTER      8
+#define KYWY_LEFT_BUTTON 12
+#define KYWY_RIGHT_BUTTON 2
+#define KYWY_D_PAD_UP 9
+#define KYWY_D_PAD_DOWN 3
+#define KYWY_D_PAD_LEFT 6
+#define KYWY_D_PAD_RIGHT 7
+#define KYWY_D_PAD_CENTER 8
 
 class Input : public Actor::Actor {
 private:
-  bool buttonLeftPressed;
-  bool buttonRightPressed;
-  bool dPadLeftPressed;
-  bool dPadRightPressed;
-  bool dPadUpPressed;
-  bool dPadDownPressed;
-  bool dPadCenterPressed;
-
-public:
-  void initialize();
-  void handle(::Actor::Message *message);
+  bool _buttonLeftPressed;
+  bool _buttonRightPressed;
+  bool _dPadLeftPressed;
+  bool _dPadRightPressed;
+  bool _dPadUpPressed;
+  bool _dPadDownPressed;
+  bool _dPadCenterPressed;
 
   ::Actor::Message inputMessage;
   ::Actor::Message inputPressedMessage;
@@ -50,8 +46,20 @@ public:
   ::Actor::Message dPadDownReleasedMessage;
   ::Actor::Message dPadCenterPressedMessage;
   ::Actor::Message dPadCenterReleasedMessage;
+
+public:
+  void initialize();
+  void handle(::Actor::Message *message);
+
+  bool buttonLeftPressed;
+  bool buttonRightPressed;
+  bool dPadLeftPressed;
+  bool dPadRightPressed;
+  bool dPadUpPressed;
+  bool dPadDownPressed;
+  bool dPadCenterPressed;
 };
 
-} // namespace Kywy
+}  // namespace Kywy
 
 #endif

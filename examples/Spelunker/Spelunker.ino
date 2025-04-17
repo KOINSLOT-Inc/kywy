@@ -1,15 +1,10 @@
-// SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Kywy.hpp"
 
 Kywy::Engine engine;
-
-#define DISPLAY_WIDTH  144
-#define DISPLAY_HEIGHT 168
-#define BLACK          0x0
-#define WHITE          0xf
 
 typedef enum : uint16_t {
   START_SCREEN = Kywy::Events::USER_EVENTS,
@@ -272,16 +267,16 @@ const uint8_t splashScreenBMP[] = {
 };
 
 const uint8_t spelunkerBMP[] = {
-    0b00000000, //
-    0b00111110, //
-    0b10001000, //
-    0b11111110, //
-    0b00111111, //
-    0b00100010, //
-    0b00000000, //
-    0b00000000, //
+  0b00000000,  //
+  0b00111110,  //
+  0b10001000,  //
+  0b11111110,  //
+  0b00111111,  //
+  0b00100010,  //
+  0b00000000,  //
+  0b00000000,  //
 };
-const uint8_t *spelunkerFrames[] = {spelunkerBMP};
+const uint8_t *spelunkerFrames[] = { spelunkerBMP };
 Sprite spelunkerSprite(spelunkerFrames, 1, 8, 8);
 
 class spelunkerManager : public Actor::Actor {
@@ -295,8 +290,6 @@ public:
 
   bool buttonPressed = false;
 
-  const char *getName() { return "spelunkerManager"; };
-
   void initialize() {
     spelunkerSprite.setDisplay(&engine.display);
     spelunkerSprite.setPosition(xPosition, yPosition);
@@ -308,37 +301,37 @@ public:
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case Kywy::Events::BUTTON_LEFT_PRESSED:
-      Serial.println("button left pressed");
-      buttonPressed = true;
-      break;
-    case Kywy::Events::BUTTON_LEFT_RELEASED:
-      Serial.println("button left released");
-      buttonPressed = false;
-      break;
-    case Kywy::Events::TICK:
-      // up/down movement
-      yPosition += yVelocity;
+      case Kywy::Events::BUTTON_LEFT_PRESSED:
+        Serial.println("button left pressed");
+        buttonPressed = true;
+        break;
+      case Kywy::Events::BUTTON_LEFT_RELEASED:
+        Serial.println("button left released");
+        buttonPressed = false;
+        break;
+      case Kywy::Events::TICK:
+        // up/down movement
+        yPosition += yVelocity;
 
-      if (yPosition < padding) {
-        yPosition = padding;
-        yVelocity = 0;
-      }
+        if (yPosition < padding) {
+          yPosition = padding;
+          yVelocity = 0;
+        }
 
-      if (yPosition > DISPLAY_HEIGHT - 8)
-        yPosition = DISPLAY_HEIGHT - 8;
+        if (yPosition > KYWY_DISPLAY_HEIGHT - 8)
+          yPosition = KYWY_DISPLAY_HEIGHT - 8;
 
-      // gravity
-      if (yVelocity < 7 && !buttonPressed)
-        yVelocity += 1;
+        // gravity
+        if (yVelocity < 7 && !buttonPressed)
+          yVelocity += 1;
 
-      if (buttonPressed)
-        yVelocity = -5;
+        if (buttonPressed)
+          yVelocity = -5;
 
-      // apply changes
-      spelunkerSprite.setPosition(xPosition, yPosition);
-      spelunkerSprite.render();
-      break;
+        // apply changes
+        spelunkerSprite.setPosition(xPosition, yPosition);
+        spelunkerSprite.render();
+        break;
     }
   }
 
@@ -346,10 +339,8 @@ public:
 
 class columnManager : public Actor::Actor {
 public:
-  const char *getName() { return "columnManager"; };
-
   static const uint8_t numColumns = 16;
-  static const uint8_t columnWidth = DISPLAY_WIDTH / numColumns;
+  static const uint8_t columnWidth = KYWY_DISPLAY_WIDTH / numColumns;
 
   uint8_t topColumns[(numColumns + 1)];
   uint8_t bottomColumns[(numColumns + 1)];
@@ -384,85 +375,83 @@ public:
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case Kywy::Events::TICK:
-      int offset = tickCounter * pixelsPerTick;
+      case Kywy::Events::TICK:
+        int offset = tickCounter * pixelsPerTick;
 
-      for (int i = 0; i < (numColumns + 1); i++) {
-        int columnIndex = (startIndex + i) % (numColumns + 1);
+        for (int i = 0; i < (numColumns + 1); i++) {
+          int columnIndex = (startIndex + i) % (numColumns + 1);
 
-        engine.display.fillRectangle(i * columnWidth - offset, 0, columnWidth, topColumns[columnIndex], Display::Object2DOptions().color(WHITE));
-        
-        engine.display.fillRectangle(i * columnWidth - offset, topColumns[columnIndex], columnWidth, DISPLAY_HEIGHT - bottomColumns[columnIndex] - topColumns[columnIndex]);
+          engine.display.fillRectangle(i * columnWidth - offset, 0, columnWidth, topColumns[columnIndex], Display::Object2DOptions().color(WHITE));
 
-        engine.display.fillRectangle(i * columnWidth - offset, DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
-      }
+          engine.display.fillRectangle(i * columnWidth - offset, topColumns[columnIndex], columnWidth, KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex] - topColumns[columnIndex]);
 
-      // record height of the most recently created column
-      int lastColumnIndex = (startIndex - 1) % (numColumns + 1);
-      if (lastColumnIndex == -1)
-        lastColumnIndex = (numColumns + 1) - 1;
-
-      uint8_t lastColumnHeight = topColumns[lastColumnIndex];
-
-      if (tickCounter < (ticksPerColumnWidth - 1)) {
-        tickCounter++;
-      } else {
-        // move head of list to effectively rotate the column lists
-        startIndex = (startIndex + 1) % (numColumns + 1);
-
-        // reset tick counter
-        tickCounter = 0;
-
-        // choose a new column height around the height of the most recently created column
-        int newColumnIndex = (startIndex - 1) % (numColumns + 1);
-        if (newColumnIndex == -1)
-          newColumnIndex = (numColumns + 1) - 1;
-
-        int8_t newColumnHeight;
-        if (random(2) == 1) { // randomly choose up or down
-          newColumnHeight = lastColumnHeight + 6;
-        } else {
-          newColumnHeight = lastColumnHeight - 6;
+          engine.display.fillRectangle(i * columnWidth - offset, KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
         }
-        newColumnHeight = fmin(DISPLAY_HEIGHT - 72, fmax(0, newColumnHeight));
 
-        topColumns[newColumnIndex] = newColumnHeight;
-        bottomColumns[newColumnIndex] = DISPLAY_HEIGHT - 72 - newColumnHeight; // pin tunnel width at 72
-      }
+        // record height of the most recently created column
+        int lastColumnIndex = (startIndex - 1) % (numColumns + 1);
+        if (lastColumnIndex == -1)
+          lastColumnIndex = (numColumns + 1) - 1;
 
-      // check for collisions
-      uint8_t overlapColumnsStart = 1;
-      uint8_t overlapColumnsEnd = (8 / columnWidth) + (offset ? 1 : 0);
-      bool collided = false;
-      for (int i = overlapColumnsStart; i <= overlapColumnsEnd; i++) {
-        int columnIndex = (startIndex + i) % (numColumns + 1);
+        uint8_t lastColumnHeight = topColumns[lastColumnIndex];
 
-        // collisions with top columns
-        //
-        // `- 1` because top pixels of 8x8 spelunker sprite are all off
-        if (spelunkerManager.yPosition < (topColumns[columnIndex] - 1))
-          collided = true;
+        if (tickCounter < (ticksPerColumnWidth - 1)) {
+          tickCounter++;
+        } else {
+          // move head of list to effectively rotate the column lists
+          startIndex = (startIndex + 1) % (numColumns + 1);
 
-        // collisions with bottom columns
-        //
-        // `+ 5` because bottom pixels of 8x8 spelunker sprite are on the sixth row
-        if ((spelunkerManager.yPosition + 5) > (DISPLAY_HEIGHT - bottomColumns[columnIndex]))
-          collided = true;
-      }
+          // reset tick counter
+          tickCounter = 0;
 
-      if (collided) {
-        publish(&gameOverMessage);
-      }
+          // choose a new column height around the height of the most recently created column
+          int newColumnIndex = (startIndex - 1) % (numColumns + 1);
+          if (newColumnIndex == -1)
+            newColumnIndex = (numColumns + 1) - 1;
 
-      break;
+          int8_t newColumnHeight;
+          if (random(2) == 1) {  // randomly choose up or down
+            newColumnHeight = lastColumnHeight + 6;
+          } else {
+            newColumnHeight = lastColumnHeight - 6;
+          }
+          newColumnHeight = fmin(KYWY_DISPLAY_HEIGHT - 72, fmax(0, newColumnHeight));
+
+          topColumns[newColumnIndex] = newColumnHeight;
+          bottomColumns[newColumnIndex] = KYWY_DISPLAY_HEIGHT - 72 - newColumnHeight;  // pin tunnel width at 72
+        }
+
+        // check for collisions
+        uint8_t overlapColumnsStart = 1;
+        uint8_t overlapColumnsEnd = (8 / columnWidth) + (offset ? 1 : 0);
+        bool collided = false;
+        for (int i = overlapColumnsStart; i <= overlapColumnsEnd; i++) {
+          int columnIndex = (startIndex + i) % (numColumns + 1);
+
+          // collisions with top columns
+          //
+          // `- 1` because top pixels of 8x8 spelunker sprite are all off
+          if (spelunkerManager.yPosition < (topColumns[columnIndex] - 1))
+            collided = true;
+
+          // collisions with bottom columns
+          //
+          // `+ 5` because bottom pixels of 8x8 spelunker sprite are on the sixth row
+          if ((spelunkerManager.yPosition + 5) > (KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex]))
+            collided = true;
+        }
+
+        if (collided) {
+          publish(&gameOverMessage);
+        }
+
+        break;
     }
   }
 } columnManager;
 
 class GameManager : public Actor::Actor {
 public:
-  const char *getName() { return "gameManager"; };
-
   int score = 0;
   int highScore = 0;
 
@@ -471,78 +460,81 @@ public:
   void drawScore() {
     char msg[16];
     snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
-    engine.display.fillRectangle(DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
-    engine.display.drawText(DISPLAY_WIDTH - 33, 3, msg);
+    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
+    engine.display.drawText(KYWY_DISPLAY_WIDTH - 33, 3, msg);
   }
 
   void initialize() {}
 
   void handle(::Actor::Message *message) {
     switch (message->signal) {
-    case START_SCREEN: {
-      inMenu = true;
-      spelunkerManager.unsubscribe(&engine.clock);
-      columnManager.unsubscribe(&engine.clock);
-      unsubscribe(&engine.clock);
-      engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)splashScreenBMP);
-      engine.display.update();
-      subscribe(&engine.input);
-      break;
-    }
-    case Kywy::Events::TICK: {
-      if (inMenu)
-        break;
+      case START_SCREEN:
+        {
+          inMenu = true;
+          spelunkerManager.unsubscribe(&engine.clock);
+          columnManager.unsubscribe(&engine.clock);
+          unsubscribe(&engine.clock);
+          engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)splashScreenBMP);
+          engine.display.update();
+          subscribe(&engine.input);
+          break;
+        }
+      case Kywy::Events::TICK:
+        {
+          if (inMenu)
+            break;
 
-      score += 1;
-      drawScore();
+          score += 1;
+          drawScore();
 
-      unsigned long updateStart = millis();
-      engine.display.update();
+          engine.display.update();
 
-      break;
-    }
-    case GAME_OVER: {
-      inMenu = true;
-      spelunkerManager.unsubscribe(&engine.clock);
-      columnManager.unsubscribe(&engine.clock);
-      subscribe(&engine.input);
-      unsubscribe(&engine.clock);
+          break;
+        }
+      case GAME_OVER:
+        {
+          inMenu = true;
+          spelunkerManager.unsubscribe(&engine.clock);
+          columnManager.unsubscribe(&engine.clock);
+          subscribe(&engine.input);
+          unsubscribe(&engine.clock);
 
-      if (score > highScore)
-        highScore = score;
+          if (score > highScore)
+            highScore = score;
 
-      engine.display.clear();
+          engine.display.clear();
 
-      engine.display.drawText(5, 5, "GAME OVER");
-      char msg[32];
-      snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
-      engine.display.drawText(5, 15, msg);
-      snprintf(msg, sizeof(msg), "High Score: %d", highScore);
-      engine.display.drawText(5, 25, msg);
-      engine.display.drawText(5, 45, "Press left button");
-      engine.display.drawText(5, 55, "to try again.");
-      engine.display.update();
-      break;
-    }
-    case Kywy::Events::BUTTON_LEFT_PRESSED: { // start a new game
-      inMenu = false;
-      unsubscribe(&engine.input);
+          engine.display.drawText(5, 5, "GAME OVER");
+          char msg[32];
+          snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
+          engine.display.drawText(5, 15, msg);
+          snprintf(msg, sizeof(msg), "High Score: %d", highScore);
+          engine.display.drawText(5, 25, msg);
+          engine.display.drawText(5, 45, "Press left button");
+          engine.display.drawText(5, 55, "to try again.");
+          engine.display.update();
+          break;
+        }
+      case Kywy::Events::BUTTON_LEFT_PRESSED:
+        {  // start a new game
+          inMenu = false;
+          unsubscribe(&engine.input);
 
-      spelunkerManager.xPosition = 10;
-      spelunkerManager.yPosition = 64;
-      spelunkerManager.yVelocity = -5;
-      spelunkerManager.initialize();
-      columnManager.initialize();
+          spelunkerManager.xPosition = 10;
+          spelunkerManager.yPosition = 64;
+          spelunkerManager.yVelocity = -5;
+          spelunkerManager.initialize();
+          columnManager.initialize();
 
-      score = 0;
+          score = 0;
 
-      engine.display.fillRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+          engine.display.fillRectangle(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT);
 
-      columnManager.subscribe(&engine.clock);
-      spelunkerManager.subscribe(&engine.clock);
-      subscribe(&engine.clock);
-      break;
-    }
+          columnManager.subscribe(&engine.clock);
+          spelunkerManager.subscribe(&engine.clock);
+          subscribe(&engine.clock);
+          break;
+        }
     }
   }
 } gameManager;
@@ -550,7 +542,7 @@ public:
 void setup() {
   engine.start();
 
-  // make sure column manager subscribes to the ticker before the spelunkerManager so that 
+  // make sure column manager subscribes to the ticker before the spelunkerManager so that
   // the columns don't override the spelunker sprite
   columnManager.subscribe(&engine.clock);
 
@@ -558,8 +550,8 @@ void setup() {
   spelunkerManager.subscribe(&engine.clock);
 
   gameManager.subscribe(&columnManager);
-  gameManager.subscribe(&engine.clock); // sub to clock last so score is written last over top of everything
-  
+  gameManager.subscribe(&engine.clock);  // sub to clock last so score is written last over top of everything
+
   columnManager.start();
   spelunkerManager.start();
   gameManager.start();

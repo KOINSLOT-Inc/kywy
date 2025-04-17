@@ -12,20 +12,23 @@ void clockTickCallback(Clock *clock) {
 };
 
 int Clock::getTickDuration() {
-  return tickDuration;
+  return tickDuration.count();
 }
 
 void Clock::setTickDuration(int milliseconds) {
-  tickDuration = milliseconds;
+  tickDuration = std::chrono::milliseconds(milliseconds);
   // TODO: this is still broken
   // this->clock.break_dispatch();
-  // this->clock.call_every(tickDuration, mbed::callback(&clockTickCallback, this));
+  // this->clock.call_every(tickDuration, mbed::callback(&clockTickCallback,
+  // this));
 }
 
 void Clock::initialize() {
   this->tickMessage.signal = Kywy::Events::TICK;
-  this->clock.call_every(tickDuration, mbed::callback(&clockTickCallback, this));
-  clockThread.start(mbed::callback(&(this->clock), &events::EventQueue::dispatch_forever));
+  this->clock.call_every(tickDuration,
+                         mbed::callback(&clockTickCallback, this));
+  clockThread.start(
+    mbed::callback(&(this->clock), &events::EventQueue::dispatch_forever));
 }
 
 void Clock::handle(::Actor::Message *message) {

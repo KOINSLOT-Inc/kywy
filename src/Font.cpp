@@ -10,10 +10,8 @@ namespace Display {
 namespace Font {
 
 Character::Character(uint8_t *character) {
-  code = ((uint16_t)character[CHARACTER_CODE] * 256U) +
-         character[CHARACTER_CODE + 1];
-  bytes = ((uint16_t)character[CHARACTER_BYTES] * 256U) +
-          character[CHARACTER_BYTES + 1];
+  code = ((uint16_t)character[CHARACTER_CODE] * 256U) + character[CHARACTER_CODE + 1];
+  bytes = ((uint16_t)character[CHARACTER_BYTES] * 256U) + character[CHARACTER_BYTES + 1];
   deviceWidthX = character[CHARACTER_DEVICE_WIDTH_X];
   deviceWidthY = character[CHARACTER_DEVICE_WIDTH_Y];
   bbxWidth = character[CHARACTER_BBX_WIDTH];
@@ -27,7 +25,7 @@ Character::Character(uint8_t *character) {
 Font::Font(uint8_t *font) {
   size = font[FONT_SIZE];
   numCharacters =
-      ((uint16_t)font[FONT_CHARACTERS] * 256U) + font[FONT_CHARACTERS + 1];
+    ((uint16_t)font[FONT_CHARACTERS] * 256U) + font[FONT_CHARACTERS + 1];
   boundingBoxWidth = font[FONT_BOUNDING_BOX_WIDTH];
   boundingBoxHeight = font[FONT_BOUNDING_BOX_HEIGHT];
   boundingBoxXOffset = font[FONT_BOUNDING_BOX_X_OFFSET];
@@ -42,18 +40,16 @@ Character Font::getCharacter(uint16_t character) {
 
   // first character is always the missing character replacement glyph so skip
   // it
-  currentCharacter += 256U * *(currentCharacter + CHARACTER_BYTES) +
-                      *(currentCharacter + CHARACTER_BYTES + 1);
+  currentCharacter += 256U * *(currentCharacter + CHARACTER_BYTES) + *(currentCharacter + CHARACTER_BYTES + 1);
 
   uint16_t charactersLeft = numCharacters;
 
   while (256U * *(currentCharacter) + *(currentCharacter + 1) != character) {
     charactersLeft--;
-    currentCharacter += 256U * *(currentCharacter + CHARACTER_BYTES) +
-                        *(currentCharacter + CHARACTER_BYTES + 1);
+    currentCharacter += 256U * *(currentCharacter + CHARACTER_BYTES) + *(currentCharacter + CHARACTER_BYTES + 1);
 
-    if (charactersLeft <= 0) { // if we didn't find the character use the
-                               // missing character replacement glyph
+    if (charactersLeft <= 0) {  // if we didn't find the character use the
+                                // missing character replacement glyph
       printf("Char not found! '%#x'\n", character);
       return Character(firstCharacter);
     }
@@ -62,9 +58,9 @@ Character Font::getCharacter(uint16_t character) {
   return Character(currentCharacter);
 };
 
-} // namespace Font
+}  // namespace Font
 
-uint16_t Display::readUTF8Char(char *&string) {
+uint16_t Display::readUTF8Char(const char *&string) {
   uint16_t firstByte = string[0];
 
   // end of string
@@ -79,8 +75,7 @@ uint16_t Display::readUTF8Char(char *&string) {
     string += 3;
 
     // extract the 16 bits (x's) embedded in '1110xxxx 10xxxxxx 10xxxxxx'
-    return (firstByte * 4096U) | ((secondByte & 0b00111111) * 64U) |
-           (thirdByte & 0b00111111);
+    return (firstByte * 4096U) | ((secondByte & 0b00111111) * 64U) | (thirdByte & 0b00111111);
   }
 
   // two byte character sequence, U+0080 - U+07FF
@@ -97,7 +92,7 @@ uint16_t Display::readUTF8Char(char *&string) {
   return firstByte;
 };
 
-void Display::getTextSize(uint8_t *font, char *text, uint16_t &width,
+void Display::getTextSize(uint8_t *font, const char *text, uint16_t &width,
                           uint16_t &height, int16_t &originXOffset,
                           int16_t &originYOffset, uint16_t &baselineLength) {
   width = 0;
@@ -134,7 +129,7 @@ void Display::getTextSize(uint8_t *font, char *text, uint16_t &width,
     maxAscent = ascent > maxAscent ? ascent : maxAscent;
 
     uint16_t descent =
-        currentChar.bbxYOffset < 0 ? -1 * currentChar.bbxYOffset : 0;
+      currentChar.bbxYOffset < 0 ? -1 * currentChar.bbxYOffset : 0;
     maxDescent = descent > maxDescent ? descent : maxDescent;
 
     height = maxAscent + maxDescent;
@@ -142,16 +137,17 @@ void Display::getTextSize(uint8_t *font, char *text, uint16_t &width,
 
   // the device width often extends beyond the BBX, so for the last char we need
   // to calculate the added width based on the BBX instead
-  width -= currentChar.deviceWidthX; // undo the last operation
-  width += currentChar.bbxWidth +
-           currentChar.bbxXOffset; // add width and account for offset
+  width -= currentChar.deviceWidthX;                       // undo the last operation
+  width += currentChar.bbxWidth + currentChar.bbxXOffset;  // add width and account for offset
 
   originYOffset = maxAscent - 1;
 };
 
-void Display::setFont(uint8_t *font) { defaultFont = font; }
+void Display::setFont(uint8_t *font) {
+  defaultFont = font;
+}
 
-void Display::getTextSize(char *text, uint16_t &width, uint16_t &height,
+void Display::getTextSize(const char *text, uint16_t &width, uint16_t &height,
                           TextOptions options) {
   if (options.getFont() == nullptr) {
     options = options.font(defaultFont);
@@ -163,7 +159,8 @@ void Display::getTextSize(char *text, uint16_t &width, uint16_t &height,
               originYOffset, baselineLength);
 };
 
-void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
+void Display::drawText(int16_t x, int16_t y, const char *text,
+                       TextOptions options) {
   if (options.getFont() == nullptr) {
     options = options.font(defaultFont);
   }
@@ -178,38 +175,38 @@ void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
   int16_t originX = x, originY = y;
 
   switch (options.getOrigin()) {
-  case Origin::Text::TOP_LEFT:
-    originX = x + originXOffset;
-    originY = y + originYOffset;
-    break;
-  case Origin::Text::TOP_RIGHT:
-    originX = x - (height - 1) + originXOffset;
-    originY = y + originYOffset;
-    break;
-  case Origin::Text::BOTTOM_LEFT:
-    originX = x + originXOffset;
-    originY = y - (height - 1) + originYOffset;
-    break;
-  case Origin::Text::BOTTOM_RIGHT:
-    originX = x - (height - 1) + originXOffset;
-    originY = y - (height - 1) + originYOffset;
-    break;
-  case Origin::Text::CENTER:
-    originX = x - (width / 2) + originXOffset;
-    originY = y - (height / 2) + originYOffset;
-    break;
-  case Origin::Text::BASELINE_LEFT:
-    originX = x;
-    originY = y;
-    break;
-  case Origin::Text::BASELINE_CENTER:
-    originX = x - (baselineLength / 2);
-    originY = y;
-    break;
-  case Origin::Text::BASELINE_RIGHT:
-    originX = x - baselineLength;
-    originY = y;
-    break;
+    case Origin::Text::TOP_LEFT:
+      originX = x + originXOffset;
+      originY = y + originYOffset;
+      break;
+    case Origin::Text::TOP_RIGHT:
+      originX = x - (height - 1) + originXOffset;
+      originY = y + originYOffset;
+      break;
+    case Origin::Text::BOTTOM_LEFT:
+      originX = x + originXOffset;
+      originY = y - (height - 1) + originYOffset;
+      break;
+    case Origin::Text::BOTTOM_RIGHT:
+      originX = x - (height - 1) + originXOffset;
+      originY = y - (height - 1) + originYOffset;
+      break;
+    case Origin::Text::CENTER:
+      originX = x - (width / 2) + originXOffset;
+      originY = y - (height / 2) + originYOffset;
+      break;
+    case Origin::Text::BASELINE_LEFT:
+      originX = x;
+      originY = y;
+      break;
+    case Origin::Text::BASELINE_CENTER:
+      originX = x - (baselineLength / 2);
+      originY = y;
+      break;
+    case Origin::Text::BASELINE_RIGHT:
+      originX = x - baselineLength;
+      originY = y;
+      break;
   }
 
   // we need to draw text in transparent mode so that diacritical marks aren't
@@ -231,12 +228,13 @@ void Display::drawText(int16_t x, int16_t y, char *text, TextOptions options) {
                currentChar.bbxWidth + (8 - currentChar.bbxWidth % 8),
                currentChar.bbxHeight, currentChar.bitmap,
                BitmapOptions()
-                   .negative(true) // serialized format is 1==black, 0==white, but we need to flip that
-                   .color(options.getColor())
-                   .origin(Origin::Object2D::BOTTOM_LEFT));
+                 .negative(true)  // serialized format is 1==black, 0==white,
+                                  // but we need to flip that
+                 .color(options.getColor())
+                 .origin(Origin::Object2D::BOTTOM_LEFT));
 
     originX += currentChar.deviceWidthX;
   }
 };
 
-} // namespace Display
+}  // namespace Display
