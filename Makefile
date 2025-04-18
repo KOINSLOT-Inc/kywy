@@ -16,6 +16,11 @@ CACHE := .cache
 $(CACHE):
 	@mkdir .cache
 
+PYTHON_DEPS := $(CACHE)/.python-deps
+$(PYTHON_DEPS): Pipfile $(CACHE)
+	@pipenv install --dev
+	@touch $(PYTHON_DEPS)
+
 ARDUINO_CLI := $(CACHE)/.arduino-cli
 $(ARDUINO_CLI): $(CACHE)
 	@which arduino-cli 2>&1 > /dev/null || (echo "no arduino-cli found, try `brew install arduino-cli`" && exit 1)
@@ -36,11 +41,11 @@ $(CLANG_FORMAT): $(CACHE) .clang-format
 	@touch $(CLANG_FORMAT)
 
 .PHONY: check-licenses
-check-licenses:
+check-licenses: $(PYTHON_DEPS)
 	@pipenv run reuse lint
 
 .PHONY: update-licenses
-update-licenses:
+update-licenses: $(PYTHON_DEPS)
 	@pipenv run reuse annotate \
 	    --copyright "KOINSLOT, Inc." \
 	    --year $$(date +%Y) \
@@ -94,3 +99,11 @@ upload/examples/%: $(ARDUINO_CLI)
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
 		$$(echo $@ | cut -d'/' -f 2,3)
+
+.PHONY: docs
+docs: $(PYTHON_DEPS)
+	@pipenv run mkdocs build
+
+.PHONY: serve-docs
+serve-docs: $(PYTHON_DEPS)
+	@pipenv run mkdocs serve

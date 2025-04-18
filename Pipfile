@@ -7,6 +7,9 @@ name = "pypi"
 
 [dev-packages]
 reuse = "*"
+mkdocs = "*"
+mkdocs-dracula-theme = "*"
+mkdocs-macros-plugin = "*"
 
 [requires]
 python_version = "3.11"

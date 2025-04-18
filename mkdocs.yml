@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+site_name: Kywy Documentation
+theme: dracula
+plugins:
+  - macros:
+      module_name: docs/macros
