@@ -6,7 +6,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <!--
 TODO:
-  - https://github.com/JakubAndrysek/MkDoxy
   - https://github.com/rnorth/mkdocs-codeinclude-plugin
 -->
 

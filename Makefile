@@ -40,6 +40,11 @@ $(CLANG_FORMAT): $(CACHE) .clang-format
 	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
 	@touch $(CLANG_FORMAT)
 
+DOXYGEN := $(CACHE)/.doxygen
+$(DOXYGEN): $(CACHE)
+	@which doxygen 2>&1 > /dev/null || (echo "no doxygen found, try `brew install doxygen`" && exit 1)
+	@touch $(DOXYGEN)
+
 .PHONY: check-licenses
 check-licenses: $(PYTHON_DEPS)
 	@pipenv run reuse lint
@@ -101,9 +106,9 @@ upload/examples/%: $(ARDUINO_CLI)
 		$$(echo $@ | cut -d'/' -f 2,3)
 
 .PHONY: docs
-docs: $(PYTHON_DEPS)
+docs: $(PYTHON_DEPS) $(DOXYGEN)
 	@pipenv run mkdocs build
 
 .PHONY: serve-docs
-serve-docs: $(PYTHON_DEPS)
+serve-docs: $(PYTHON_DEPS) $(DOXYGEN)
 	@pipenv run mkdocs serve
