@@ -89,11 +89,19 @@ compile-arduino-sketches: $(ARDUINO_CLI)
 	done \
 	&& echo "compiled $$num_examples examples in $$(($$(date +%s) - start)) seconds"
 
+.PHONY: lint-python-code
+lint-python-code: $(PYTHON_DEPS)
+	@pipenv run black --check .
+
+.PHONY: format-python-code
+format-python-code: $(PYTHON_DEPS)
+	@pipenv run black .
+
 .PHONY: lint
-lint: check-licenses lint-arduino-code
+lint: check-licenses lint-arduino-code lint-python-code
 
 .PHONY: format
-format: format-arduino-code
+format: format-arduino-code format-python-code
 
 .PHONY: upload/examples/%
 upload/examples/%: $(ARDUINO_CLI)
