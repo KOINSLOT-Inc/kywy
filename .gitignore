@@ -12,5 +12,5 @@ src/src.ino
 .nvim.lua
 .envrc
 .clang-format
-site
+_site
 __pycache__
