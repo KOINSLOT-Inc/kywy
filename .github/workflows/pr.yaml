@@ -34,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: check proposed version bump
       id: tag
       uses: anothrNick/github-tag-action@1.71.0
@@ -42,6 +44,7 @@ jobs:
         WITH_V: true
         INITIAL_VERSION: 1.0.0
         DRY_RUN: true
+        VERBOSE: true
     - name: assert version in library.properties is bumped
       run: |
         if [ \
