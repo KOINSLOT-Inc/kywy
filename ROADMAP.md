@@ -15,7 +15,7 @@ _current state: draft_
 The Kywy engine is currently in a beta state: fully functional and usable, and ready for a period of maturation,
 refinement based on user feedback, and new feature implementation.
 
-Since the engine is out in the wild for use, we'll call it `v1.0.0`.
+Since the engine is out in the wild for use, we'll call it at least `v1`.
 
 This roadmap will sketch out our path forward along three major work streams: documentation, codebase maturity, and new
 features development.
@@ -31,11 +31,13 @@ solely on help from the Discord server.
 *Primary Goal: A Kywy user should be able to go from zero knowledge to a functional game using only our documentation.*
 
 Items:
+
 * [ ] (S) `README.md` for the repo that gives an overview, links to Kywy website/socials/store, and links to further
   documentation.
-* [ ] (M) Spike: Documentation Hosting. Where should we host docs? GitHub Wiki, hosted static site, markdown in repo?
-* [ ] (M) Automated API Documentation. Use a tool like `doxygen` to generate API docs for us, or see if there's a tool
+* [x] (M) Spike: Documentation Hosting. Where should we host docs? GitHub Wiki, hosted static site, markdown in repo?
+* [x] (M) Automated API Documentation. Use a tool like `doxygen` to generate API docs for us, or see if there's a tool
   typically used by Arduino libraries.
+  * [ ] build out docstrings and api documentation
 * [ ] (M) Getting Started Guide: Should walk through from scratch to uploading a `Hello, World!` program to the Kywy.
 * [ ] (M) Engine Overview Guide: Should walk through all the features of the engine at a high level, and also talk about the
   engine design philosophy and an opinionated way to make games with it.
@@ -69,6 +71,7 @@ that it is enjoyable to learn and use.
 *Primary Goal: Our codebase should be intuitive, easy to use, and reliable.*
 
 Items:
+
 * [x] (M) Formatting/Linting: Arduino has a [lint action](https://github.com/arduino/arduino-lint-action) we can use in
   pipelines and an [LSP] (https://github.com/arduino/arduino-language-server) we can use locally.
   * [ ] also linting for any other file types we have
@@ -96,6 +99,7 @@ The new feature development work stream is third, purposefully, because the new 
 *Primary Goal: Allow easier and more advanced game development with new engine features.*
 
 Items:
+
 * [ ] (M) Advanced sprite sheets (named frames, animation cycles, etc)
 * [ ] (L) UI Layout Tool: easily create menus/buttons, screen overlays, etc.
 * [ ] (L) Physics: colliders and forces.

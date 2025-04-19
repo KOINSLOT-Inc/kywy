@@ -13,6 +13,11 @@ plugins:
       projects:
         kywy:
           src-dirs: src
+  - gen-files:
+      scripts:
+        - docs/generate/main.py
 nav:
   - index.md
-  - api_reference.md
+  - Getting Started: getting_started.md
+  - Roadmap: roadmap.md
+  - API Reference: api_reference.md
