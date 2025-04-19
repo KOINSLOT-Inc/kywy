@@ -5,6 +5,7 @@
 # see the link below for documentation on mkdocs-macros modules
 # https://mkdocs-macros-plugin.readthedocs.io/en/latest/macros/
 
+
 def define_env(env):
     with open("library.properties") as f:
         lines = f.readlines()
