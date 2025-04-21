@@ -23,6 +23,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 </p>
 <br />
 
+*Don't want the pitch? Click [here](./getting_started.md) to skip straight to the docs!*
+
 # What is Kywy?
 
 Kywy is hardware and software, artfully designed to blur the lines between the two.
@@ -54,8 +56,8 @@ you can get started with embedded programming with one simple product.
 Kywy has everything you need to create retro-style games that you can keep in your pocket. The engine boasts
 multi-threading, event handling, sprites and sprite sheets, state machines, and much more in the pipeline. 
 
-Check out our [examples](https://github.com/KOINSLOT-Inc/kywy/tree/main/examples) to see how you can re-create the classics like Pong, Doodle Jump, Snake, and
-Flappy Bird!
+Check out our [examples](https://github.com/KOINSLOT-Inc/kywy/tree/main/examples/games) to see how you can re-create the
+classics like Pong, Doodle Jump, Snake, and Flappy Bird!
 
 ## Kywy for DIY Electronics
 
@@ -82,4 +84,4 @@ Visit our [store](https://koinslot.myshopify.com) to get your Kywy today!
 
 # Getting Started
 
-Check out our [documentation site](./getting_started.md) to kickstart your Kywy experience!
+Check out our [documentation](./getting_started.md) to kickstart your Kywy experience!

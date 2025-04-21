@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import os
+import re
 
 import mkdocs_gen_files
 
@@ -14,7 +15,12 @@ for repo_file_name, docs_file_name in [
 ]:
     with mkdocs_gen_files.open(docs_file_name, "w") as f:
         with open(repo_file_name) as repo_file:
-            print(repo_file.read(), file=f)
+            text = repo_file.read()
+
+            # replace links to docs site
+            text = re.sub(r"\(http(s|)://docs.kywy.io/([^)]+)\)", "(./\\2.md)", text)
+
+            print(text, file=f)
 
 # make repo assets available to docs
 for asset in os.listdir("assets"):
