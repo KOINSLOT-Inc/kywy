@@ -111,7 +111,7 @@ upload/examples/%: $(ARDUINO_CLI)
 	&& arduino-cli upload \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
-		$$(echo $@ | cut -d'/' -f 2,3)
+		$$(echo $@ | cut -d'/' -f 2-)
 
 .PHONY: docs
 docs: $(PYTHON_DEPS) $(DOXYGEN)
@@ -119,4 +119,4 @@ docs: $(PYTHON_DEPS) $(DOXYGEN)
 
 .PHONY: serve-docs
 serve-docs: $(PYTHON_DEPS) $(DOXYGEN)
-	@pipenv run mkdocs serve
+	@pipenv run mkdocs serve --watch README.md --watch ROADMAP.md --watch getting_started.md

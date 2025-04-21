@@ -19,5 +19,7 @@ plugins:
 nav:
   - index.md
   - Getting Started: getting_started.md
+  - Guides: guides.md
+  - Tutorials: tutorials.md
   - Roadmap: roadmap.md
   - API Reference: api_reference.md
