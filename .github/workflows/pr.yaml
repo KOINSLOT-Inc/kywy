@@ -37,12 +37,18 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Skip if no src/ or examples/ changes
+    - name: Check for src/ or examples/ changes
+      id: check_changes
       run: |
         git fetch origin ${{ github.base_ref }}
-        changes=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
-        echo "$changes" | grep -E '^(src|examples)/' || exit 0
+        if git diff --name-only origin/${{ github.base_ref }} HEAD | grep -qE '^(src|examples)/'; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: check proposed version bump
+      if: steps.check_changes.outputs.changed == 'true'
       id: tag
       uses: anothrNick/github-tag-action@1.71.0
       env:
@@ -52,6 +58,7 @@ jobs:
         DRY_RUN: true
         VERBOSE: true
     - name: assert version in library.properties is bumped
+      if: steps.check_changes.outputs.changed == 'true'
       run: |
         if [ \
           "$(cat library.properties | grep version | sed 's/version=/v/')" \
