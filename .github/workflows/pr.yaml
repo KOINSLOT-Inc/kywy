@@ -36,6 +36,12 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: Skip if no src/ or examples/ changes
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        changes=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+        echo "$changes" | grep -E '^(src|examples)/' || exit 1
     - name: check proposed version bump
       id: tag
       uses: anothrNick/github-tag-action@1.71.0
