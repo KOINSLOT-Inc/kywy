@@ -41,7 +41,7 @@ jobs:
       run: |
         git fetch origin ${{ github.base_ref }}
         changes=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
-        echo "$changes" | grep -E '^(src|examples)/' || exit 1
+        echo "$changes" | grep -E '^(src|examples)/' || exit 0
     - name: check proposed version bump
       id: tag
       uses: anothrNick/github-tag-action@1.71.0
