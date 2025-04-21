@@ -18,7 +18,10 @@ for repo_file_name, docs_file_name in [
             text = repo_file.read()
 
             # replace links to docs site
-            text = re.sub(r"\(http(s|)://docs.kywy.io/([^)]+)\)", "(./\\2.md)", text)
+            text = re.sub(
+                r"\(http(s|)://docs.kywy.io/([^)]+)\)", "(./\\2/index.md)", text
+            )
+            text = text.replace("(./api_reference/index.md)", "(./api_reference.md)")
 
             print(text, file=f)
 
