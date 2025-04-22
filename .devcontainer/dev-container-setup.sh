@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: 2025 2025 KOINSLOT Inc.
+# SPDX-FileCopyrightText: 2025 KOINSLOT Inc.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -15,10 +15,8 @@ echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.bashrc
 echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.zshrc
 
 
-# Install missing dependencies
-# sudo apt update # uncomment if we need apt installs
-pip install reuse
-pip install pipenv
+# Install from makefile
+make install
 
 # Clean up to save space
 sudo apt-get clean

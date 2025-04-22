@@ -19,6 +19,7 @@ $(CACHE):
 
 PYTHON_DEPS := $(CACHE)/.python-deps
 $(PYTHON_DEPS): Pipfile $(CACHE)
+	@python -m pipenv -h 2>&1 > /dev/null || python -m pip install pipenv
 	@python -m pipenv install
 	@touch $(PYTHON_DEPS)
 
@@ -45,6 +46,9 @@ DOXYGEN := $(CACHE)/.doxygen
 $(DOXYGEN): $(CACHE)
 	@which doxygen 2>&1 > /dev/null || (echo "no doxygen found, try `brew install doxygen`" && exit 1)
 	@touch $(DOXYGEN)
+
+.PHONY: install
+install: $(PYTHON_DEPS)
 
 .PHONY: check-licenses
 check-licenses: $(PYTHON_DEPS)
@@ -104,16 +108,6 @@ lint: check-licenses lint-arduino-code lint-python-code
 .PHONY: format
 format: format-arduino-code format-python-code
 
-.PHONY: upload/examples/%
-upload/examples/%: build/examples/%
-	@port=$$(arduino-cli board list --json \
-		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
-	) \
-	&& arduino-cli upload \
-		-b arduino:mbed_rp2040:pico \
-		-p $$port \
-		$$(echo $@ | cut -d'/' -f 2-)
-
 .PHONY: build/examples/%
 build/examples/%: $(ARDUINO_CLI)
 	@port=$$(arduino-cli board list --json \
@@ -123,6 +117,16 @@ build/examples/%: $(ARDUINO_CLI)
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
 		$$(echo $@ | cut -d'/' -f 2-) \
+
+.PHONY: upload/examples/%
+upload/examples/%: $(ARDUINO_CLI) build/examples/%
+	@port=$$(arduino-cli board list --json \
+		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
+	) \
+	&& arduino-cli upload \
+		-b arduino:mbed_rp2040:pico \
+		-p $$port \
+		$$(echo $@ | cut -d'/' -f 2-)
 
 .PHONY: docs
 docs: $(PYTHON_DEPS) $(DOXYGEN)
