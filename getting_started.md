@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 <!--
 SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 

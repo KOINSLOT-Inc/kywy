@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 <!--
 SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 
@@ -78,11 +83,11 @@ get you from zero right to solving the problem you want to solve.
 
 Don't get bogged down with 1000 little side issues; start with Kywy and get right to what you really want to do.
 
-# Where to get a Kywy
+## Where to get a Kywy
 
 Visit our [store](https://koinslot.myshopify.com) to get your Kywy today!
 
-# Getting Started
+## Getting Started
 
 Check out our [documentation](./getting_started.md) to kickstart your Kywy experience!
 
