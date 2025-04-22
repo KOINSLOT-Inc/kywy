@@ -9,6 +9,12 @@ chmod +x .devcontainer/scripts/*
 echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.bashrc
 echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.zshrc
 
+# Welcome message
+chmod +x .devcontainer/welcome-message.sh
+echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.bashrc
+echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.zshrc
+
+
 # Install missing dependencies
 # sudo apt update # uncomment if we need apt installs
 
