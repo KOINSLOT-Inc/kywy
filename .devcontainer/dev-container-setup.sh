@@ -28,6 +28,7 @@ if ! command -v arduino-cli &> /dev/null; then
   arduino-cli config init || true
   arduino-cli core update-index || true
   arduino-cli core install rp2040:rp2040 || true
+  arduino-cli core install arduino:mbed_rp2040 || true
 else
   echo "arduino-cli already installed"
 fi
