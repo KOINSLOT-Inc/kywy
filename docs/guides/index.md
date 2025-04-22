@@ -1,7 +1,14 @@
+---
+hide:
+  - footer
+---
+
 <!--
 SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# Tutorials
+# Guides
+
+coming soon...

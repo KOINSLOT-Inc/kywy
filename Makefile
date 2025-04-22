@@ -18,7 +18,7 @@ $(CACHE):
 
 PYTHON_DEPS := $(CACHE)/.python-deps
 $(PYTHON_DEPS): Pipfile $(CACHE)
-	@pipenv install --dev
+	@python -m pipenv install
 	@touch $(PYTHON_DEPS)
 
 ARDUINO_CLI := $(CACHE)/.arduino-cli
@@ -47,11 +47,11 @@ $(DOXYGEN): $(CACHE)
 
 .PHONY: check-licenses
 check-licenses: $(PYTHON_DEPS)
-	@pipenv run reuse lint
+	@python -m pipenv run reuse lint
 
 .PHONY: update-licenses
 update-licenses: $(PYTHON_DEPS)
-	@pipenv run reuse annotate \
+	@python -m pipenv run reuse annotate \
 	    --copyright "KOINSLOT, Inc." \
 	    --year $$(date +%Y) \
 	    --license "GPL-3.0-or-later" \
@@ -91,11 +91,11 @@ compile-arduino-sketches: $(ARDUINO_CLI)
 
 .PHONY: lint-python-code
 lint-python-code: $(PYTHON_DEPS)
-	@pipenv run black --check .
+	@python -m pipenv run black --check .
 
 .PHONY: format-python-code
 format-python-code: $(PYTHON_DEPS)
-	@pipenv run black .
+	@python -m pipenv run black .
 
 .PHONY: lint
 lint: check-licenses lint-arduino-code lint-python-code
@@ -115,8 +115,8 @@ upload/examples/%: $(ARDUINO_CLI)
 
 .PHONY: docs
 docs: $(PYTHON_DEPS) $(DOXYGEN)
-	@pipenv run mkdocs build
+	@python -m pipenv run mkdocs build
 
 .PHONY: serve-docs
 serve-docs: $(PYTHON_DEPS) $(DOXYGEN)
-	@pipenv run mkdocs serve --watch README.md --watch ROADMAP.md --watch getting_started.md
+	@python -m pipenv run mkdocs serve --watch README.md --watch ROADMAP.md --watch getting_started.md
