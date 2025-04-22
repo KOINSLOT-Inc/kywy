@@ -6,8 +6,8 @@
 
 # Setup environment and add scripts to path
 chmod +x .devcontainer/scripts/*.sh
-echo 'export PATH="$PATH:/workspaces/kywy-rust/.devcontainer/scripts"' >> ~/.bashrc
-echo 'export PATH="$PATH:/workspaces/kywy-rust/.devcontainer/scripts"' >> ~/.zshrc
+echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.bashrc
+echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.zshrc
 
 # Install missing dependencies
 # sudo apt update # uncomment if we need apt installs
