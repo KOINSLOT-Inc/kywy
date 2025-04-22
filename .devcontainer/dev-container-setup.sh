@@ -18,6 +18,21 @@ sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
 pip cache purge
 
+# Install arduino-cli directly from arduino
+if ! command -v arduino-cli &> /dev/null; then
+  echo "Installing arduino-cli..."
+  cd ~
+  curl -fsSL https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.tar.gz -o arduino-cli.tar.gz
+  tar -xzf arduino-cli.tar.gz
+  sudo mv arduino-cli /usr/local/bin/
+  rm arduino-cli.tar.gz
+  arduino-cli config init || true
+  arduino-cli core update-index || true
+  arduino-cli core install rp2040:rp2040 || true
+else
+  echo "arduino-cli already installed"
+fi
+
 # Remove unused SDKs and preinstalled junk
 sudo rm -rf /usr/share/dotnet
 sudo rm -rf ~/.dotnet
