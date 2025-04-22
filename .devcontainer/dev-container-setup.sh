@@ -40,6 +40,7 @@ else
 fi
 
 # Configure additional library path for Kywy sources
+arduino-cli core install arduino:mbed_rp2040
 arduino-cli config set library.enable_unsafe_install true
 arduino-cli config set directories.user /workspaces/kywy/.arduino
 arduino-cli config set directories.data /workspaces/kywy/.arduino/data
