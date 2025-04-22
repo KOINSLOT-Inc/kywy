@@ -85,3 +85,5 @@ Visit our [store](https://koinslot.myshopify.com) to get your Kywy today!
 # Getting Started
 
 Check out our [documentation](./getting_started.md) to kickstart your Kywy experience!
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?repo=KOINSLOT-Inc/kywy)
