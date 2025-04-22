@@ -11,7 +11,7 @@ help:
 	@echo "- 'update-licenses': runs 'reuse' to update licenses"
 	@echo "- 'lint': lints all files (code, config, license, etc.)"
 	@echo "- 'upload/examples/<example>': uploads the specified '<example>'"
-	@echo "- 'builds/examples/<example>': builds the specified '<example>'"
+	@echo "- 'build/examples/<example>': builds the specified '<example>'"
 
 CACHE := .cache
 $(CACHE):
