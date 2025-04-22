@@ -5,4 +5,4 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 echo -e "Welcome to the KOINSLOT Arduino DevContainer"
-echo -e "🔧 Build an example using make build/example/<example name>"
+echo -e "🔧 Build an example using make build/examples/<example folder>/<example name>"
