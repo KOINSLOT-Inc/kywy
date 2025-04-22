@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Setup environment and add scripts to path
-chmod +x .devcontainer/scripts/*.sh
+chmod +x .devcontainer/scripts/*
 echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.bashrc
 echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.zshrc
 
