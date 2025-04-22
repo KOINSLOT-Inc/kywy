@@ -3,9 +3,26 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 site_name: Kywy Documentation
-theme: dracula
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.path
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.instant.prefetch
+    - navigation.footer
+    - search.suggest
+    - search.hightlight
 site_dir: _site
+site_url: https://docs.kywy.io
+repo_url: https://github.com/KOINSLOT-Inc/kywy
 plugins:
+  - search
+  - meta
+  - tags
+  - awesome-nav
   - macros:
       module_name: docs/macros
   - mkdoxy:
@@ -16,10 +33,16 @@ plugins:
   - gen-files:
       scripts:
         - docs/generate/main.py
-nav:
-  - index.md
-  - Getting Started: getting_started.md
-  - Guides: guides.md
-  - Tutorials: tutorials.md
-  - Roadmap: roadmap.md
-  - API Reference: api_reference.md
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+extra:
+  social:
+    - name: Kywy Discord
+      link: https://discord.gg/zAYym57Fy6
+      icon: fontawesome/brands/discord
