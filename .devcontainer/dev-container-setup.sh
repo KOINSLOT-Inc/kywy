@@ -18,6 +18,7 @@ echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.zshrc
 # Install missing dependencies
 # sudo apt update # uncomment if we need apt installs
 pip install reuse
+pip install pipenv
 
 # Clean up to save space
 sudo apt-get clean
