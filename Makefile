@@ -109,7 +109,7 @@ upload/examples/%: $(ARDUINO_CLI)
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
-		&& arduino-cli compile \
+	&& arduino-cli compile \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
 		$$(echo $@ | cut -d'/' -f 2-) \
