@@ -39,6 +39,13 @@ else
   echo "arduino-cli already installed"
 fi
 
+# Configure additional library path for Kywy sources
+arduino-cli config set library.enable_unsafe_install true
+arduino-cli config set directories.user /workspaces/kywy/.arduino
+arduino-cli config set directories.data /workspaces/kywy/.arduino/data
+arduino-cli config set directories.downloads /workspaces/kywy/.arduino/staging
+arduino-cli config set directories.builtin.libraries /workspaces/kywy/src
+
 # Remove unused SDKs and preinstalled junk
 sudo rm -rf /usr/share/dotnet
 sudo rm -rf ~/.dotnet
