@@ -119,7 +119,7 @@ upload/examples/%: $(ARDUINO_CLI)
 		$$(echo $@ | cut -d'/' -f 2-)
 
 .PHONY: build/examples/%
-upload/examples/%: $(ARDUINO_CLI)
+build/examples/%: $(ARDUINO_CLI)
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
