@@ -10,8 +10,7 @@ echo 'export PATH="$PATH:/workspaces/kywy-rust/.devcontainer/scripts"' >> ~/.bas
 echo 'export PATH="$PATH:/workspaces/kywy-rust/.devcontainer/scripts"' >> ~/.zshrc
 
 # Install missing dependencies
-sudo apt update
-sudo apt install -y arduino-cli
+# sudo apt update # uncomment if we need apt installs
 
 # Clean up to save space
 sudo apt-get clean
