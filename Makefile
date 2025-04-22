@@ -124,9 +124,9 @@ build/examples/%: $(ARDUINO_CLI)
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
 	&& arduino-cli compile \
-	-b arduino:mbed_rp2040:pico \
-	-p $$port \
-	$$(echo $@ | cut -d'/' -f 2-) \
+		-b arduino:mbed_rp2040:pico \
+		-p $$port \
+		$$(echo $@ | cut -d'/' -f 2-) \
 
 .PHONY: docs
 docs: $(PYTHON_DEPS) $(DOXYGEN)
