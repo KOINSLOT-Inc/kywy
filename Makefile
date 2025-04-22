@@ -11,6 +11,7 @@ help:
 	@echo "- 'update-licenses': runs 'reuse' to update licenses"
 	@echo "- 'lint': lints all files (code, config, license, etc.)"
 	@echo "- 'upload/examples/<example>': uploads the specified '<example>'"
+	@echo "- 'build/examples/<example>': builds the specified '<example>'"
 
 CACHE := .cache
 $(CACHE):
@@ -108,10 +109,24 @@ upload/examples/%: $(ARDUINO_CLI)
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
+	&& arduino-cli compile \
+		-b arduino:mbed_rp2040:pico \
+		-p $$port \
+		$$(echo $@ | cut -d'/' -f 2-) \
 	&& arduino-cli upload \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
 		$$(echo $@ | cut -d'/' -f 2-)
+
+.PHONY: build/examples/%
+build/examples/%: $(ARDUINO_CLI)
+	@port=$$(arduino-cli board list --json \
+		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
+	) \
+	&& arduino-cli compile \
+	-b arduino:mbed_rp2040:pico \
+	-p $$port \
+	$$(echo $@ | cut -d'/' -f 2-) \
 
 .PHONY: docs
 docs: $(PYTHON_DEPS) $(DOXYGEN)

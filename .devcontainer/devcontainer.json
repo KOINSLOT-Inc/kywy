@@ -1,0 +1,7 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/universal:2",
+	"features": {
+		"ghcr.io/jungaretti/features/make:1": {}
+	},
+	"postCreateCommand": "bash .devcontainer/dev-container-setup.sh",
+}
