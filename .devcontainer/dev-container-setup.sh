@@ -43,7 +43,7 @@ arduino-cli core update-index || true
 arduino-cli config set directories.user /workspaces/kywy/.arduino
 arduino-cli config set directories.data /workspaces/kywy/.arduino/data
 arduino-cli config set directories.downloads /workspaces/kywy/.arduino/staging
-arduino-cli config set directories.builtin.libraries /workspaces/kywy/src
+arduino-cli config set directories.builtin.libraries /workspaces/kywy/
 arduino-cli core install arduino:mbed_rp2040 || true
 
 # Remove unused SDKs and preinstalled junk
