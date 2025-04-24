@@ -1,6 +1,7 @@
 ---
 title: "Part 1: Writing To The Screen"
 ---
+
 <!-- hide previous page button that links outside of tutorial -->
 <style>
   .md-footer__link--prev:not([hidden]) { display: none }

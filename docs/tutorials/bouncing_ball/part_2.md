@@ -1,10 +1,6 @@
 ---
 title: "Part 2: Moving the Ball"
 ---
-<!-- hide next page button that links outside of tutorial -->
-<style>
-  .md-footer__link--next:not([hidden]) { display: none }
-</style>
 
 <!--
 SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
@@ -111,3 +107,7 @@ Now we should see our ball moving successfully!
   {% set _ = frames.append([("draw_circle", [ [12, 12 + i], 12 ], { "outline": "black" })]) %}
 {% endfor %}
 {{ kywy_screen_gif("first_circle_moves", frames, duration=250) }}
+
+## Centering the Ball
+
+Remember that `Object2DOptions` argument that we ignored before? We're going to look at that now!
