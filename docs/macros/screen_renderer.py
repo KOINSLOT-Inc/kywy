@@ -35,6 +35,7 @@ GREEN = "#38a832"
 DARK_GREEN = "#2b8026"
 BLACK = "#000000"
 GREY = "#adadad"
+RED = "#b51500"
 CLEAR = "#00000000"
 
 FULL_WIDTH = (
@@ -65,6 +66,28 @@ SCREEN_ORIGIN_X = (
     0 + CHAMFER_WIDTH + TOP_LEFT_RIGHT_BORDER_WIDTH + CHAMFER_WIDTH + BEZEL_WIDTH
 )
 SCREEN_ORIGIN_Y = SCREEN_ORIGIN_X
+
+
+def draw_left_button(draw, color):
+    draw.circle(
+        [
+            0 + CHAMFER_WIDTH + TOP_LEFT_RIGHT_BORDER_WIDTH + CHAMFER_WIDTH,
+            FULL_HEIGHT - BUTTON_HEIGHT_FROM_BOTTOM,
+        ],
+        BUTTON_RADIUS,
+        fill=color,
+    )
+
+
+def draw_right_button(draw, color):
+    draw.circle(
+        [
+            FULL_WIDTH - (CHAMFER_WIDTH + TOP_LEFT_RIGHT_BORDER_WIDTH + CHAMFER_WIDTH),
+            FULL_HEIGHT - BUTTON_HEIGHT_FROM_BOTTOM,
+        ],
+        BUTTON_RADIUS,
+        fill=color,
+    )
 
 
 def create_blank_kywy() -> Image:
@@ -158,22 +181,8 @@ def create_blank_kywy() -> Image:
     )
 
     # buttons
-    draw.circle(
-        [
-            0 + CHAMFER_WIDTH + TOP_LEFT_RIGHT_BORDER_WIDTH + CHAMFER_WIDTH,
-            FULL_HEIGHT - BUTTON_HEIGHT_FROM_BOTTOM,
-        ],
-        BUTTON_RADIUS,
-        fill=BLACK,
-    )
-    draw.circle(
-        [
-            FULL_WIDTH - (CHAMFER_WIDTH + TOP_LEFT_RIGHT_BORDER_WIDTH + CHAMFER_WIDTH),
-            FULL_HEIGHT - BUTTON_HEIGHT_FROM_BOTTOM,
-        ],
-        BUTTON_RADIUS,
-        fill=BLACK,
-    )
+    draw_left_button(draw, BLACK)
+    draw_right_button(draw, BLACK)
     draw.circle(
         [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
         BUTTON_RADIUS,
@@ -208,19 +217,37 @@ def create_blank_kywy() -> Image:
 
     return image
 
+
 Operation = NewType("Operation", Tuple[str, List[Any], Dict[str, Any]])
+
 
 def kywy_screen_image(operations: List[Operation]) -> Image:
     kywy = create_blank_kywy()
+    kywy_draw = ImageDraw.Draw(kywy)
 
     screen = Image.new("RGBA", (SCREEN_WIDTH, SCREEN_HEIGHT), GREY)
-    draw = ImageDraw.Draw(screen)
+    screen_draw = ImageDraw.Draw(screen)
+
+    left_button_pressed = False
+    right_button_pressed = False
     for operation, args, kwargs in operations:
-        getattr(draw, operation)(*args, **kwargs)
+        if operation == "press_left_button":
+            left_button_pressed = True
+        elif operation == "press_right_button":
+            right_button_pressed = True
+        else:
+            getattr(screen_draw, operation)(*args, **kwargs)
 
     kywy.paste(screen, (SCREEN_ORIGIN_X, SCREEN_ORIGIN_Y), mask=screen)
 
+    if left_button_pressed:
+        draw_left_button(kywy_draw, RED)
+
+    if right_button_pressed:
+        draw_right_button(kywy_draw, RED)
+
     return kywy
+
 
 def kywy_screen(env, name: str, operations: List[Operation]) -> str:
     img_directory = (
@@ -255,6 +282,7 @@ def kywy_screen(env, name: str, operations: List[Operation]) -> str:
         <img src="./img/{name}.png"/>
     </p>
     """.strip()
+
 
 def kywy_screen_gif(
     env, name: str, frames: List[List[Operation]], duration: int = 100

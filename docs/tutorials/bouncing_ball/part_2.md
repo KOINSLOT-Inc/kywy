@@ -130,8 +130,10 @@ Object2DOptions().origin(Display::Origin::Object2D::TOP_LEFT);
 Object2DOptions().origin(Display::Origin::Object2D::TOP_LEFT).color(BLACK);
 ```
 
-We use this scheme because it let's you specify whatever options you want in whatever order you want them. This is
-actually surprisingly difficult to do in older versions of C++!
+!!! info
+
+    We use this scheme because it let's you specify whatever options you want in whatever order you want them. This is
+    actually surprisingly difficult to do in older versions of C++!
 
 Color is pretty self-explanatory. Since Kywy has a black and white screen you can specify `BLACK` or `WHITE` for the
 color. `BLACK` is the default, which is why our circle appears black on a white screen above. Setting the color to
@@ -148,7 +150,8 @@ If we were to draw a circle with
 
 ```c++
 engine.display.drawCircle(
-  0, 0, 25, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER),
+  0, 0, 25,
+  Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER),
 );
 ```
 
