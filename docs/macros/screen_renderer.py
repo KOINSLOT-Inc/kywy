@@ -2,6 +2,13 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import os
+import json
+import hashlib
+import shutil
+from pathlib import Path
+from typing import List, Tuple, Dict, Any, NewType
+
 from PIL import Image, ImageDraw
 
 SCREEN_WIDTH = 144
@@ -201,14 +208,102 @@ def create_blank_kywy() -> Image:
 
     return image
 
+Operation = NewType("Operation", Tuple[str, List[Any], Dict[str, Any]])
 
-def draw_circle(image: Image, xy, *args, **kwargs):
-    draw = ImageDraw.Draw(image)
+def kywy_screen_image(operations: List[Operation]) -> Image:
+    kywy = create_blank_kywy()
 
-    shifted_xy = (SCREEN_ORIGIN_X + xy[0], SCREEN_ORIGIN_Y + xy[1])
-    draw.circle(shifted_xy, *args, **kwargs)
+    screen = Image.new("RGBA", (SCREEN_WIDTH, SCREEN_HEIGHT), GREY)
+    draw = ImageDraw.Draw(screen)
+    for operation, args, kwargs in operations:
+        getattr(draw, operation)(*args, **kwargs)
 
-    return image
+    kywy.paste(screen, (SCREEN_ORIGIN_X, SCREEN_ORIGIN_Y), mask=screen)
+
+    return kywy
+
+def kywy_screen(env, name: str, operations: List[Operation]) -> str:
+    img_directory = (
+        Path(env.conf["site_dir"]) / Path(os.path.dirname(env.page.url)) / "img"
+    )
+
+    os.makedirs(img_directory, exist_ok=True)
+
+    image_path = img_directory / f"{name}.png"
+
+    if os.path.exists(image_path):
+        raise Exception(f"image '{name}' already exists")
+
+    input_hash = hashlib.md5(json.dumps(operations).encode()).hexdigest()
+    cached_image_path = (
+        ".cache/img"
+        / Path(os.path.dirname(env.page.url))
+        / "img"
+        / f"{name}.{input_hash}.png"
+    )
+
+    if not os.path.isfile(cached_image_path):
+        os.makedirs(os.path.dirname(cached_image_path), exist_ok=True)
+
+        kywy = kywy_screen_image(operations)
+        kywy.save(cached_image_path)
+
+    shutil.copy(cached_image_path, image_path)
+
+    return f"""
+    <p align="center">
+        <img src="./img/{name}.png"/>
+    </p>
+    """.strip()
+
+def kywy_screen_gif(
+    env, name: str, frames: List[List[Operation]], duration: int = 100
+) -> str:
+    img_directory = (
+        Path(env.conf["site_dir"]) / Path(os.path.dirname(env.page.url)) / "img"
+    )
+
+    os.makedirs(img_directory, exist_ok=True)
+
+    image_path = img_directory / f"{name}.gif"
+
+    if os.path.exists(image_path):
+        raise Exception(f"gif '{name}' already exists")
+
+    if len(frames) == 0:
+        raise Exception("must provide at least one frame for kywy_screen_gif")
+
+    input_hash = hashlib.md5(json.dumps(frames).encode()).hexdigest()
+    cached_image_path = (
+        ".cache/img"
+        / Path(os.path.dirname(env.page.url))
+        / "img"
+        / f"{name}.{input_hash}.gif"
+    )
+
+    if not os.path.isfile(cached_image_path):
+        os.makedirs(os.path.dirname(cached_image_path), exist_ok=True)
+
+        kywy = kywy_screen_image(frames[0])
+
+        append_images = []
+        for operations in frames:
+            append_images.append(kywy_screen_image(operations))
+
+        kywy.save(
+            cached_image_path,
+            append_images=append_images,
+            loop=0,
+            duration=duration,
+        )
+
+    shutil.copy(cached_image_path, image_path)
+
+    return f"""
+    <p align="center">
+        <img src="./img/{name}.gif"/>
+    </p>
+    """.strip()
 
 
 if __name__ == "__main__":

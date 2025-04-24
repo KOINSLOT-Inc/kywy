@@ -132,7 +132,7 @@ Uploading this should give you:
 {{ kywy_screen(
   "first_circle",
   [
-    ("draw_circle", [ [12, 12], 12 ], { "outline": "black" }),
+    ("circle", [ [12, 12], 12 ], { "outline": "black" }),
   ],
 ) }}
 
