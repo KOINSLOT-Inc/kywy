@@ -1,6 +1,7 @@
 ---
 title: "Part 1: Writing To The Screen"
 ---
+
 <!-- hide previous page button that links outside of tutorial -->
 <style>
   .md-footer__link--prev:not([hidden]) { display: none }
@@ -131,7 +132,7 @@ Uploading this should give you:
 {{ kywy_screen(
   "first_circle",
   [
-    ("draw_circle", [ [12, 12], 12 ], { "outline": "black" }),
+    ("circle", [ [12, 12], 12 ], { "outline": "black" }),
   ],
 ) }}
 
