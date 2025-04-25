@@ -3,14 +3,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Kywy.hpp"
-// #include "AsteroidSpriteSheet.h"
 
 Kywy::Engine engine;
 
-#define DISPLAY_WIDTH 144
-#define DISPLAY_HEIGHT 168
-#define BLACK 0x0
-#define WHITE 0xf
 
 const uint8_t asteroidSplashScreen[] = {
   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -299,18 +294,13 @@ public:
   float leftX = 0.0;
   float leftY = 0.0;
 
-  bool buttonLeftPressed = false;
-  bool buttonRightPressed = false;
-  bool buttonUpPressed = false;
-  bool buttonDownPressed = false;
-
   const char *getName() {
     return "spriteManager";
   };
 
   void initialize() {
-    xPosition = DISPLAY_WIDTH / 2;
-    yPosition = DISPLAY_HEIGHT / 2;
+    xPosition = KYWY_DISPLAY_WIDTH / 2;
+    yPosition = KYWY_DISPLAY_HEIGHT / 2;
     xVelocity = 0.0;
     yVelocity = 0.0;
   }
@@ -318,48 +308,16 @@ public:
   void handle(::Actor::Message *message) {
     switch (message->signal) {
 
-      case Kywy::Events::D_PAD_LEFT_PRESSED:
-        buttonLeftPressed = true;
-        break;
-
-      case Kywy::Events::D_PAD_RIGHT_PRESSED:
-        buttonRightPressed = true;
-        break;
-
-      case Kywy::Events::D_PAD_UP_PRESSED:
-        buttonUpPressed = true;
-        break;
-
-      case Kywy::Events::D_PAD_DOWN_PRESSED:
-        buttonDownPressed = true;
-        break;
-
-      case Kywy::Events::D_PAD_LEFT_RELEASED:
-        buttonLeftPressed = false;
-        break;
-
-      case Kywy::Events::D_PAD_RIGHT_RELEASED:
-        buttonRightPressed = false;
-        break;
-
-      case Kywy::Events::D_PAD_UP_RELEASED:
-        buttonUpPressed = false;
-        break;
-
-      case Kywy::Events::D_PAD_DOWN_RELEASED:
-        buttonDownPressed = false;
-        break;
-
       case Kywy::Events::TICK:
-        if (buttonUpPressed) {
+        if (engine.input.dPadUpPressed) {
           xVelocity += acceleration * cos(shipAngle * M_PI / 180.0f);
           yVelocity += acceleration * -sin(shipAngle * M_PI / 180.0f);
         }
-        if (buttonRightPressed) {
+        if (engine.input.buttonRightPressed) {
           shipAngle -= rotationSpeed;
           if (shipAngle < 0) shipAngle += 360;
         }
-        if (buttonLeftPressed) {
+        if (engine.input.buttonLeftPressed) {
           shipAngle += rotationSpeed;
           if (shipAngle >= 360) shipAngle -= 360;
         }
@@ -370,11 +328,11 @@ public:
         xVelocity *= friction;
         yVelocity *= friction;
 
-        if (xPosition < 0) xPosition = DISPLAY_WIDTH;
-        else if (xPosition > DISPLAY_WIDTH) xPosition = 0;
+        if (xPosition < 0) xPosition = KYWY_DISPLAY_WIDTH;
+        else if (xPosition > KYWY_DISPLAY_WIDTH) xPosition = 0;
 
-        if (yPosition < 0) yPosition = DISPLAY_HEIGHT;
-        else if (yPosition > DISPLAY_HEIGHT) yPosition = 0;
+        if (yPosition < 0) yPosition = KYWY_DISPLAY_HEIGHT;
+        else if (yPosition > KYWY_DISPLAY_HEIGHT) yPosition = 0;
 
 
         engine.display.clear();
@@ -393,7 +351,7 @@ public:
         engine.display.drawLine((int16_t)xPosition, (int16_t)yPosition, (int16_t)rightX, (int16_t)rightY);
 
         //Draw tail
-        if (buttonUpPressed) {
+        if (engine.input.dPadUpPressed) {
           for (int i = 1; i <= 3; i++) {
             int16_t x = (int16_t)(xPosition - 0.7 * i * shipArea * cos(shipAngle * M_PI / 180.0));
             int16_t y = (int16_t)(yPosition + 0.7 * i * shipArea * sin(shipAngle * M_PI / 180.0));
@@ -458,7 +416,7 @@ public:
             bullets[i].y += bullets[i].yVel;
             engine.display.fillCircle(bullets[i].x, bullets[i].y, 5);
 
-            if (bullets[i].x < 0 || bullets[i].x > DISPLAY_WIDTH || bullets[i].y < 0 || bullets[i].y > DISPLAY_HEIGHT) {
+            if (bullets[i].x < 0 || bullets[i].x > KYWY_DISPLAY_WIDTH || bullets[i].y < 0 || bullets[i].y > KYWY_DISPLAY_HEIGHT) {
               bullets[i].exist = false;
             }
           }
@@ -493,8 +451,8 @@ public:
   void initialize() {
     for (int i = 0; i < numAsteroids; i++) {
       asteroids[i] = Asteroid{
-        .x = random(DISPLAY_WIDTH),
-        .y = random(DISPLAY_HEIGHT),
+        .x = random(KYWY_DISPLAY_WIDTH),
+        .y = random(KYWY_DISPLAY_HEIGHT),
         .xVel = (float)random(-xVelocityMax, xVelocityMax),
         .yVel = (float)random(-yVelocityMax, yVelocityMax),
         .radius = radius,
@@ -519,7 +477,7 @@ public:
           asteroids[i].x += asteroids[i].xVel;
           asteroids[i].y += asteroids[i].yVel;
 
-          if (asteroids[i].x < 0 || asteroids[i].x > DISPLAY_WIDTH || asteroids[i].y < 0 || asteroids[i].y > DISPLAY_HEIGHT) {
+          if (asteroids[i].x < 0 || asteroids[i].x > KYWY_DISPLAY_WIDTH || asteroids[i].y < 0 || asteroids[i].y > KYWY_DISPLAY_HEIGHT) {
             asteroids[i].exist = false;
           }
         }
@@ -532,26 +490,26 @@ public:
           option = random(1, 5);
           switch (option) {
             case 1:
-              asteroids[i].x = random(DISPLAY_WIDTH);
-              asteroids[i].y = DISPLAY_HEIGHT;
+              asteroids[i].x = random(KYWY_DISPLAY_WIDTH);
+              asteroids[i].y = KYWY_DISPLAY_HEIGHT;
               asteroids[i].xVel = (float)random(-xVelocityMax, xVelocityMax);
               asteroids[i].yVel = (float)random(-yVelocityMax, -1);
               break;
             case 2:
-              asteroids[i].x = random(DISPLAY_WIDTH);
+              asteroids[i].x = random(KYWY_DISPLAY_WIDTH);
               asteroids[i].y = 0;
               asteroids[i].xVel = (float)random(-xVelocityMax, xVelocityMax);
               asteroids[i].yVel = (float)random(1, yVelocityMax);
               break;
             case 3:
               asteroids[i].x = 0;
-              asteroids[i].y = random(DISPLAY_HEIGHT);
+              asteroids[i].y = random(KYWY_DISPLAY_HEIGHT);
               asteroids[i].xVel = (float)random(1, xVelocityMax);
               asteroids[i].yVel = (float)random(-yVelocityMax, yVelocityMax);
               break;
             case 4:
-              asteroids[i].x = DISPLAY_WIDTH;
-              asteroids[i].y = random(DISPLAY_HEIGHT);
+              asteroids[i].x = KYWY_DISPLAY_WIDTH;
+              asteroids[i].y = random(KYWY_DISPLAY_HEIGHT);
               asteroids[i].xVel = (float)random(-xVelocityMax, -1);
               asteroids[i].yVel = (float)random(-yVelocityMax, yVelocityMax);
               break;
