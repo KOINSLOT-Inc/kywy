@@ -11,6 +11,7 @@ help:
 	@echo "- 'update-licenses': runs 'reuse' to update licenses"
 	@echo "- 'lint': lints all files (code, config, license, etc.)"
 	@echo "- 'upload/examples/<example>': uploads the specified '<example>'"
+	@echo "- 'build/examples/<example>': builds the specified '<example>'"
 
 CACHE := .cache
 $(CACHE):
@@ -18,6 +19,7 @@ $(CACHE):
 
 PYTHON_DEPS := $(CACHE)/.python-deps
 $(PYTHON_DEPS): Pipfile $(CACHE)
+	@python -m pipenv -h 2>&1 > /dev/null || python -m pip install pipenv
 	@python -m pipenv install
 	@touch $(PYTHON_DEPS)
 
@@ -44,6 +46,9 @@ DOXYGEN := $(CACHE)/.doxygen
 $(DOXYGEN): $(CACHE)
 	@which doxygen 2>&1 > /dev/null || (echo "no doxygen found, try `brew install doxygen`" && exit 1)
 	@touch $(DOXYGEN)
+
+.PHONY: install
+install: $(PYTHON_DEPS)
 
 .PHONY: check-licenses
 check-licenses: $(PYTHON_DEPS)
