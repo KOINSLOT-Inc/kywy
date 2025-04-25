@@ -395,8 +395,8 @@ public:
         //Draw tail
         if (buttonUpPressed) {
           for (int i = 1; i <= 3; i++) {
-            int16_t x = (int16_t)(xPosition - 0.7*i * shipArea * cos(shipAngle * M_PI / 180.0));
-            int16_t y = (int16_t)(yPosition + 0.7*i * shipArea * sin(shipAngle * M_PI / 180.0));
+            int16_t x = (int16_t)(xPosition - 0.7 * i * shipArea * cos(shipAngle * M_PI / 180.0));
+            int16_t y = (int16_t)(yPosition + 0.7 * i * shipArea * sin(shipAngle * M_PI / 180.0));
             int radius = 4 - i;
             engine.display.fillCircle(x, y, radius);
           }
@@ -562,7 +562,7 @@ public:
         }
         drawAsteroids();
         //Game End
-        
+
         for (int i = 0; i < numAsteroids; i++) {
           if ((abs(asteroids[i].x - shipManager.xPosition) < 2 * asteroids[i].radius) and (abs(asteroids[i].y - shipManager.yPosition) < 2 * asteroids[i].radius)) {
             publish(&gameOverMessage);
