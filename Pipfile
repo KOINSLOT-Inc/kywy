@@ -4,9 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-
-[dev-packages]
 reuse = "*"
+black = "*"
+pillow = "*"
+
+mkdocs = "*"
+mkdocs-material = "*"
+mkdocs-macros-plugin = "*"
+mkdoxy = "*"
+mkdocs-gen-files = "*"
+mkdocs-awesome-nav = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

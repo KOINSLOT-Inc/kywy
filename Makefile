@@ -16,6 +16,11 @@ CACHE := .cache
 $(CACHE):
 	@mkdir .cache
 
+PYTHON_DEPS := $(CACHE)/.python-deps
+$(PYTHON_DEPS): Pipfile $(CACHE)
+	@python -m pipenv install
+	@touch $(PYTHON_DEPS)
+
 ARDUINO_CLI := $(CACHE)/.arduino-cli
 $(ARDUINO_CLI): $(CACHE)
 	@which arduino-cli 2>&1 > /dev/null || (echo "no arduino-cli found, try `brew install arduino-cli`" && exit 1)
@@ -35,13 +40,18 @@ $(CLANG_FORMAT): $(CACHE) .clang-format
 	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
 	@touch $(CLANG_FORMAT)
 
+DOXYGEN := $(CACHE)/.doxygen
+$(DOXYGEN): $(CACHE)
+	@which doxygen 2>&1 > /dev/null || (echo "no doxygen found, try `brew install doxygen`" && exit 1)
+	@touch $(DOXYGEN)
+
 .PHONY: check-licenses
-check-licenses:
-	@pipenv run reuse lint
+check-licenses: $(PYTHON_DEPS)
+	@python -m pipenv run reuse lint
 
 .PHONY: update-licenses
-update-licenses:
-	@pipenv run reuse annotate \
+update-licenses: $(PYTHON_DEPS)
+	@python -m pipenv run reuse annotate \
 	    --copyright "KOINSLOT, Inc." \
 	    --year $$(date +%Y) \
 	    --license "GPL-3.0-or-later" \
@@ -79,18 +89,44 @@ compile-arduino-sketches: $(ARDUINO_CLI)
 	done \
 	&& echo "compiled $$num_examples examples in $$(($$(date +%s) - start)) seconds"
 
+.PHONY: lint-python-code
+lint-python-code: $(PYTHON_DEPS)
+	@python -m pipenv run black --check .
+
+.PHONY: format-python-code
+format-python-code: $(PYTHON_DEPS)
+	@python -m pipenv run black .
+
 .PHONY: lint
-lint: check-licenses lint-arduino-code
+lint: check-licenses lint-arduino-code lint-python-code
 
 .PHONY: format
-format: format-arduino-code
+format: format-arduino-code format-python-code
+
+.PHONY: compile/examples/%
+compile/examples/%: $(ARDUINO_CLI)
+	@port=$$(arduino-cli board list --json \
+		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
+	) \
+	&& arduino-cli compile \
+		-b arduino:mbed_rp2040:pico \
+		-p $$port \
+		$$(echo $@ | cut -d'/' -f 2-)
 
 .PHONY: upload/examples/%
-upload/examples/%: $(ARDUINO_CLI)
+upload/examples/%: $(ARDUINO_CLI) compile/examples/%
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
 	&& arduino-cli upload \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
-		$$(echo $@ | cut -d'/' -f 2,3)
+		$$(echo $@ | cut -d'/' -f 2-)
+
+.PHONY: docs
+docs: $(PYTHON_DEPS) $(DOXYGEN)
+	@python -m pipenv run mkdocs build
+
+.PHONY: serve-docs
+serve-docs: $(PYTHON_DEPS) $(DOXYGEN)
+	@python -m pipenv run mkdocs serve --watch README.md --watch ROADMAP.md --watch getting_started.md

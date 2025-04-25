@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+nav:
+  - index.md
+  - Getting Started: getting_started.md
+  - Guides: guides
+  - Tutorials: tutorials/
+  - Roadmap: roadmap.md
+  - API Reference: api_reference.md
