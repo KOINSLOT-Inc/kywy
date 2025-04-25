@@ -108,18 +108,18 @@ lint: check-licenses lint-arduino-code lint-python-code
 .PHONY: format
 format: format-arduino-code format-python-code
 
-.PHONY: build/examples/%
-build/examples/%: $(ARDUINO_CLI)
+.PHONY: compile/examples/%
+compile/examples/%: $(ARDUINO_CLI)
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
 	&& arduino-cli compile \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
-		$$(echo $@ | cut -d'/' -f 2-) \
+		$$(echo $@ | cut -d'/' -f 2-)
 
 .PHONY: upload/examples/%
-upload/examples/%: $(ARDUINO_CLI) build/examples/%
+upload/examples/%: $(ARDUINO_CLI) compile/examples/%
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \

@@ -23,6 +23,7 @@ for repo_file_name, docs_file_name in [
             )
             text = text.replace("(./api_reference/index.md)", "(./api_reference.md)")
 
+            print("---\nhide:\n  - navigation\n---\n", file=f)
             print(text, file=f)
 
 # make repo assets available to docs
