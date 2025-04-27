@@ -40,7 +40,7 @@ jobs:
       - name: Collect UF2 files
         run: |
           mkdir -p build_artifacts
-          find ./ -type f -name '*.uf2' -exec cp {} build_artifacts/ \;
+          find ~/.cache/arduino/ -type f -name '*.uf2' -exec cp {} build_artifacts/ \;
 
       - name: List built artifacts
         run: |
