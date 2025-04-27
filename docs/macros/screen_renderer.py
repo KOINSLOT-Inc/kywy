@@ -221,7 +221,9 @@ def create_blank_kywy() -> Image:
 Operation = NewType("Operation", Tuple[str, List[Any], Dict[str, Any]])
 
 
-def kywy_screen_image(operations: List[Operation]) -> Image:
+def kywy_screen_image(
+    operations: List[Operation], post_overlay_operations: List[Operation] = []
+) -> Image:
     kywy = create_blank_kywy()
     kywy_draw = ImageDraw.Draw(kywy)
 
@@ -246,10 +248,18 @@ def kywy_screen_image(operations: List[Operation]) -> Image:
     if right_button_pressed:
         draw_right_button(kywy_draw, RED)
 
+    for operation, args, kwargs in post_overlay_operations:
+        getattr(kywy_draw, operation)(*args, **kwargs)
+
     return kywy
 
 
-def kywy_screen(env, name: str, operations: List[Operation]) -> str:
+def kywy_screen(
+    env,
+    name: str,
+    operations: List[Operation],
+    post_overlay_operations: List[Operation] = [],
+) -> str:
     img_directory = (
         Path(env.conf["site_dir"]) / Path(os.path.dirname(env.page.url)) / "img"
     )
@@ -261,7 +271,14 @@ def kywy_screen(env, name: str, operations: List[Operation]) -> str:
     if os.path.exists(image_path):
         raise Exception(f"image '{name}' already exists")
 
-    input_hash = hashlib.md5(json.dumps(operations).encode()).hexdigest()
+    input_hash = hashlib.md5(
+        json.dumps(
+            {
+                "operations": operations,
+                "post_overlay_operations": post_overlay_operations,
+            }
+        ).encode()
+    ).hexdigest()
     cached_image_path = (
         ".cache/img"
         / Path(os.path.dirname(env.page.url))
@@ -272,7 +289,7 @@ def kywy_screen(env, name: str, operations: List[Operation]) -> str:
     if not os.path.isfile(cached_image_path):
         os.makedirs(os.path.dirname(cached_image_path), exist_ok=True)
 
-        kywy = kywy_screen_image(operations)
+        kywy = kywy_screen_image(operations, post_overlay_operations)
         kywy.save(cached_image_path)
 
     shutil.copy(cached_image_path, image_path)
