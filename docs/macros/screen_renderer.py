@@ -89,6 +89,34 @@ def draw_right_button(draw, color):
         fill=color,
     )
 
+def draw_d_pad(draw, color, direction = None):
+    # outer grey circle
+    draw.circle(
+        [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
+        BUTTON_RADIUS,
+        fill=GREY,
+    )
+
+    x_shift = 0
+    y_shift = 0
+
+    if direction is not None:
+        if "up" in direction:
+            y_shift = -5
+        elif "down" in direction:
+            y_shift = 5
+
+        if "left" in direction:
+            x_shift = -5
+        elif "right" in direction:
+            x_shift = 5
+
+    draw.circle(
+        [int(FULL_WIDTH / 2) + x_shift, FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM + y_shift],
+        BUTTON_RADIUS - 2,
+        fill=color,
+    )
+
 
 def create_blank_kywy() -> Image:
     # add chamfer width / 2 for on switch but don't include in full width so we don't have to worry about it in most
@@ -183,16 +211,7 @@ def create_blank_kywy() -> Image:
     # buttons
     draw_left_button(draw, BLACK)
     draw_right_button(draw, BLACK)
-    draw.circle(
-        [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
-        BUTTON_RADIUS,
-        fill=GREY,
-    )
-    draw.circle(
-        [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
-        BUTTON_RADIUS - 2,
-        fill=BLACK,
-    )
+    draw_d_pad(draw, BLACK)
 
     # edge indents
     for i in [0, EDGE_INDENT_SEPARATION + EDGE_INDENT_HEIGHT]:
@@ -232,11 +251,14 @@ def kywy_screen_image(
 
     left_button_pressed = False
     right_button_pressed = False
+    d_pad_direction = None
     for operation, args, kwargs in operations:
         if operation == "press_left_button":
             left_button_pressed = True
         elif operation == "press_right_button":
             right_button_pressed = True
+        elif operation.startswith("d_pad_"):
+            d_pad_direction = operation[6:]
         else:
             getattr(screen_draw, operation)(*args, **kwargs)
 
@@ -247,6 +269,9 @@ def kywy_screen_image(
 
     if right_button_pressed:
         draw_right_button(kywy_draw, RED)
+
+    if d_pad_direction is not None:
+        draw_d_pad(kywy_draw, RED, d_pad_direction)
 
     for operation, args, kwargs in post_overlay_operations:
         getattr(kywy_draw, operation)(*args, **kwargs)
