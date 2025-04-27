@@ -317,7 +317,7 @@ public:
           shipAngle -= rotationSpeed;
           if (shipAngle < 0) shipAngle += 360;
         }
-        if (engine.input.buttonLeftPressed) {
+        if (engine.input.dPadLeftPressed) {
           shipAngle += rotationSpeed;
           if (shipAngle >= 360) shipAngle -= 360;
         }
