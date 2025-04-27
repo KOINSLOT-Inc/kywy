@@ -55,10 +55,13 @@ jobs:
           fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
             - examples/games
-          cli-compile-flags: |
-            - --output-dir output
           sketches-report-path: build_artifacts/sketches_report.json
           verbose: true
+
+      - name: Collect UF2 files
+        run: |
+          mkdir -p build_artifacts
+          find ./ -type f -name '*.uf2' -exec cp {} build_artifacts/ \;
 
       - name: Create Release
         uses: marvinpinto/action-automatic-releases@v1.2.1
@@ -66,4 +69,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: false
           automatic_release_tag: ${{ needs.version.outputs.new_tag }}
-          files: output/*.uf2
+          files: build_artifacts/*.uf2

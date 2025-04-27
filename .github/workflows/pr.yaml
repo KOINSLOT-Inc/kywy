@@ -26,21 +26,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Make output dir
-        run: mkdir output
-
       - name: Build all games
         uses: arduino/compile-sketches@v1
         with:
           fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
             - examples/games
-          cli-compile-flags: |
-            - --output-dir output
           sketches-report-path: build_artifacts/sketches_report.json
           verbose: true
           enable-warnings-report: true
           enable-deltas-report: true
+
+      - name: Collect UF2 files
+        run: |
+          mkdir -p build_artifacts
+          find ./ -type f -name '*.uf2' -exec cp {} build_artifacts/ \;
 
       - name: List built artifacts
         run: |
