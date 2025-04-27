@@ -46,9 +46,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Make output dir
-        run: mkdir output
-
       - name: Build all games
         uses: arduino/compile-sketches@v1
         with:
