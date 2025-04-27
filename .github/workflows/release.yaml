@@ -57,14 +57,15 @@ jobs:
           arduino-cli core install arduino:mbed_rp2040
 
       - name: Build all games
-        run: |
-          mkdir -p build_artifacts
-          for example in examples/games/*; do
-            if [ -d "$example" ]; then
-              make compile t=examples/games/$(basename "$example")
-              cp output/$example/*.uf2 build_artifacts/
-            fi
-          done
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: "arduino:mbed_rp2040:pico" # ← set to your board (adjust if needed)
+          sketch-paths: |
+            - examples/games
+          cli-compile-flags: |
+            - --build-path output # optional: if you want to control where builds go
+          sketches-report-path: build_artifacts/sketches_report.json
+          verbose: true
 
       - name: Create Release
         uses: marvinpinto/action-automatic-releases@v1.2.1
@@ -72,4 +73,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: false
           automatic_release_tag: ${{ needs.version.outputs.new_tag }}
-          files: build_artifacts/*
+          files: output/*.uf2
