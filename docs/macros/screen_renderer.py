@@ -90,6 +90,38 @@ def draw_right_button(draw, color):
     )
 
 
+def draw_d_pad(draw, color, direction=None):
+    # outer grey circle
+    draw.circle(
+        [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
+        BUTTON_RADIUS,
+        fill=GREY,
+    )
+
+    x_shift = 0
+    y_shift = 0
+
+    if direction is not None:
+        if "up" in direction:
+            y_shift = -5
+        elif "down" in direction:
+            y_shift = 5
+
+        if "left" in direction:
+            x_shift = -5
+        elif "right" in direction:
+            x_shift = 5
+
+    draw.circle(
+        [
+            int(FULL_WIDTH / 2) + x_shift,
+            FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM + y_shift,
+        ],
+        BUTTON_RADIUS - 2,
+        fill=color,
+    )
+
+
 def create_blank_kywy() -> Image:
     # add chamfer width / 2 for on switch but don't include in full width so we don't have to worry about it in most
     # calculations below
@@ -183,16 +215,7 @@ def create_blank_kywy() -> Image:
     # buttons
     draw_left_button(draw, BLACK)
     draw_right_button(draw, BLACK)
-    draw.circle(
-        [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
-        BUTTON_RADIUS,
-        fill=GREY,
-    )
-    draw.circle(
-        [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
-        BUTTON_RADIUS - 2,
-        fill=BLACK,
-    )
+    draw_d_pad(draw, BLACK)
 
     # edge indents
     for i in [0, EDGE_INDENT_SEPARATION + EDGE_INDENT_HEIGHT]:
@@ -221,7 +244,9 @@ def create_blank_kywy() -> Image:
 Operation = NewType("Operation", Tuple[str, List[Any], Dict[str, Any]])
 
 
-def kywy_screen_image(operations: List[Operation]) -> Image:
+def kywy_screen_image(
+    operations: List[Operation], post_overlay_operations: List[Operation] = []
+) -> Image:
     kywy = create_blank_kywy()
     kywy_draw = ImageDraw.Draw(kywy)
 
@@ -230,11 +255,14 @@ def kywy_screen_image(operations: List[Operation]) -> Image:
 
     left_button_pressed = False
     right_button_pressed = False
+    d_pad_direction = None
     for operation, args, kwargs in operations:
         if operation == "press_left_button":
             left_button_pressed = True
         elif operation == "press_right_button":
             right_button_pressed = True
+        elif operation.startswith("d_pad_"):
+            d_pad_direction = operation[6:]
         else:
             getattr(screen_draw, operation)(*args, **kwargs)
 
@@ -246,10 +274,21 @@ def kywy_screen_image(operations: List[Operation]) -> Image:
     if right_button_pressed:
         draw_right_button(kywy_draw, RED)
 
+    if d_pad_direction is not None:
+        draw_d_pad(kywy_draw, RED, d_pad_direction)
+
+    for operation, args, kwargs in post_overlay_operations:
+        getattr(kywy_draw, operation)(*args, **kwargs)
+
     return kywy
 
 
-def kywy_screen(env, name: str, operations: List[Operation]) -> str:
+def kywy_screen(
+    env,
+    name: str,
+    operations: List[Operation],
+    post_overlay_operations: List[Operation] = [],
+) -> str:
     img_directory = (
         Path(env.conf["site_dir"]) / Path(os.path.dirname(env.page.url)) / "img"
     )
@@ -261,7 +300,14 @@ def kywy_screen(env, name: str, operations: List[Operation]) -> str:
     if os.path.exists(image_path):
         raise Exception(f"image '{name}' already exists")
 
-    input_hash = hashlib.md5(json.dumps(operations).encode()).hexdigest()
+    input_hash = hashlib.md5(
+        json.dumps(
+            {
+                "operations": operations,
+                "post_overlay_operations": post_overlay_operations,
+            }
+        ).encode()
+    ).hexdigest()
     cached_image_path = (
         ".cache/img"
         / Path(os.path.dirname(env.page.url))
@@ -272,7 +318,7 @@ def kywy_screen(env, name: str, operations: List[Operation]) -> str:
     if not os.path.isfile(cached_image_path):
         os.makedirs(os.path.dirname(cached_image_path), exist_ok=True)
 
-        kywy = kywy_screen_image(operations)
+        kywy = kywy_screen_image(operations, post_overlay_operations)
         kywy.save(cached_image_path)
 
     shutil.copy(cached_image_path, image_path)
