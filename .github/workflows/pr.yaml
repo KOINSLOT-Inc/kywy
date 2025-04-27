@@ -45,7 +45,7 @@ jobs:
       - name: List built artifacts
         run: |
           echo "Built files:"
-          ls -lh output
+          ls -lh build_artifacts
 
   check-library-version:
     runs-on: ubuntu-latest
