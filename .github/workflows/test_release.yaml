@@ -22,11 +22,11 @@ jobs:
       - name: Build all games
         uses: arduino/compile-sketches@v1
         with:
-          fqbn: "arduino:mbed_rp2040:pico" # ← set to your board (adjust if needed)
+          fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
             - examples/games
           cli-compile-flags: |
-            - --build-path output
+            - --output-dir output
           sketches-report-path: build_artifacts/sketches_report.json
           verbose: true
 
