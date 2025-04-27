@@ -54,7 +54,7 @@ jobs:
         with:
           fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
-            - ./examples/games
+            - ../examples/games
           cli-compile-flags: |
             - --output-dir output
           sketches-report-path: build_artifacts/sketches_report.json
