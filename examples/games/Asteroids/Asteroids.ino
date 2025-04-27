@@ -295,7 +295,7 @@ public:
   float leftY = 0.0;
 
   const char *getName() {
-    return "spriteManager";
+    return "shipManager";
   };
 
   void initialize() {
