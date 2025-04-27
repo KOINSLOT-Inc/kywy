@@ -89,7 +89,8 @@ def draw_right_button(draw, color):
         fill=color,
     )
 
-def draw_d_pad(draw, color, direction = None):
+
+def draw_d_pad(draw, color, direction=None):
     # outer grey circle
     draw.circle(
         [int(FULL_WIDTH / 2), FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM],
@@ -112,7 +113,10 @@ def draw_d_pad(draw, color, direction = None):
             x_shift = 5
 
     draw.circle(
-        [int(FULL_WIDTH / 2) + x_shift, FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM + y_shift],
+        [
+            int(FULL_WIDTH / 2) + x_shift,
+            FULL_HEIGHT - D_PAD_HEIGHT_FROM_BOTTOM + y_shift,
+        ],
         BUTTON_RADIUS - 2,
         fill=color,
     )
