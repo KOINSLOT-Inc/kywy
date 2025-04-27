@@ -140,3 +140,17 @@ Your first circle!
 
 Note how the X/Y coordinate `(0, 0)` corresponds to the top left of the screen. That is the origin for all draw calls.
 Down on the screen increases Y and right on the screen increases X.
+
+{{ kywy_screen(
+  "x_y_coordinates",
+  [],
+  post_overlay_operations = [
+    ("line", [ [[50, 25], [150, 25]] ], {"fill": "black", "width": 1}),
+    ("line", [ [[150, 25], [143, 22]] ], {"fill": "black", "width": 1}),
+    ("line", [ [[150, 25], [143, 28]] ], {"fill": "black", "width": 1}),
+    ("line", [ [[25, 40], [25, 140]] ], {"fill": "black", "width": 1}),
+    ("line", [ [[25, 140], [28, 133]] ], {"fill": "black", "width": 1}),
+    ("line", [ [[25, 140], [22, 133]] ], {"fill": "black", "width": 1}),
+    ("text", [ [20, 20], "(0, 0)" ], {"fill": "black"}),
+  ]
+) }}
