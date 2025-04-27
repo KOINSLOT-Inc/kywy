@@ -313,7 +313,7 @@ public:
           xVelocity += acceleration * cos(shipAngle * M_PI / 180.0f);
           yVelocity += acceleration * -sin(shipAngle * M_PI / 180.0f);
         }
-        if (engine.input.buttonRightPressed) {
+        if (engine.input.dPadRightPressed) {
           shipAngle -= rotationSpeed;
           if (shipAngle < 0) shipAngle += 360;
         }
