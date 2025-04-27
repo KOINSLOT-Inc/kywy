@@ -131,6 +131,7 @@ upload: compile
 	&& arduino-cli upload \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
+		--library ./ \
 		--input-dir './output/$(t)' \
 		$(t)
 
