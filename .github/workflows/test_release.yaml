@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Test Release Build
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "examples/**"
+
+jobs:
+  test-release-build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make jq
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          sudo mv bin/arduino-cli /usr/local/bin/
+
+      - name: Build all games
+        run: |
+          mkdir -p build_artifacts
+          for example in examples/games/*; do
+            if [ -d "$example" ]; then
+              make compile t=games/$(basename "$example")
+              cp output/games/$(basename "$example")/*.uf2 build_artifacts/ || true
+            fi
+          done
+
+      - name: List built artifacts
+        run: |
+          echo "Built files:"
+          ls -lh build_artifacts
