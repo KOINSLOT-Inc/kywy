@@ -23,10 +23,8 @@ jobs:
   compile:
     runs-on: ubuntu-latest
     steps:
-      - name: check out with tags
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Make output dir
         run: mkdir output
@@ -36,7 +34,7 @@ jobs:
         with:
           fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
-            - ../examples/games
+            - examples/games
           cli-compile-flags: |
             - --output-dir output
           sketches-report-path: build_artifacts/sketches_report.json
