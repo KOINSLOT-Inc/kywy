@@ -10,8 +10,8 @@ help:
 	@echo "- 'check-licenses': runs 'reuse' to check licenses"
 	@echo "- 'update-licenses': runs 'reuse' to update licenses"
 	@echo "- 'lint': lints all files (code, config, license, etc.)"
-	@echo "- 'upload/examples/<example>': uploads the specified '<example>'"
-	@echo "- 'compile/examples/<example>': builds the specified '<example>'"
+	@echo "- 'upload t=examples/<example>': uploads the specified '<example>'"
+	@echo "- 'compile t=examples/<example>': builds the specified '<example>'"
 
 CACHE := .cache
 $(CACHE):
@@ -116,6 +116,7 @@ compile:
     fi
 	arduino-cli compile \
 		-b arduino:mbed_rp2040:pico \
+		--library ./ \
 		--build-path './output/$(t)' \
 		$(t)
 
