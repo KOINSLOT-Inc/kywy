@@ -55,7 +55,6 @@ jobs:
           fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
             - examples/games
-          sketches-report-path: build_artifacts/sketches_report.json
           verbose: true
 
       - name: Collect UF2 files
