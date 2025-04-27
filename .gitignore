@@ -15,3 +15,5 @@ src/src.ino
 _site
 __pycache__
 .arduino
+output
+.secrets
