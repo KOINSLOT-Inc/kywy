@@ -62,7 +62,7 @@ jobs:
           for example in examples/games/*; do
             if [ -d "$example" ]; then
               make compile t=examples/games/$(basename "$example")
-              cp output/games/$(basename "$example")/*.uf2 build_artifacts/
+              cp output/$(basename "$example")/*.uf2 build_artifacts/
             fi
           done
 
