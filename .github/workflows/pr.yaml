@@ -4,6 +4,9 @@
 
 name: Check Pull Request
 on: pull_request
+permissions:
+  pull-requests: write
+  contents: read
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -46,6 +49,31 @@ jobs:
         run: |
           echo "Built files:"
           ls -lh build_artifacts
+
+      - name: Upload UF2 build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_artifacts
+          path: artifacts/
+
+      - name: Comment UF2 artifact link on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const artifactName = "uf2-artifacts";
+            const runId = context.runId;
+            const repo = context.repo;
+            const artifactsUrl = `https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`;
+      
+            const body = `🛠️ Download build artifacts [here](${artifactsUrl}) (look for **${artifactName}**).`;
+      
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: repo.owner,
+              repo: repo.repo,
+              body: body,
+            });
 
   check-library-version:
     runs-on: ubuntu-latest
