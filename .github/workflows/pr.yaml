@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build_artifacts
-          path: artifacts/
+          path: build_artifacts/
 
       - name: Comment UF2 artifact link on PR
         uses: actions/github-script@v7
