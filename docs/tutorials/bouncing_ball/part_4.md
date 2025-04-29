@@ -1,11 +1,6 @@
 ---
-title: "Part 4: Physics"
+title: "Part 4: Simulating Physics"
 ---
-
-<!-- hide next page button that links outside of tutorial -->
-<style>
-  .md-footer__link--next:not([hidden]) { display: none }
-</style>
 
 <!--
 SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
@@ -13,7 +8,7 @@ SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# Part 4: Physics
+# Part 4: Simulating Physics
 
 We're actually going to take a quick detour here, remove our button input code, and add in some more realistic physics
 to our ball.
@@ -234,29 +229,21 @@ void loop() {
 With that, we should now be able to see the ball bouncing around the screen!
 
 {% set coordinates = [
-  (92, 96), (87, 93), (82, 91), (77, 90), (72, 90), (67, 91),
-  (62, 93), (57, 96), (52, 100), (47, 105), (42, 111), (37, 118),
-  (32, 126), (27, 135), (22, 145), (17, 156), (12, 168), (7, 145),
-  (17, 135), (22, 126), (27, 118), (32, 111), (37, 105), (42, 100),
-  (47, 96), (52, 93), (57, 91), (62, 90), (67, 90), (72, 91),
-  (77, 93), (82, 96), (87, 100), (92, 105), (97, 111), (102, 118),
-  (107, 126), (112, 135), (117, 145), (122, 156), (127, 168),
-  (132, 145), (137, 135), (127, 126), (122, 118), (117, 111),
-  (112, 105), (107, 100), (102, 96), (97, 93), (92, 91), (87, 90),
-  (82, 90), (77, 91), (72, 93), (67, 96), (62, 100), (57, 105),
-  (52, 111), (47, 118), (42, 126), (37, 135), (32, 145), (27, 156),
-  (22, 168), (17, 145), (12, 135), (7, 126), (17, 118), (22, 111),
-  (27, 105), (32, 100), (37, 96), (42, 93), (47, 91), (52, 90),
-  (57, 90), (62, 91), (67, 93), (72, 96), (77, 100), (82, 105),
-  (87, 111), (92, 118), (97, 126), (102, 135), (107, 145),
-  (112, 156), (117, 168), (122, 145), (127, 135), (132, 126),
-  (137, 118), (127, 111), (122, 105), (117, 100), (112, 96),
-  (107, 93), (102, 91), (97, 90), (92, 90),
+  (12, 90), (17, 90), (22, 91), (27, 93), (32, 96),
+  (37, 100), (42, 105), (47, 111), (52, 118), (57, 126),
+  (62, 135), (67, 145), (72, 156), (77, 145), (82, 135),
+  (87, 126), (92, 118), (97, 111), (102, 105), (107, 100),
+  (112, 96), (117, 93), (122, 91), (127, 90), (132, 90),
 ] %}
 {% set frames = [] %}
 {% for coordinate in coordinates %}
   {% set _ = frames.append([
-    ("circle", [ [coordinate[0], coordinate[1] - 12 ], 12 ], { "outline": "black" }),
+    ("circle", [ [coordinate[0], coordinate[1] ], 12 ], { "outline": "black" }),
+  ]) %}
+{% endfor %}
+{% for coordinate in coordinates[1:-1]|reverse %}
+  {% set _ = frames.append([
+    ("circle", [ [coordinate[0], coordinate[1] ], 12 ], { "outline": "black" }),
   ]) %}
 {% endfor %}
 {{ kywy_screen_gif("ball_with_physics", frames, duration=25) }}
