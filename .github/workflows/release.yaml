@@ -6,10 +6,11 @@ name: Release
 on:
   push:
     branches:
-    - main
-    paths:  # Only trigger if these files were changed
-    - 'src/**' 
-    - 'examples/**'
+      - main
+    paths:
+      - "src/**"
+      - "examples/**"
+
 jobs:
   version:
     if: github.event.pull_request.merged == true
@@ -17,18 +18,18 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: check out with tags
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.pull_request.merge_commit_sha }}
-        fetch-depth: '0'
-    - name: bump version
-      id: tag
-      uses: anothrNick/github-tag-action@1.71.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
-        INITIAL_VERSION: 1.0.0
+      - name: check out with tags
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: "0"
+      - name: bump version
+        id: tag
+        uses: anothrNick/github-tag-action@1.71.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          INITIAL_VERSION: 1.0.0
     outputs:
       new_tag: ${{ steps.tag.outputs.new_tag }}
       old_tag: ${{ steps.tag.outputs.old_tag }}
@@ -40,13 +41,27 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: check out with tags
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: create release
-      uses: marvinpinto/action-automatic-releases@v1.2.1
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        prerelease: false
-        automatic_release_tag: ${{ needs.version.outputs.new_tag }}
+      - name: check out with tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build all games
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: "arduino:mbed_rp2040:pico"
+          sketch-paths: |
+            - examples/games
+
+      - name: Collect UF2 files
+        run: |
+          mkdir -p build_artifacts
+          find ~/.cache/arduino/ -type f -name '*.uf2' -exec cp {} build_artifacts/ \;
+
+      - name: Create Release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: false
+          automatic_release_tag: ${{ needs.version.outputs.new_tag }}
+          files: build_artifacts/*.uf2

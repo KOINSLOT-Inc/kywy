@@ -10,8 +10,8 @@ help:
 	@echo "- 'check-licenses': runs 'reuse' to check licenses"
 	@echo "- 'update-licenses': runs 'reuse' to update licenses"
 	@echo "- 'lint': lints all files (code, config, license, etc.)"
-	@echo "- 'upload/examples/<example>': uploads the specified '<example>'"
-	@echo "- 'build/examples/<example>': builds the specified '<example>'"
+	@echo "- 'upload t=examples/<example>': uploads the specified '<example>'"
+	@echo "- 'compile t=examples/<example>': builds the specified '<example>'"
 
 CACHE := .cache
 $(CACHE):
@@ -108,25 +108,33 @@ lint: check-licenses lint-arduino-code lint-python-code
 .PHONY: format
 format: format-arduino-code format-python-code
 
-.PHONY: compile/examples/%
-compile/examples/%: $(ARDUINO_CLI)
-	@port=$$(arduino-cli board list --json \
-		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
-	) \
-	&& arduino-cli compile \
+.PHONY: compile upload
+compile:
+	@if [ -z "$(t)" ]; then \
+        echo "Error: No Target specified. Use t=<path>"; \
+        exit 1; \
+    fi
+	arduino-cli compile \
 		-b arduino:mbed_rp2040:pico \
-		-p $$port \
-		$$(echo $@ | cut -d'/' -f 2-)
+		--library ./ \
+		--build-path './output/$(t)' \
+		$(t)
 
-.PHONY: upload/examples/%
-upload/examples/%: $(ARDUINO_CLI) compile/examples/%
+upload: compile
+	@if [ -z "$(t)" ]; then \
+		echo "Error: No Target specified. Use -t <path> "; \
+		exit 1; \
+	fi
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
+	&& echo "Found device: $$port"
 	&& arduino-cli upload \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
-		$$(echo $@ | cut -d'/' -f 2-)
+		--library ./ \
+		--input-dir './output/$(t)' \
+		$(t)
 
 .PHONY: docs
 docs: $(PYTHON_DEPS) $(DOXYGEN)
