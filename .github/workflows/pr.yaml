@@ -66,7 +66,7 @@ jobs:
             const repo = context.repo;
             const artifactsUrl = `https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`;
       
-            const body = `🛠️ Download build artifacts [here](${artifactsUrl}) (look for **${artifactName}**).`;
+            const body = `🛠️ Download build artifacts [here](${artifactsUrl}) (artifact **${artifactName}**).\n\nBuilt from commit \`${commit}\`.`;
       
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
