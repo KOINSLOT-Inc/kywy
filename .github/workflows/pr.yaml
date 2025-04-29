@@ -65,6 +65,7 @@ jobs:
             const runId = context.runId;
             const repo = context.repo;
             const artifactsUrl = `https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`;
+            onst commit = context.payload.pull_request.head.sha.slice(0, 7); // short SHA
       
             const body = `🛠️ Download build artifacts [here](${artifactsUrl}) (artifact **${artifactName}**).\n\nBuilt from commit \`${commit}\`.`;
       
