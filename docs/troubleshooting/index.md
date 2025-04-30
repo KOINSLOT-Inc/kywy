@@ -44,5 +44,4 @@ For help use the discord:
         src="https://img.shields.io/discord/1172988360063725629?style=for-the-badge&logo=discord"
 /></a>
 
-You can submit issues with the Arduino library on GitHub:
-[kywy issues GitHub](https://github.com/KOINSLOT-Inc/kywy/issues)
+You can submit issues with the Kywy library on GitHub [here](https://github.com/KOINSLOT-Inc/kywy/issues).
