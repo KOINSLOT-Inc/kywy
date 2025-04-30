@@ -128,11 +128,10 @@ upload: compile
 	@port=$$(arduino-cli board list --json \
 		| jq -r '.detected_ports | map(select(.matching_boards)) | .[0].port.address' \
 	) \
-	&& echo "Found device: $$port"
+	&& echo "Found device: $$port" \
 	&& arduino-cli upload \
 		-b arduino:mbed_rp2040:pico \
 		-p $$port \
-		--library ./ \
 		--input-dir './output/$(t)' \
 		$(t)
 
