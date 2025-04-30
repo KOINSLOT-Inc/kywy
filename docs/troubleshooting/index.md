@@ -11,7 +11,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Troubleshooting
 ## Common Issues
-### 1. Arduino can not find the kywy
+### 1. Arduino can not find the Kywy
 #### Bad USB cable
 This is a common cause of the board not being found. Make sure you are
 using a data cable, not just a power cable. Try a different cable and verify
