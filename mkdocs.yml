@@ -16,6 +16,33 @@ theme:
     - search.suggest
     - search.hightlight
     - content.code.copy
+  favicon: img/favicon.ico
+  logo: img/favicon.ico
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
 site_dir: _site
 site_url: https://docs.kywy.io
 repo_url: https://github.com/KOINSLOT-Inc/kywy
