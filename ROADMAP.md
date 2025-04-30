@@ -6,9 +6,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Engine Roadmap
 
-_last updated: april 15th, 2025_
-
-_current state: draft_
+_last updated: april 30th, 2025_
 
 ## Overview
 
@@ -45,12 +43,12 @@ Items:
 * [ ] (M) State Machine Guide
 * [ ] (M) FAQ Page
 * [ ] Tutorials:
-    * [ ] (S) Writing to the screen
-    * [ ] (S) Reading button input
-    * [ ] (S) Using the clock
-    * [ ] (S) Bouncing Ball - walk through how to use the previous three to create a bouncing ball that you can move left and
+    * [x] (S) Writing to the screen
+    * [x] (S) Reading button input
+    * [x] (S) Using the clock
+    * [x] (S) Bouncing Ball - walk through how to use the previous three to create a bouncing ball that you can move left and
       right (without actors)
-    * [ ] (S) Bouncing Ball w/ Actors - convert the previous tutorial code to one with actors, add a second ball using a
+    * [x] (S) Bouncing Ball w/ Actors - convert the previous tutorial code to one with actors, add a second ball using a
       second actor that can move independently (e.g. 1 uses d-pad, one uses L/R buttons).
     * [ ] (M) Some tutorial about adding a state machine to this, need a clean way to transition from the previous tutorial to
       this one
