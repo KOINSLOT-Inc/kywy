@@ -30,7 +30,7 @@ back of the Kywy, to the right of the Koinslot logo.
 
 ### 2. Arduino IDE can not find the library
 When uploading, if you get the message "Compilation error:
-Kywy1.hpp: No such file or directory", it means that the library is not
+Kywy.hpp: No such file or directory", it means that the library is not
 installed.
 On the arduino IDE, open the library manager and search for "Kywy". Install the
 library and restart the IDE.
