@@ -21,11 +21,11 @@ something is wrong with the board, please contact us.
 #### Hard reset the board
 It is possible to upload a broken sketch or a sketch that does not start the
 serial port. To fix this follow the following steps to hard reset and put the
-kywy into programming mode:
-1. Disconnect the USB and turn the kywy off.
+Kywy into programming mode:
+1. Disconnect the USB and turn the Kywy off.
 2. Using a paperclip or similar small pointy thing, press the reset button on the
-back of the kywy, to the right of the Koinslot logo.
-3. While holding the reset button, connect the USB cable to the kywy or power it on.
+back of the Kywy, to the right of the Koinslot logo.
+3. While holding the reset button, connect the USB cable to the Kywy or power it on.
 4. Wait a few second and the device should show up as a USB drive.
 
 ### 2. Arduino IDE can not find the library
