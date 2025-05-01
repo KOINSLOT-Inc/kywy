@@ -8,6 +8,17 @@
 namespace Kywy {
 
 void clockTickCallback(Clock *clock) {
+  if (clock->options.getClickToClick()) {
+    if (Serial.available()) {
+      String input = Serial.readString();
+      if (!(input == "tick\n")) {
+        return;
+      }
+    } else {
+      return;
+    }
+  }
+
   clock->publish(&clock->tickMessage);
 };
 
