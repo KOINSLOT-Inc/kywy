@@ -11,6 +11,18 @@
 
 namespace Kywy {
 
+struct ClockOptions {
+  bool _clickToTick = false;
+
+  ClockOptions clickToTick(bool setClickToTick) {
+    _clickToTick = setClickToTick;
+    return *this;
+  };
+  bool getClickToClick() {
+    return _clickToTick;
+  };
+};
+
 class Clock : public Actor::Actor {
 private:
   // The number of ms between a Clock tick
@@ -27,6 +39,8 @@ public:
   };
   void initialize();
   void handle(::Actor::Message *message);
+
+  ClockOptions options;
 
   // Returns the milliseconds between each Clock tick
   int getTickDuration();

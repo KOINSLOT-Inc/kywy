@@ -6,12 +6,16 @@
 
 namespace Kywy {
 
-void Engine::start() {
+void Engine::start(EngineOptions options) {
+  this->options = options;
+  Serial.begin(9600);
+
   displayDriver = new Display::Driver::MBED_SPI_DRIVER();
   display = Display::Display(displayDriver);
 
   Actor::Actor::start();
 
+  clock.options.clickToTick(options.getClickToClick());
   clock.start();
 
   input.subscribe(&clock);  // get inputs for every tick
