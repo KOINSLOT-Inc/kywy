@@ -13,7 +13,6 @@ on:
 
 jobs:
   version:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -36,7 +35,6 @@ jobs:
 
   release:
     needs: version
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
