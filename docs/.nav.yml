@@ -7,6 +7,6 @@ nav:
   - Getting Started: getting_started.md
   - Guides: guides
   - Tutorials: tutorials/
-  - Troubleshooting: troubleshooting
+  - Troubleshooting: troubleshooting.md
   - Roadmap: roadmap.md
   - API Reference: api_reference.md
