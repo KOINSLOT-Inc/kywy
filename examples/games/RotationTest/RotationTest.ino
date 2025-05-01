@@ -61,11 +61,11 @@ public:
     if (tickCount%n == 0){
       engine.display.clear();
 
-      slime.rotate(spriteSheetData,rotatedBitmap,32, 32,float(angle));
+      // slime.rotate(spriteSheetData,rotatedBitmap,slime.width, slime.height,float(angle));
       
 
-      const uint8_t* frames2[] = {rotatedBitmap};
-      slime.setSheet(frames2,1);
+      // const uint8_t* frames2[] = {rotatedBitmap};
+      // slime.setSheet(frames2,1);
       angle += 45;
       if (angle >= 360)
         angle = 0;
