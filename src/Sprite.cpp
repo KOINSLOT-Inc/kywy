@@ -21,10 +21,41 @@ Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width,
   }
 };
 
+// void Sprite::rotate(const uint8_t* bitmap, uint8_t* output, int width, int height, double angle) {
+//   double cosA = cos(angle);
+//   double sinA = sin(angle);
+
+//   double cx = width / 2.0;
+//   double cy = height / 2.0;
+
+//   for (int y = 0; y < height; ++y) {
+//       for (int x = 0; x < width; ++x) {
+//           double dx = x - cx;
+//           double dy = y - cy;
+
+//           double srcX =  dx * cosA + dy * sinA + cx;
+//           double srcY = -dx * sinA + dy * cosA + cy;
+
+//           int ix = (int)(srcX + 0.5);
+//           int iy = (int)(srcY + 0.5);
+
+//           if (ix >= 0 && iy >= 0 && ix < width && iy < height) {
+//               output[y * width + x] = bitmap[iy * width + ix];
+//           } else {
+//               output[y * width + x] = 0;
+//           }
+//       }
+//   }
+// }
+
 void Sprite::rotate(const uint8_t* bitmap, uint8_t* output, int width, int height, double angle) {
+  int byteCount = (width * height) / 8;
+  for (int i = 0; i < byteCount; ++i) {
+      output[i] = 0;
+  }
+
   double cosA = cos(angle);
   double sinA = sin(angle);
-
   double cx = width / 2.0;
   double cy = height / 2.0;
 
@@ -40,9 +71,17 @@ void Sprite::rotate(const uint8_t* bitmap, uint8_t* output, int width, int heigh
           int iy = (int)(srcY + 0.5);
 
           if (ix >= 0 && iy >= 0 && ix < width && iy < height) {
-              output[y * width + x] = bitmap[iy * width + ix];
-          } else {
-              output[y * width + x] = 0;
+              int srcIndex = iy * width + ix;
+              int srcByte = srcIndex / 8;
+              int srcBit = 7 - (ix % 8);
+              int bit = (bitmap[srcByte] >> srcBit) & 1;
+
+              int dstIndex = y * width + x;
+              int dstByte = dstIndex / 8;
+              int dstBit = 7 - (x % 8);
+              if (bit) {
+                  output[dstByte] |= (1 << dstBit);
+              }
           }
       }
   }
