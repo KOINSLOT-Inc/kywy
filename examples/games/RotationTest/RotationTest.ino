@@ -66,13 +66,14 @@ public:
 
       const uint8_t* frames2[] = {rotatedBitmap};
       slime.setSheet(frames2,1);
-      angle += 1;
+      angle += 45;
       if (angle >= 360)
         angle = 0;
-    }
-
       slime.render();
       engine.display.update();
+    }
+
+
       tickCount++;
     }
   }
@@ -90,5 +91,5 @@ void setup()
 
 void loop()
 {
-  delay(1000);
+  delay(1);
 }

@@ -21,8 +21,9 @@ public:
 
   void setFrame(uint16_t frame);
 
+  //Rotate the sprite/sprite sheet a number of degrees
   void rotate(const uint8_t* bitmap, uint8_t* output, int width, int height, double angle);
-
+  //Update the spritesheet of the sprite (need to do after rotation)
   void setSheet(const uint8_t* newFrames[], uint16_t newNumFrames);
 
   // move sprite to (x, y) coordinate relative to current position
