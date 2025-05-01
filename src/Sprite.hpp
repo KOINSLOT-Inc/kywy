@@ -21,6 +21,10 @@ public:
 
   void setFrame(uint16_t frame);
 
+  void rotate(const uint8_t* bitmap, uint8_t* output, int width, int height, double angle);
+
+  void setSheet(const uint8_t* newFrames[], uint16_t newNumFrames);
+
   // move sprite to (x, y) coordinate relative to current position
   void translate(int16_t x, int16_t y);
   // move sprite from current position a specified distance in (x, y) direction

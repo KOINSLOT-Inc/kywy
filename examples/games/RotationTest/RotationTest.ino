@@ -15,7 +15,7 @@ const uint8_t spriteSheetData[] = {
     0x20, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x04,
     0x20, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x04, 0x30, 0x00, 0x00, 0x0c, 0x1f, 0xff, 0xff, 0xf8};
 
-uint8_t rotatedBitmap[128];
+uint8_t rotatedBitmap[sizeof(spriteSheetData)];
 
 const uint8_t *frames[] = {spriteSheetData};
 Sprite slime(frames, 1, 32, 32);
@@ -39,11 +39,16 @@ public:
     case Kywy::Events::TICK:
       engine.display.clear();
 
-      // slime.rotate(spriteSheetData,rotatedBitmap,32, 32,float(angle));
+
+      slime.rotate(spriteSheetData,rotatedBitmap,32, 32,float(angle));
+      
+
+      const uint8_t* frames2[] = {rotatedBitmap};
+      slime.setSheet(frames2,1);
 
       slime.render();
       engine.display.update();
-      angle += 5;
+      angle += 1;
       if (angle >= 360)
         angle = 0;
     }
