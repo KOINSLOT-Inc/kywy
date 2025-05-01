@@ -18,9 +18,21 @@
 
 namespace Kywy {
 
+struct EngineOptions {
+  bool _clickToTick = false;
+
+  EngineOptions clickToTick(bool setClickToTick) {
+    _clickToTick = setClickToTick;
+    return *this;
+  };
+  bool getClickToClick() {
+    return _clickToTick;
+  };
+};
+
 class Engine : public ::Actor::Actor {
 public:
-  void start();
+  void start(EngineOptions options = EngineOptions());
   void initialize();
   void handle(::Actor::Message *message);
 
@@ -28,6 +40,7 @@ public:
   Input input;
   Display::Display display;
   Battery battery;
+  EngineOptions options;
 
 private:
   Display::Driver::Driver *displayDriver;
