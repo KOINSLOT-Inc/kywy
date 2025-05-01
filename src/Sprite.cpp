@@ -26,14 +26,14 @@ Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width,
   : width(width), height(height) {
   this->numFrames = numFrames;
 
-  int pad_x = static_cast<int>(std::ceil(std::sqrt(2) * width));
-  int pad_y = static_cast<int>(std::ceil(std::sqrt(2) * height));
+  int new_width = static_cast<int>(std::ceil(std::sqrt(2) * width));
+  int new_height = static_cast<int>(std::ceil(std::sqrt(2) * height));
 
-  int new_width = width + pad_x;
   if (new_width % 8 != 0)
     new_width += 8 - (new_width % 8);  // Ensure multiple of 8
 
-  int new_height = height + pad_y;
+  if (new_height % 8 != 0)
+    new_height += 8 - (new_height % 8);  // Ensure multiple of 8
 
   int old_bytes_per_row = (width + 7) / 8;
   int new_bytes_per_row = new_width / 8;
@@ -54,16 +54,15 @@ Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width,
     }
 
     // Add a white border (set border bits to 1)
-    for (int y = 0; y < new_height; ++y) {
-      for (int x = 0; x < new_width; ++x) {
-        if (y == 0 || y == new_height - 1 || x == 0 || x == new_width - 1) {
-          int byte_index = y * new_bytes_per_row + x / 8;
-          int bit_offset = 7 - (x % 8);
-          new_frame[byte_index] |= (1 << bit_offset);
-        }
-      }
-    }
-
+    // for (int y = 0; y < new_height; ++y) {
+    //   for (int x = 0; x < new_width; ++x) {
+    //     if (y == 0 || y == new_height - 1 || x == 0 || x == new_width - 1) {
+    //       int byte_index = y * new_bytes_per_row + x / 8;
+    //       int bit_offset = 7 - (x % 8);
+    //       new_frame[byte_index] |= (1 << bit_offset);
+    //     }
+    //   }
+    // }
 
     for (int y = 0; y < height; ++y) {
       uint8_t *dst_row = new_frame + (y + top_pad_rows) * new_bytes_per_row + byte_offset;
@@ -78,6 +77,18 @@ Sprite::Sprite(const uint8_t *frames[], uint16_t numFrames, int16_t width,
   }
 }
 
+void Sprite::debugPrintBitmapInfo() const {
+  uint16_t byteWidth = width / 8;
+  uint16_t totalBytes = byteWidth * height;
+  Serial.print("Width: ");
+  Serial.println(width);
+  Serial.print("Height: ");
+  Serial.println(height);
+  Serial.print("Byte width: ");
+  Serial.println(byteWidth);
+  Serial.print("Total bytes: ");
+  Serial.println(totalBytes);
+}
 
 void Sprite::rotate(const uint8_t *bitmap, uint8_t *output, int width, int height, double angle) {
   int byteCount = (width * height) / 8;
