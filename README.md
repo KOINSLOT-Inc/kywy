@@ -23,7 +23,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 </p>
 <br />
 
-*Don't want the pitch? Click [here](./getting_started.md) to skip straight to the docs!*
+*Don't want the pitch? Click [here](https://docs.kywy.io) to skip straight to the docs!*
 
 # What is Kywy?
 
