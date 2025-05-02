@@ -25,6 +25,7 @@ const uint8_t *frames[] = { spriteSheetData };
 Sprite slime(frames, 1, 32, 32);
 
 
+
 class slimeRotator : public Actor::Actor {
 public:
   int angle = 0;
@@ -59,23 +60,23 @@ public:
       case Kywy::Events::TICK:
         if (tickCount % n == 0) {
           engine.display.clear();
-          slime.debugPrintBitmapInfo();
-
-          const uint8_t *currentFrame = slime.frames[slime.frame];
-          printBitmap(currentFrame, width, height);
+          // slime.debugPrintBitmapInfo();
           
-          // slime.rotate(spriteSheetData, rotatedBitmap, 48, 48, float(angle));
-          printBitmap(rotatedBitmap, width, height);
+          // // slime.rotate(spriteSheetData, rotatedBitmap, 48, 48, float(angle));
 
-          static const uint8_t* frames2[1];
-          frames2[0] = currentFrame;
+          // uint8_t buffer[(48 * 48)/8];
+          // memcpy(buffer, slime.frames[slime.frame], sizeof(buffer));
+          // slime.rotate(buffer, rotatedBitmap, 48, 48, float(angle));
 
-          slime.setSheet(frames2,1);
+          // static const uint8_t* frames2[1];
+          // frames2[0] = rotatedBitmap;
 
-          angle += 45;
+          // slime.setSheet(frames2,1);
+          // slime.setRotation(angle);
+          // slime.render();
+          angle = 5;
           if (angle >= 360)
             angle = 0;
-          slime.render();
           engine.display.update();
         }
 
