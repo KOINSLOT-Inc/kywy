@@ -231,7 +231,8 @@ void Display::drawText(int16_t x, int16_t y, const char *text,
                  .negative(true)  // serialized format is 1==black, 0==white,
                                   // but we need to flip that
                  .color(options.getColor())
-                 .origin(Origin::Object2D::BOTTOM_LEFT));
+                 .origin(Origin::Object2D::BOTTOM_LEFT)
+                .rotation(options.getRotation()));
 
     originX += currentChar.deviceWidthX;
   }

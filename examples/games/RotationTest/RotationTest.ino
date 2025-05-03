@@ -73,8 +73,9 @@ public:
 
           // slime.setSheet(frames2,1);
           slime.setRotation(angle);
+          engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "Spinning!!", Display::TextOptions().origin(Display::Origin::Text::CENTER).rotation(angle));
           slime.render();
-          angle = 10;
+          angle += 10;
           if (angle >= 360)
             angle = 0;
           engine.display.update();
