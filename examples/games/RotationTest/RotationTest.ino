@@ -16,14 +16,8 @@ const uint8_t spriteSheetData[] = {
   0x20, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x04, 0x30, 0x00, 0x00, 0x0c, 0x1f, 0xff, 0xff, 0xf8
 };
 
-uint8_t rotatedBitmap[(48 * 48)/8];
-const uint8_t *rotatedFrames[] = {rotatedBitmap};
-
-
-// static uint8_t rotatedBitmap[sizeof(spriteSheetData)];
 const uint8_t *frames[] = { spriteSheetData };
 Sprite slime(frames, 1, 32, 32);
-
 
 
 class slimeRotator : public Actor::Actor {
@@ -36,53 +30,19 @@ public:
     slime.setNegative(true);
   }
 
-  void printBitmap(const uint8_t *bitmap, int width, int height) {
-    int byteCount = (width * height) / 8;
-    Serial.println("const uint8_t bitmap[] = {");
-    for (int i = 0; i < byteCount; ++i) {
-        if (i % 8 == 0 && i != 0) {
-            Serial.println();  // Add new line after every 8 bytes for readability
-        }
-        Serial.print("0x");
-        Serial.print(bitmap[i], HEX);
-        Serial.print(", ");
-    }
-    Serial.println("\n};");
-}
-
   void handle(::Actor::Message *message) {
-    static int tickCount = 0;
-    const int n = 1;
-    int width = slime.width;
-    int height = slime.height;
+
 
     switch (message->signal) {
       case Kywy::Events::TICK:
-        if (tickCount % n == 0) {
           engine.display.clear();
-          // slime.debugPrintBitmapInfo();
-          
-          // // slime.rotate(spriteSheetData, rotatedBitmap, 48, 48, float(angle));
-
-          // uint8_t buffer[(48 * 48)/8];
-          // memcpy(buffer, slime.frames[slime.frame], sizeof(buffer));
-          // slime.rotate(buffer, rotatedBitmap, 48, 48, float(angle));
-
-          // static const uint8_t* frames2[1];
-          // frames2[0] = rotatedBitmap;
-
-          // slime.setSheet(frames2,1);
           slime.setRotation(angle);
-          engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "Spinning!!", Display::TextOptions().origin(Display::Origin::Text::CENTER).rotation(angle));
+          // engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "Spinning!!", Display::TextOptions().origin(Display::Origin::Text::CENTER).rotation(angle));
           slime.render();
-          angle += 10;
+          angle += 1;
           if (angle >= 360)
             angle = 0;
           engine.display.update();
-        }
-
-
-        tickCount++;
     }
   }
 } slimeRotator;

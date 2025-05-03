@@ -45,7 +45,7 @@ void Sprite::draw() {
 void Sprite::erase(int16_t lastRenderedX, int16_t lastRenderedY) {
   display->drawBitmap(lastRenderedX, lastRenderedY, width, height,
                       (uint8_t *)frames[lastRenderedFrame],
-                      Display::BitmapOptions().negative(negative).color(!color));
+                      Display::BitmapOptions().negative(negative).color(!color).rotation(0));
 }
 
 void Sprite::translate(int16_t x, int16_t y) {
