@@ -52,7 +52,7 @@ public:
 
   void handle(::Actor::Message *message) {
     static int tickCount = 0;
-    const int n = 5;
+    const int n = 1;
     int width = slime.width;
     int height = slime.height;
 
@@ -72,9 +72,9 @@ public:
           // frames2[0] = rotatedBitmap;
 
           // slime.setSheet(frames2,1);
-          // slime.setRotation(angle);
-          // slime.render();
-          angle = 5;
+          slime.setRotation(angle);
+          slime.render();
+          angle += 10;
           if (angle >= 360)
             angle = 0;
           engine.display.update();
