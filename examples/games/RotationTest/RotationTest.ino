@@ -74,7 +74,7 @@ public:
           // slime.setSheet(frames2,1);
           slime.setRotation(angle);
           slime.render();
-          angle += 10;
+          angle = 10;
           if (angle >= 360)
             angle = 0;
           engine.display.update();

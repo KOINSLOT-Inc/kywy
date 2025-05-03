@@ -133,69 +133,71 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
     byteCount = (width * height) / 8;
   }
 
+  uint8_t resized[byteCount];
   uint8_t output[byteCount];
 
   if (options.getRotation() != 0) {
 
     for (int i = 0; i < byteCount; ++i) {
-      output[i] = 255;
+      resized[i] = 0;
+      output[i] = 0;
     }
 
-    // int old_bytes_per_row = (width + 7) / 8;
-    // int new_bytes_per_row = new_width / 8;
+    int old_bytes_per_row = (width + 7) / 8;
+    int new_bytes_per_row = new_width / 8;
 
-    // int left_pad_pixels = (new_width - width) / 2;
-    // int top_pad_rows = (new_height - height) / 2;
-    // int byte_offset = left_pad_pixels / 8;
+    int left_pad_pixels = (new_width - width) / 2;
+    int top_pad_rows = (new_height - height) / 2;
+    int byte_offset = left_pad_pixels / 8;
 
-    // for (int y = 0; y < height; ++y) {
-    //   uint8_t *dst_row = output + (y + top_pad_rows) * new_bytes_per_row + byte_offset;
-    //   const uint8_t *src_row = bitmap + y * old_bytes_per_row;
+    for (int y = 0; y < height; ++y) {
+      uint8_t *dst_row = resized + (y + top_pad_rows) * new_bytes_per_row + byte_offset;
+      const uint8_t *src_row = bitmap + y * old_bytes_per_row;
 
-    //   for (int b = 0; b < old_bytes_per_row; ++b) {
-    //     dst_row[b] = src_row[b];
-    //   }
-    // }
+      for (int b = 0; b < old_bytes_per_row; ++b) {
+        dst_row[b] = src_row[b];
+      }
+    }
 
-    // width = (int)new_width;
-    // height = (int)new_height;
+    x = x - left_pad_pixels;
+    y = y -top_pad_rows;
 
-
-    // double cosA = cos(options.getRotation() * 3.1415926f / 180.0);
-    // double sinA = sin(options.getRotation() * 3.1415926 / 180.0);
-    // double cx = width / 2.0;
-    // double cy = height / 2.0;
-
-    // for (int y = 0; y < height; ++y) {
-    //   for (int x = 0; x < width; ++x) {
-    //     double dx = x - cx;
-    //     double dy = y - cy;
-
-    //     double srcX = dx * cosA + dy * sinA + cx;
-    //     double srcY = -dx * sinA + dy * cosA + cy;
-
-    //     int ix = (int)(srcX + 0.5);
-    //     int iy = (int)(srcY + 0.5);
-
-    //     if (ix >= 0 && iy >= 0 && ix < width && iy < height) {
-    //       // Annoying bitmapping that was needed
-    //       int srcIndex = iy * width + ix;
-    //       int srcByte = srcIndex / 8;
-    //       int srcBit = 7 - (ix % 8);
-    //       int bit = (bitmap[srcByte] >> srcBit) & 1;
-
-    //       int dstIndex = y * width + x;
-    //       int dstByte = dstIndex / 8;
-    //       int dstBit = 7 - (x % 8);
-    //       if (bit) {
-    //         output[dstByte] |= (1 << dstBit);
-    //       }
-    //     }
-    //   }
-    // }
-    // bitmap = output;
     width = (int)new_width;
     height = (int)new_height;
+
+
+    double cosA = cos(options.getRotation() * 3.1415926f / 180.0);
+    double sinA = sin(options.getRotation() * 3.1415926 / 180.0);
+    double cx = width / 2.0;
+    double cy = height / 2.0;
+
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
+        double dx = x - cx;
+        double dy = y - cy;
+
+        double srcX = dx * cosA + dy * sinA + cx;
+        double srcY = -dx * sinA + dy * cosA + cy;
+
+        int ix = (int)(srcX + 0.5);
+        int iy = (int)(srcY + 0.5);
+
+        if (ix >= 0 && iy >= 0 && ix < width && iy < height) {
+          int srcIndex = iy * width + ix;
+          int srcByte = srcIndex / 8;
+          int srcBit = 7 - (ix % 8);
+          int bit = (resized[srcByte] >> srcBit) & 1;
+
+          int dstIndex = y * width + x;
+          int dstByte = dstIndex / 8;
+          int dstBit = 7 - (x % 8);
+          if (bit) {
+            output[dstByte] |= (1 << dstBit);
+          }
+        }
+      }
+    }
+    bitmap = output;
   }
 
 
