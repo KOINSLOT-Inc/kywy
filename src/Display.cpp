@@ -132,7 +132,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
   } else {
     byteCount = (width * height) / 8;
   }
-
+// Has to be outside loop for some reason
   uint8_t resized[byteCount];
   uint8_t output[byteCount];
 
@@ -142,7 +142,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
       resized[i] = 0;
       output[i] = 0;
     }
-
+//Padding
     int old_bytes_per_row = (width + 7) / 8;
     int new_bytes_per_row = new_width / 8;
 
@@ -160,24 +160,28 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
     }
 
     x = x - left_pad_pixels;
-    y = y -top_pad_rows;
+    y = y - top_pad_rows;
 
     width = (int)new_width;
     height = (int)new_height;
 
-
-    double cosA = cos(options.getRotation() * 3.1415926f / 180.0);
-    double sinA = sin(options.getRotation() * 3.1415926 / 180.0);
+    double angleRad = options.getRotation() * 3.1415926 / 180.0;
+    double cosA = cos(angleRad);
+    double sinA = sin(angleRad);
     double cx = width / 2.0;
     double cy = height / 2.0;
 
+    double m00 = cosA, m01 = sinA;
+    double m10 = -sinA, m11 = cosA;
+    double tx = -cx * m00 - cy * m01 + cx;
+    double ty = -cx * m10 - cy * m11 + cy;
+//bitmask to optimize search
+    const uint8_t bit_mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
-        double dx = x - cx;
-        double dy = y - cy;
-
-        double srcX = dx * cosA + dy * sinA + cx;
-        double srcY = -dx * sinA + dy * cosA + cy;
+        double srcX = x * m00 + y * m01 + tx;
+        double srcY = x * m10 + y * m11 + ty;
 
         int ix = (int)(srcX + 0.5);
         int iy = (int)(srcY + 0.5);
@@ -185,14 +189,13 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
         if (ix >= 0 && iy >= 0 && ix < width && iy < height) {
           int srcIndex = iy * width + ix;
           int srcByte = srcIndex / 8;
-          int srcBit = 7 - (ix % 8);
-          int bit = (resized[srcByte] >> srcBit) & 1;
+          int srcBit = ix & 7;
 
-          int dstIndex = y * width + x;
-          int dstByte = dstIndex / 8;
-          int dstBit = 7 - (x % 8);
-          if (bit) {
-            output[dstByte] |= (1 << dstBit);
+          if (resized[srcByte] & bit_mask[srcBit]) {
+            int dstIndex = y * width + x;
+            int dstByte = dstIndex / 8;
+            int dstBit = x & 7;
+            output[dstByte] |= bit_mask[dstBit];
           }
         }
       }

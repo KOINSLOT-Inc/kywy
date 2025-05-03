@@ -23,6 +23,7 @@ Sprite slime(frames, 1, 32, 32);
 class slimeRotator : public Actor::Actor {
 public:
   int angle = 0;
+  int score = 0;
 
   void initialize() {
     slime.setPosition(58, 64);
@@ -30,19 +31,24 @@ public:
     slime.setNegative(true);
   }
 
+
   void handle(::Actor::Message *message) {
-
-
     switch (message->signal) {
       case Kywy::Events::TICK:
-          engine.display.clear();
-          slime.setRotation(angle);
-          // engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "Spinning!!", Display::TextOptions().origin(Display::Origin::Text::CENTER).rotation(angle));
-          slime.render();
-          angle += 1;
-          if (angle >= 360)
-            angle = 0;
-          engine.display.update();
+        engine.display.clear();
+        slime.setRotation(angle);
+        // engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "Spinning!!", Display::TextOptions().origin(Display::Origin::Text::CENTER).rotation(angle));
+        slime.render();
+        angle += 1;
+
+        char msg[16];
+        snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
+        engine.display.drawText(5, 5, msg);
+
+        if (angle >= 360)
+          angle = 0;
+        engine.display.update();
+        score += 1;
     }
   }
 } slimeRotator;
