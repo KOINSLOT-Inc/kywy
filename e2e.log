@@ -1,0 +1,3 @@
+{"level":"info","message":"Loading config.yaml from {\"uriType\":\"file\",\"filePath\":\"/home/jmlannan/.continue/config.yaml\"} with root path home/jmlannan/.continue"}
+{"level":"info","message":"Loading config.yaml from {\"uriType\":\"file\",\"filePath\":\"/home/jmlannan/.continue/config.yaml\"} with root path home/jmlannan/.continue"}
+{"level":"info","message":"Loading config.yaml from {\"uriType\":\"slug\",\"fullSlug\":{\"ownerSlug\":\"joela\",\"packageSlug\":\"joela-first-assistant\",\"versionSlug\":\"0.0.2\"}} with root path undefined"}
