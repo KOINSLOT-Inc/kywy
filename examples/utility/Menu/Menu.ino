@@ -500,7 +500,6 @@ public:
 
 } gameManager;
 
-Kywy::MenuSystem* menuSystem = nullptr;
 // Function to show the current settings
 void showSettings() {
     engine.display.clear();
@@ -559,7 +558,8 @@ void startGame() {
     engine.display.drawText(20, 60, "Starting Snake...", Display::TextOptions().color(0x00));
     engine.display.update();
     delay(1000);
-    gameManager.start(); //broken af
+    gameManager.initialize(); //broken af
+    gameManager.start();
 }
 
 void changeDifficulty() {
@@ -584,15 +584,38 @@ void changeLanguage() {
     }
 }
 
+Kywy::MenuSystem* menuSystem;
+Kywy::MenuSystem* subMenuSystem;
+
 void setup() {
     Serial.begin(9600);
     engine.start();
+
+    // Create menuOptions object and set the settings
+    Kywy::MenuSystem::MenuOptions menuOptions;
+    menuOptions.x = 0;
+    menuOptions.y = 10;
+    menuOptions.itemHeight = 15;
+    menuOptions.pointer = '>';
+    menuOptions.font = Display::Font::intel_one_mono_8_pt;
+
+    // Create a submenu that we will put into the menu
+    std::vector<Kywy::MenuSystem::MenuItem> submenuItems = {
+        // Action items
+        Kywy::MenuSystem::createAction("Item in submenu", showSettings),
+        Kywy::MenuSystem::createAction("Settings", showSettings),
+    };
+
+    subMenuSystem = new Kywy::MenuSystem(engine.display, submenuItems, menuOptions);
 
     // Create menu items with different types using helper functions
     std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
         // Action items
         Kywy::MenuSystem::createAction("Start Game", startGame),
         Kywy::MenuSystem::createAction("Settings", showSettings),
+
+        // Submenu drop down
+        Kywy::MenuSystem::createSubmenu("Submenu", subMenuSystem),
 
         // Divider (label)
         Kywy::MenuSystem::createLabel("-- Options --"),
@@ -608,22 +631,17 @@ void setup() {
         Kywy::MenuSystem::createOption("Language", language, changeLanguage, []() { return language; }),
 
         // More action items
-        Kywy::MenuSystem::createAction("About", showAbout)
+        Kywy::MenuSystem::createAction("About", showAbout),
     };
 
     // Configure menu appearance
-    Kywy::MenuSystem::MenuOptions menuOptions;
-    menuOptions.x = 0;
-    menuOptions.y = 10;
-    menuOptions.itemHeight = 15;
-    menuOptions.pointer = '>';
-    menuOptions.font = Display::Font::intel_one_mono_8_pt;
+
 
     // Create menu system
     menuSystem = new Kywy::MenuSystem(engine.display, menuItems, menuOptions);
 
     // Set a smaller number of visible items to test scrolling
-    menuSystem->scrollOptions.setVisibleItems(12);  // Only show 4 items at a time
+    menuSystem->scrollOptions.setVisibleItems(10);  // Only show 4 items at a time
 
     // Start the menu
     menuSystem->start(engine);

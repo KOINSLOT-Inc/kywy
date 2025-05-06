@@ -1,4 +1,3 @@
-
 // SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -8,11 +7,8 @@
 
 #include "Display.hpp"
 #include "Font.hpp"
-#include <future>
-#include <sys/types.h>
 #include <vector>
 #include <string>
-#include <functional>
 
 namespace Kywy {
 
@@ -37,6 +33,8 @@ public:
         std::function<void()> action = nullptr; // Function to call when selected
         std::string optionValue = ""; // Value for OPTION type menu items
         std::function<std::string()> optionValueProvider = nullptr; // Function to get current option value
+        MenuSystem* submenu = nullptr; // Pointer to submenu for SUBMENU type
+        bool expanded = false; // Flag to track if a submenu is expanded
 
         // Constructor for action items (type defaults to ACTION)
         MenuItem(const std::string &label, bool *toggleable, const std::function<void()> &action)
@@ -50,9 +48,11 @@ public:
         // Full constructor with all parameters
         MenuItem(const std::string &label, MenuItemType type, bool *toggleable,
                 const std::function<void()> &action, const std::string &optionValue = "",
-                const std::function<std::string()> &optionValueProvider = nullptr)
-            : label(label), type(type), toggleable(toggleable), action(action), 
-              optionValue(optionValue), optionValueProvider(optionValueProvider) {
+                const std::function<std::string()> &optionValueProvider = nullptr,
+                MenuSystem* submenu = nullptr)
+            : label(label), type(type), toggleable(toggleable), action(action),
+              optionValue(optionValue), optionValueProvider(optionValueProvider),
+              submenu(submenu), expanded(false) {
         }
     };
 
@@ -69,14 +69,15 @@ public:
         return MenuItem(label, MenuItemType::LABEL, nullptr, nullptr);
     }
 
-    static MenuItem createOption(const std::string &label, const std::string &optionValue, 
+    static MenuItem createOption(const std::string &label, const std::string &optionValue,
                           const std::function<void()> &action = nullptr,
                           const std::function<std::string()> &optionValueProvider = nullptr) {
         return MenuItem(label, MenuItemType::OPTION, nullptr, action, optionValue, optionValueProvider);
     }
 
-    static MenuItem createSubmenu(const std::string &label, const std::function<void()> &action) {
-        return MenuItem(label, MenuItemType::SUBMENU, nullptr, action);
+    static MenuItem createSubmenu(const std::string &label, MenuSystem* submenu) {
+        // No action needed - the submenu will be toggled in selectOption
+        return MenuItem(label, MenuItemType::SUBMENU, nullptr, nullptr, "", nullptr, submenu);
     }
 
     struct MenuOptions {
@@ -130,6 +131,9 @@ public:
     void pauseMenu();
     void unpauseMenu();
     bool isMenuPaused() const;
+    
+    // Collapse expanded submenus when back button is pressed
+    void handleBackAction();
 
     void start(Kywy::Engine &engine); // Start the menu system with an engine reference
 
@@ -140,13 +144,31 @@ public:
         }
         return false; // Return false if index is out of bounds or not toggleable
     }
-    
+
 
 
 private:
+    struct FlatMenuItem {
+        const MenuItem* item;        // Pointer to the actual menu item
+        int indentLevel;             // Indentation level (0 for main menu, 1+ for submenu)
+        int parentIndex;             // Index in the flattened list of the parent item (-1 for main items)
+        bool isSubmenuItem;          // Whether this is a submenu item
+        MenuItem* parentItem;        // Pointer to the parent menu item (nullptr for main items)
+        
+        FlatMenuItem(const MenuItem* item, int indentLevel, int parentIndex, bool isSubmenuItem, MenuItem* parentItem) 
+            : item(item), indentLevel(indentLevel), parentIndex(parentIndex), 
+              isSubmenuItem(isSubmenuItem), parentItem(parentItem) {}
+    };
+
     Display::Display &display;
     MenuOptions options;
-    size_t selectedIndex;
+    size_t selectedIndex;               // Index in main menu
+    size_t flattenedSelectedIndex = 0;  // Index in flattened menu
+    std::vector<FlatMenuItem> flattenedMenu; // The flattened menu for display
+    
+    // Helper methods for submenu handling
+    void buildFlattenedMenu();          // Build the flattened menu structure
+    void syncSelectedIndices();         // Sync main menu index with flattened index
 
 public:
     std::vector<MenuItem> items;
