@@ -119,7 +119,7 @@ void MenuSystem::selectOption() {
                 pause();
                 item.action();
                 unpause();
-                // Redraw the menu to show the updated option value 
+                // Redraw the menu to show the updated option value
                 displayMenu();
             }
             return;
@@ -155,7 +155,7 @@ public:
     MenuInputHandler(MenuSystem &menu, Kywy::Engine &engine)
         : menu(menu), engine(engine), rightButtonPressed(false) {}
 
-    void handle(::Actor::Message *message) override {
+    void handle(::Actor::Message *message) {
         if (menu.isMenuPaused()) {
             return;
         }
@@ -175,6 +175,8 @@ public:
                 break;
         }
     }
+
+
 
 private:
     MenuSystem &menu;

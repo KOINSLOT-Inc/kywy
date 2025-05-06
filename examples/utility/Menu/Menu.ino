@@ -559,7 +559,7 @@ void startGame() {
     engine.display.drawText(20, 60, "Starting Snake...", Display::TextOptions().color(0x00));
     engine.display.update();
     delay(1000);
-    // gameManager.start(); //broken
+    gameManager.start(); //broken af
 }
 
 void changeDifficulty() {
