@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "MenuSystem.hpp"
 #include "Actor.hpp"
 #include "Events.hpp"
@@ -18,17 +26,44 @@ void MenuSystem::displayMenu() {
         int itemIndex = scrollOptions.startIndex + i;
         if (itemIndex >= items.size()) break;
 
-        std::string itemText = (itemIndex == selectedIndex ? std::string(1, options.pointer) + " " : "  ") + items[itemIndex].label;
-        if (items[itemIndex].toggleable) {
-            bool toggleState = *items[itemIndex].toggleable;
-            itemText += toggleState ? " [X]" : " [ ]";
-        }
+        const MenuItem& item = items[itemIndex];
+        bool isSelected = (itemIndex == selectedIndex);
+
+        std::string itemText = (isSelected ? std::string(1, options.pointer) : " ") + item.label;
         int yPosition = startY + i * options.itemHeight;
 
         Display::TextOptions textOptions;
         textOptions._color = 0x00;
         textOptions._origin = Display::Origin::Text::BASELINE_LEFT;
         textOptions._font = options.font;
+
+        // Handle menu item types for drawing
+        switch (item.type) {
+            case MenuItemType::TOGGLE: {
+                bool toggleState = *item.toggleable;
+                itemText += toggleState ? " [X]" : " [ ]";
+                break;
+            }
+            case MenuItemType::ACTION:
+            default:
+                break;
+            case MenuItemType::LABEL:
+                itemText += " ";
+                textOptions._font = options.labelFont;
+                break;
+            case MenuItemType::OPTION:
+                itemText += " : ";
+                // Use optionValueProvider if available, otherwise use the static optionValue
+                if (item.optionValueProvider) {
+                    itemText += item.optionValueProvider();
+                } else {
+                    itemText += item.optionValue;
+                }
+                break;
+            case MenuItemType::SUBMENU:
+                itemText += " >";
+                break;
+        }
 
         display.drawText(options.x, yPosition, itemText.c_str(), textOptions);
     }
@@ -40,7 +75,10 @@ void MenuSystem::nextOption() {
     if (items.empty()) return;
 
     selectedIndex = (selectedIndex + 1) % items.size();
-    if (selectedIndex >= scrollOptions.startIndex + scrollOptions.visibleItems) {
+
+    if (selectedIndex == 0) {
+        scrollOptions.startIndex = 0;
+    } else if (selectedIndex >= scrollOptions.startIndex + scrollOptions.visibleItems) {
         if (scrollOptions.startIndex + scrollOptions.visibleItems < items.size()) {
             scrollOptions.startIndex++;
         }
@@ -63,30 +101,54 @@ void MenuSystem::previousOption() {
     }
 }
 
+// Handle menu item types on selection
 void MenuSystem::selectOption() {
-    if (items[selectedIndex].toggleable) {
-        bool currentState = *items[selectedIndex].toggleable;
-        *items[selectedIndex].toggleable = !currentState;
+    MenuItem& item = items[selectedIndex];
+
+    switch (item.type) {
+        case MenuItemType::TOGGLE:
+            if (item.toggleable) {
+                *item.toggleable = !(*item.toggleable);
+            }
+            break;
+        case MenuItemType::LABEL:
+            return;
+        case MenuItemType::OPTION:
+            // For OPTION items, execute the action first
+            if (item.action) {
+                pause();
+                item.action();
+                unpause();
+                // Redraw the menu to show the updated option value 
+                displayMenu();
+            }
+            return;
+        case MenuItemType::SUBMENU:
+        case MenuItemType::ACTION:
+        default:
+            break;
     }
 
-    if (items[selectedIndex].action) {
+    if (item.action) {
         pause();
-        items[selectedIndex].action();
+        item.action();
         unpause();
     }
 }
 
 void MenuSystem::pauseMenu() {
-    paused = true;
+    pause();
 }
 
 void MenuSystem::unpauseMenu() {
-    paused = false;
+    unpause();
 }
 
 bool MenuSystem::isMenuPaused() const {
     return paused;
 }
+
+
 
 class MenuInputHandler : public Actor::Actor {
 public:
@@ -94,7 +156,7 @@ public:
         : menu(menu), engine(engine), rightButtonPressed(false) {}
 
     void handle(::Actor::Message *message) override {
-        if (menu.isPaused()) {
+        if (menu.isMenuPaused()) {
             return;
         }
 
@@ -108,14 +170,8 @@ public:
                 menu.displayMenu();
                 break;
             case Kywy::Events::BUTTON_RIGHT_PRESSED:
-                if (!rightButtonPressed) {
-                    rightButtonPressed = true;
-                    menu.selectOption();
-                    menu.displayMenu();
-                }
-                break;
-            case Kywy::Events::BUTTON_RIGHT_RELEASED:
-                rightButtonPressed = false;
+                menu.selectOption();
+                menu.displayMenu();
                 break;
         }
     }
@@ -127,12 +183,10 @@ private:
 };
 
 void MenuSystem::start(Kywy::Engine &engine) {
-    // Create and start the input handler
     auto inputHandler = new MenuInputHandler(*this, engine);
     inputHandler->subscribe(&engine.input);
     inputHandler->start();
 
-    // Display the menu immediately
     displayMenu();
 }
 
