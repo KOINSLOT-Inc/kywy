@@ -4,44 +4,45 @@
 
 #include "Kywy.hpp"
 #include "MenuSystem.hpp"
+#include <sys/types.h>
 
 Kywy::Engine engine;
 bool toggleOption = false;
+Kywy::MenuSystem* menuSystem = nullptr; // Pass null for un-needed options
 
-void exampleAction() {
+void exampleFunction() {
     engine.display.clear();
-    engine.display.drawText(10, 10, "Action executed!", Display::TextOptions().color(0xFF));
+    engine.display.drawText(10, 10, "Function executed!", Display::TextOptions().color(0x00));
+    engine.display.drawText(10, 20, "Toggle Option is:", Display::TextOptions().color(0x00));
+    engine.display.drawText(10, 30, toggleOption ? "ON" : "OFF", Display::TextOptions().color(0x00));
     engine.display.update();
     delay(2000);
 }
 
-void testDisplay() {
-    engine.display.clear();
-    engine.display.drawText(10, 10, "Test Display", Display::TextOptions().color(0xFF));
-    engine.display.update();
-    delay(2000);
-}
-
-// Ensure the menu is displayed at the start
 void setup() {
+    Serial.begin(9600);
     engine.start();
 
     std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
-        {"Start Game", nullptr, []() { engine.display.clear(); engine.display.drawText(10, 10, "Starting game...", Display::TextOptions().color(0x00)); engine.display.update(); delay(1000); }},
-        {"Toggle Option", &toggleOption, nullptr},
-        {"Execute Action", nullptr, exampleAction}
+        {"Display Message", nullptr, []() { engine.display.clear(); engine.display.drawText(10, 10, "Displaying message...", Display::TextOptions().color(0x00)); engine.display.update(); delay(2000); }}, // Text, bool for toggle, fuction pointer
+        {"Toggle Option", &toggleOption, nullptr}, // This makes a bool for toggleOption
+        {"Execute Function", nullptr, exampleFunction}
     };
 
-    Kywy::MenuSystem::MenuOptions options;
-    options.x = 5;
-    options.y = 5;
-    options.itemHeight = 15;
-    options.pointer = '>';
+    Kywy::MenuSystem::MenuOptions menuOptions;
+    menuOptions.x = 0;
+    menuOptions.y = 5;
+    menuOptions.itemHeight = 15;
+    menuOptions.pointer = '>';
+    menuOptions.font = Display::Font::intel_one_mono_8_pt;
 
-    Kywy::MenuSystem menu(engine.display, menuItems, options);
-    menu.start(engine); // Pass the engine instance to start the menu system
+    // Create menu system and store it in the global pointer
+    menuSystem = new Kywy::MenuSystem(engine.display, menuItems, menuOptions);
+
+    // Pass the engine instance to start the menu system
+    menuSystem->start(engine);
 }
 
 void loop() {
-    // Empty loop as the menu runs in setup
+    delay(1000);
 }

@@ -2,12 +2,16 @@
 #define KYWY_MENU_SYSTEM_HPP
 
 #include "Display.hpp"
-#include "Kywy.hpp" // Include Kywy header for Kywy::Engine type
+#include "Font.hpp"
+#include <sys/types.h>
 #include <vector>
 #include <string>
 #include <functional>
 
 namespace Kywy {
+
+// Forward declaration
+class Engine;
 
 class MenuSystem {
 public:
@@ -24,29 +28,9 @@ public:
         MenuOptions() : x(10), y(10), itemHeight(10), pointer('>') {}
         int x;
         int y;
-        int itemHeight;
+        int itemHeight = 15;
         char pointer; // Character to indicate the current selection
-    };
-
-    struct TextOptions {
-        uint16_t color = 0x00;
-        uint8_t *font = nullptr;
-        bool opaque = false;
-
-        TextOptions &setColor(uint16_t newColor) {
-            color = newColor;
-            return *this;
-        }
-
-        TextOptions &setFont(uint8_t *newFont) {
-            font = newFont;
-            return *this;
-        }
-
-        TextOptions &setOpaque(bool isOpaque) {
-            opaque = isOpaque;
-            return *this;
-        }
+        uint8_t *font;
     };
 
     struct ScrollOptions {
