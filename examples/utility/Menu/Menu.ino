@@ -502,152 +502,156 @@ public:
 
 // Function to show the current settings
 void showSettings() {
-    engine.display.clear();
+  engine.display.clear();
 
-    Display::TextOptions textOpt;
-    textOpt._color = 0x00;
-    textOpt._font = Display::Font::intel_one_mono_8_pt;
+  Display::TextOptions textOpt;
+  textOpt._color = 0x00;
+  textOpt._font = Display::Font::intel_one_mono_8_pt;
 
-    engine.display.drawText(10, 20, "Current Settings:", textOpt);
+  engine.display.drawText(10, 20, "Current Settings:", textOpt);
 
-    // Show all the toggle states
-    std::string sound = "Sound: ";
-    sound += soundEnabled ? "ON" : "OFF";
-    engine.display.drawText(10, 40, sound.c_str(), textOpt);
+  // Show all the toggle states
+  std::string sound = "Sound: ";
+  sound += soundEnabled ? "ON" : "OFF";
+  engine.display.drawText(10, 40, sound.c_str(), textOpt);
 
-    std::string vibration = "Vibration: ";
-    vibration += vibrationEnabled ? "ON" : "OFF";
-    engine.display.drawText(10, 60, vibration.c_str(), textOpt);
+  std::string vibration = "Vibration: ";
+  vibration += vibrationEnabled ? "ON" : "OFF";
+  engine.display.drawText(10, 60, vibration.c_str(), textOpt);
 
-    std::string mode = "Night Mode: ";
-    mode += nightMode ? "ON" : "OFF";
-    engine.display.drawText(10, 80, mode.c_str(), textOpt);
+  std::string mode = "Night Mode: ";
+  mode += nightMode ? "ON" : "OFF";
+  engine.display.drawText(10, 80, mode.c_str(), textOpt);
 
-    // Show option values
-    std::string diff = "Difficulty: " + difficulty;
-    engine.display.drawText(10, 100, diff.c_str(), textOpt);
+  // Show option values
+  std::string diff = "Difficulty: " + difficulty;
+  engine.display.drawText(10, 100, diff.c_str(), textOpt);
 
-    std::string lang = "Language: " + language;
-    engine.display.drawText(10, 120, lang.c_str(), textOpt);
+  std::string lang = "Language: " + language;
+  engine.display.drawText(10, 120, lang.c_str(), textOpt);
 
-    engine.display.update();
+  engine.display.update();
 
-    delay(2000);
+  delay(2000);
 }
 
 // Function to show about information
 void showAbout() {
-    engine.display.clear();
+  engine.display.clear();
 
-    Display::TextOptions textOpt;
-    textOpt._color = 0x00;
-    textOpt._font = Display::Font::intel_one_mono_8_pt;
+  Display::TextOptions textOpt;
+  textOpt._color = 0x00;
+  textOpt._font = Display::Font::intel_one_mono_8_pt;
 
-    engine.display.drawText(10, 30, "About This App", textOpt);
-    engine.display.drawText(10, 50, "Version: 1.0", textOpt);
-    engine.display.drawText(10, 70, "Created with Kywy", textOpt);
+  engine.display.drawText(10, 30, "About This App", textOpt);
+  engine.display.drawText(10, 50, "Version: 1.0", textOpt);
+  engine.display.drawText(10, 70, "Created with Kywy", textOpt);
 
-    engine.display.update();
+  engine.display.update();
 
-    delay(3000);
+  delay(3000);
 }
 
 // Function to start the game
 void startGame() {
-    engine.display.clear();
-    engine.display.drawText(20, 60, "Starting Snake...", Display::TextOptions().color(0x00));
-    engine.display.update();
-    delay(1000);
-    gameManager.initialize(); //broken af
-    gameManager.start();
+  engine.display.clear();
+  engine.display.drawText(20, 60, "Starting Snake...", Display::TextOptions().color(0x00));
+  engine.display.update();
+  delay(1000);
+  gameManager.initialize();  //broken af
+  gameManager.start();
 }
 
 void changeDifficulty() {
-    // Cycle through difficulty options
-    if (difficulty == "Easy") {
-        difficulty = "Medium";
-    } else if (difficulty == "Medium") {
-        difficulty = "Hard";
-    } else {
-        difficulty = "Easy";
-    }
+  // Cycle through difficulty options
+  if (difficulty == "Easy") {
+    difficulty = "Medium";
+  } else if (difficulty == "Medium") {
+    difficulty = "Hard";
+  } else {
+    difficulty = "Easy";
+  }
 }
 
 void changeLanguage() {
-    // Cycle through language options
-    if (language == "English") {
-        language = "Spanish";
-    } else if (language == "Spanish") {
-        language = "French";
-    } else {
-        language = "English";
-    }
+  // Cycle through language options
+  if (language == "English") {
+    language = "Spanish";
+  } else if (language == "Spanish") {
+    language = "French";
+  } else {
+    language = "English";
+  }
 }
 
-Kywy::MenuSystem* menuSystem;
-Kywy::MenuSystem* subMenuSystem;
+Kywy::MenuSystem *menuSystem;
+Kywy::MenuSystem *subMenuSystem;
 
 void setup() {
-    Serial.begin(9600);
-    engine.start();
+  Serial.begin(9600);
+  engine.start();
 
-    // Create menuOptions object and set the settings
-    Kywy::MenuSystem::MenuOptions menuOptions;
-    menuOptions.x = 0;
-    menuOptions.y = 10;
-    menuOptions.itemHeight = 15;
-    menuOptions.pointer = '>';
-    menuOptions.font = Display::Font::intel_one_mono_8_pt;
+  // Create menuOptions object and set the settings
+  Kywy::MenuSystem::MenuOptions menuOptions;
+  menuOptions.x = 0;
+  menuOptions.y = 10;
+  menuOptions.itemHeight = 15;
+  menuOptions.pointer = '>';
+  menuOptions.font = Display::Font::intel_one_mono_8_pt;
 
-    // Create a submenu that we will put into the menu
-    std::vector<Kywy::MenuSystem::MenuItem> submenuItems = {
-        // Action items
-        Kywy::MenuSystem::createAction("Item in submenu", showSettings),
-        Kywy::MenuSystem::createAction("Settings", showSettings),
-    };
+  // Create a submenu that we will put into the menu
+  std::vector<Kywy::MenuSystem::MenuItem> submenuItems = {
+    // Action items
+    Kywy::MenuSystem::createAction("Item in submenu", showSettings),
+    Kywy::MenuSystem::createAction("Settings", showSettings),
+  };
 
-    subMenuSystem = new Kywy::MenuSystem(engine.display, submenuItems, menuOptions);
+  subMenuSystem = new Kywy::MenuSystem(engine.display, submenuItems, menuOptions);
 
-    // Create menu items with different types using helper functions
-    std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
-        // Action items
-        Kywy::MenuSystem::createAction("Start Game", startGame),
-        Kywy::MenuSystem::createAction("Settings", showSettings),
+  // Create menu items with different types using helper functions
+  std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
+    // Action items
+    Kywy::MenuSystem::createAction("Start Game", startGame),
+    Kywy::MenuSystem::createAction("Settings", showSettings),
 
-        // Divider (label)
-        Kywy::MenuSystem::createLabel("-- Options --"),
+    // Divider (label)
+    Kywy::MenuSystem::createLabel("-- Options --"),
 
-        // Toggle items
-        Kywy::MenuSystem::createToggle("Sound", &soundEnabled),
-        Kywy::MenuSystem::createToggle("Vibration", &vibrationEnabled),
-        Kywy::MenuSystem::createToggle("Night Mode", &nightMode),
-        Kywy::MenuSystem::createToggle("Autosave", &autoSave),
+    // Toggle items
+    Kywy::MenuSystem::createToggle("Sound", &soundEnabled),
+    Kywy::MenuSystem::createToggle("Vibration", &vibrationEnabled),
+    Kywy::MenuSystem::createToggle("Night Mode", &nightMode),
+    Kywy::MenuSystem::createToggle("Autosave", &autoSave),
 
-        // Submenu drop down
-        Kywy::MenuSystem::createSubmenu("Submenu", subMenuSystem),
+    // Submenu drop down
+    Kywy::MenuSystem::createSubmenu("Submenu", subMenuSystem),
 
-        // Option items
-        Kywy::MenuSystem::createOption("Difficulty", difficulty, changeDifficulty, []() { return difficulty; }),
-        Kywy::MenuSystem::createOption("Language", language, changeLanguage, []() { return language; }),
+    // Option items
+    Kywy::MenuSystem::createOption("Difficulty", difficulty, changeDifficulty, []() {
+      return difficulty;
+    }),
+    Kywy::MenuSystem::createOption("Language", language, changeLanguage, []() {
+      return language;
+    }),
 
-        // More action items
-        Kywy::MenuSystem::createAction("About", showAbout),
-    };
+    // More action items
+    Kywy::MenuSystem::createAction("About", showAbout),
+  };
 
-    // Configure menu appearance
+  // Configure menu appearance
 
 
-    // Create menu system
-    menuSystem = new Kywy::MenuSystem(engine.display, menuItems, menuOptions);
+  // Create menu system
+  menuSystem = new Kywy::MenuSystem(engine.display, menuItems, menuOptions);
 
-    // Set a smaller number of visible items to test scrolling
-    menuSystem->scrollOptions.setVisibleItems(10);  // Only show 4 items at a time
+  // Set a smaller number of visible items to test scrolling
+  menuSystem->scrollOptions.setVisibleItems(10);  // Only show 4 items at a time
 
-    // Start the menu
-    menuSystem->start(engine);
+  // Start the menu
+  menuSystem->start(engine);
 }
 
 void loop() {
-    // The menu system handles user input through its input handler
-    delay(100);
+  // The menu system handles user input through its input handler
+  delay(100);
 }
