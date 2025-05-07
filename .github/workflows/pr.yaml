@@ -29,16 +29,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: List sketches
+        run: find examples -name "*.ino"
+
       - name: Build all games
         uses: arduino/compile-sketches@v1
         with:
           fqbn: "arduino:mbed_rp2040:pico"
-          sketch-paths: |
-            - examples
           sketches-report-path: build_artifacts/sketches_report.json
           verbose: true
           enable-warnings-report: true
-          enable-deltas-report: true
 
       - name: Collect UF2 files
         run: |
