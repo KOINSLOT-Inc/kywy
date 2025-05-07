@@ -614,9 +614,6 @@ void setup() {
         Kywy::MenuSystem::createAction("Start Game", startGame),
         Kywy::MenuSystem::createAction("Settings", showSettings),
 
-        // Submenu drop down
-        Kywy::MenuSystem::createSubmenu("Submenu", subMenuSystem),
-
         // Divider (label)
         Kywy::MenuSystem::createLabel("-- Options --"),
 
@@ -625,6 +622,9 @@ void setup() {
         Kywy::MenuSystem::createToggle("Vibration", &vibrationEnabled),
         Kywy::MenuSystem::createToggle("Night Mode", &nightMode),
         Kywy::MenuSystem::createToggle("Autosave", &autoSave),
+
+        // Submenu drop down
+        Kywy::MenuSystem::createSubmenu("Submenu", subMenuSystem),
 
         // Option items
         Kywy::MenuSystem::createOption("Difficulty", difficulty, changeDifficulty, []() { return difficulty; }),

@@ -17,7 +17,7 @@ void MenuSystem::displayMenu() {
 
     display.clear();
     int startY = options.y + 5;
-    int indentWidth = 12; // Width in pixels for each indent level (increased for better visibility)
+    int indentWidth = 8; // Width in pixels for each indent level (increased for better visibility)
 
     // Build the flattened menu structure for display and navigation
     buildFlattenedMenu();
@@ -46,11 +46,6 @@ void MenuSystem::displayMenu() {
         // Add selection indicator or indentation space
         itemText = isSelected ? std::string(1, options.pointer) : " ";
 
-        // Add submenu prefix if this is a submenu item
-        if (isSubmenuItem) {
-            itemText += " ";
-        }
-
         // Add the actual label
         itemText += item->label;
 
@@ -77,7 +72,7 @@ void MenuSystem::displayMenu() {
                 textOptions._font = options.labelFont;
                 break;
             case MenuItemType::OPTION:
-                itemText += " : ";
+                itemText += ": ";
                 // Use optionValueProvider if available, otherwise use the static optionValue
                 if (item->optionValueProvider) {
                     itemText += item->optionValueProvider();
