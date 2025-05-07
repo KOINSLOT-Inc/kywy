@@ -32,9 +32,6 @@ jobs:
       - name: List sketches
         run: find examples -name "*.ino"
 
-      - name: List sketches
-        run: find examples -name "*.ino"
-
       - name: Build all games
         uses: arduino/compile-sketches@v1
         with:
