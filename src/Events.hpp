@@ -35,7 +35,7 @@ typedef enum : int {
   // User Event Boundary
   USER_EVENTS,
 
-  MENU_MESSAGE, // Specific message for menu-related actions
+  MENU_MESSAGE,  // Specific message for menu-related actions
 
 } KywyEvents;
 
