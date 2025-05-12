@@ -49,7 +49,7 @@ extern uint8_t bailleul_bold_16_pt[7418];
 //   - (C) 2023 Intel Corporation"
 //   - Size: 8
 //   - Characters: 622
-extern uint8_t intel_one_mono_8_pt[11121];
+extern uint8_t intel_one_mono_8_pt[9558];
 
 // intel_one_mono
 //   - (C) 2023 Intel Corporation"
