@@ -15,6 +15,7 @@
 #include "Input.hpp"
 #include "Sprite.hpp"
 #include "SpriteSheet.hpp"
+#include "StateMachine.hpp"
 
 namespace Kywy {
 
