@@ -225,7 +225,7 @@ void Display::drawText(int16_t x, int16_t y, const char *text,
     currentChar = fontObject.getCharacter(currentCharCode);
     drawBitmap(originX + currentChar.bbxXOffset,
                originY - currentChar.bbxYOffset,
-               currentChar.bbxWidth + (8 - currentChar.bbxWidth % 8),
+               currentChar.bbxWidth,
                currentChar.bbxHeight, currentChar.bitmap,
                BitmapOptions()
                  .negative(true)  // serialized format is 1==black, 0==white,
