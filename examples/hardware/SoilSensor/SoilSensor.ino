@@ -3,34 +3,37 @@
 
 /*
  * I2C Capacitive Soil Moisture Sensor Example for Kywy
+ * With Animated Plant Monster Sprite
  * 
  * LEARNING OBJECTIVES:
  * - Understand I2C communication with register-based sensors
  * - Learn to read multi-byte data (big-endian format)
  * - Practice sensor calibration and data conversion
  * - Implement real-time sensor monitoring with error handling
+ * - Display sprite animations based on sensor data
  * 
  * WHAT THIS EXAMPLE DOES:
  * - Reads soil moisture using capacitive sensing technology
  * - Reads temperature from an onboard sensor
  * - Displays live sensor data with visual indicators
- * - Shows proper I2C communication error handling
+ * - Shows animated plant monster sprite that reacts to moisture levels
+ * - Demonstrates sprite sheet animation techniques
+ * 
+ * SPRITE ANIMATIONS:
+ * - Normal state: Row 1 animation (happy plant monster)
+ * - Low moisture: Row 3 animation (thirsty plant monster)
+ * - Watering detected: Row 2 animation (excited plant monster, 2 loops)
  * 
  * HARDWARE SETUP:
  * - Uses STEMMA Soil Sensor from Adafruit (ATSAMD10-based)
  * - Connect: VCC→3.3V, GND→GND, SDA→GP4, SCL→GP5
  * - Default I2C address: 0x36 (configurable to 0x39)
  * - Uses "seesaw" protocol for sensor communication
- * 
- * I2C CONCEPTS DEMONSTRATED:
- * - Multi-register sensor communication
- * - Big-endian data conversion
- * - Device detection and error recovery
- * - Register-based protocol implementation
  */
 
 #include <Wire.h>
 #include "Kywy.hpp"
+#include "plant_monster_sprites.h"
 
 // === SENSOR CONFIGURATION ===
 const uint8_t SENSOR_I2C_ADDRESS = 0x36;  // Can be 0x36 or 0x39
@@ -47,14 +50,44 @@ const uint8_t REG_TOUCH_CHANNEL_BASE = 0x10;  // Base address for touch channels
 // Hardware channel assignments
 const uint8_t MOISTURE_CHANNEL = 0;  // Touch channel 0 is connected to moisture sensor
 
+// === SPRITE ANIMATION CONFIGURATION ===
+// Plant monster sprite sheet organization (3x4 grid):
+// Row 1 (frames 0-2): Normal/happy state
+// Row 2 (frames 3-5): Watering detected (excited)
+// Row 3 (frames 6-8): Low moisture (thirsty)
+// Row 4 (frames 9-11): Not used
+
+enum PlantState {
+  PLANT_NORMAL,      // Happy, content plant
+  PLANT_THIRSTY,     // Low moisture, needs water
+  PLANT_WATERING     // Watering detected, excited
+};
+
+// Animation timing
+const unsigned long FRAME_DURATION = 500;  // 500ms per frame
+const unsigned long ANIMATION_INTERVAL = 2000;  // Check for state changes every 2s
+
 // === GLOBAL VARIABLES ===
 Kywy::Engine engine;
 
 // Sensor state tracking
 bool sensorConnected = false;
 uint16_t moistureReading = 0;    // Raw capacitive touch value
+uint16_t previousMoisture = 0;   // Previous reading for change detection
 float temperatureC = 0.0;        // Temperature in Celsius
 unsigned long lastUpdateTime = 0;
+
+// Sprite animation state
+PlantState currentPlantState = PLANT_NORMAL;
+uint8_t currentFrame = 0;
+unsigned long lastFrameTime = 0;
+unsigned long lastStateChangeTime = 0;
+uint8_t wateringLoopCount = 0;   // Count loops during watering animation
+
+// Sprite frame arrays for each animation state
+const uint8_t* normalFrames[] = {plant_monster_frame_0, plant_monster_frame_1, plant_monster_frame_2};
+const uint8_t* thirstyFrames[] = {plant_monster_frame_6, plant_monster_frame_7, plant_monster_frame_8};
+const uint8_t* wateringFrames[] = {plant_monster_frame_3, plant_monster_frame_4, plant_monster_frame_5};
 
 void setup() {
   // === HARDWARE INITIALIZATION ===
@@ -70,15 +103,10 @@ void setup() {
   
   // Show application title
   engine.display.drawText(
-    KYWY_DISPLAY_WIDTH / 2, 8,
+    KYWY_DISPLAY_WIDTH / 2, 64,
     "Soil Sensor Monitor",
     Display::TextOptions().origin(Display::Origin::Text::CENTER));
     
-  // Show sensor type
-  engine.display.drawText(
-    KYWY_DISPLAY_WIDTH / 2, 20,
-    "Capacitive I2C Sensor",
-    Display::TextOptions().origin(Display::Origin::Text::CENTER));
   
   engine.display.update();
   delay(2000);  // Show startup screen for 2 seconds
@@ -104,8 +132,14 @@ void loop() {
   if (millis() - lastUpdateTime >= 1000) {
     
     if (sensorConnected) {
+      // Store previous moisture for change detection
+      previousMoisture = moistureReading;
+      
       // Sensor is connected - read current values
       readAllSensorData();
+      
+      // Update plant state based on sensor data
+      updatePlantState();
     } else {
       // Sensor not connected - check if it's been reconnected
       checkSensorConnection();
@@ -118,8 +152,99 @@ void loop() {
     lastUpdateTime = millis();
   }
   
+  // Update sprite animation frame
+  updateSpriteAnimation();
+  
   // Small delay to prevent overwhelming the processor
-  delay(100);
+  delay(50);
+}
+
+void updatePlantState() {
+  // === DETERMINE PLANT STATE BASED ON SENSOR DATA ===
+  
+  uint8_t moisturePercent = convertToMoisturePercentage();
+  
+  // Detect sudden moisture increase (watering event)
+  int16_t moistureChange = (int16_t)moistureReading - (int16_t)previousMoisture;
+  
+  if (moistureChange > 100 && moisturePercent > 30) {
+    // Significant moisture increase detected - watering event!
+    if (currentPlantState != PLANT_WATERING) {
+      currentPlantState = PLANT_WATERING;
+      currentFrame = 0;
+      wateringLoopCount = 0;
+      lastStateChangeTime = millis();
+      lastFrameTime = millis();
+    }
+  } else if (currentPlantState == PLANT_WATERING) {
+    // Check if we've completed 2 loops of watering animation
+    if (wateringLoopCount >= 2) {
+      // Switch to appropriate state based on moisture level
+      currentPlantState = (moisturePercent < 30) ? PLANT_THIRSTY : PLANT_NORMAL;
+      currentFrame = 0;
+      lastFrameTime = millis();
+    }
+  } else {
+    // Normal state determination based on moisture level
+    PlantState newState = (moisturePercent < 30) ? PLANT_THIRSTY : PLANT_NORMAL;
+    
+    if (newState != currentPlantState) {
+      currentPlantState = newState;
+      currentFrame = 0;
+      lastFrameTime = millis();
+    }
+  }
+}
+
+void updateSpriteAnimation() {
+  // === UPDATE SPRITE ANIMATION FRAME ===
+  
+  // Check if it's time to advance to the next frame
+  if (millis() - lastFrameTime >= FRAME_DURATION) {
+    currentFrame++;
+    
+    // Handle frame wrapping based on current state
+    if (currentFrame >= 3) {  // All animations have 3 frames
+      currentFrame = 0;
+      
+      // If we're in watering state, count completed loops
+      if (currentPlantState == PLANT_WATERING) {
+        wateringLoopCount++;
+      }
+    }
+    
+    lastFrameTime = millis();
+  }
+}
+
+void drawPlantSprite() {
+  // === DRAW CURRENT PLANT SPRITE FRAME ===
+  
+  const uint8_t* frameData = nullptr;
+  
+  // Select appropriate frame based on current state
+  switch (currentPlantState) {
+    case PLANT_NORMAL:
+      frameData = normalFrames[currentFrame];
+      break;
+    case PLANT_THIRSTY:
+      frameData = thirstyFrames[currentFrame];
+      break;
+    case PLANT_WATERING:
+      frameData = wateringFrames[currentFrame];
+      break;
+  }
+  
+  // Draw sprite centered horizontally, positioned below moisture bar
+  if (frameData != nullptr) {
+    int spriteX = (KYWY_DISPLAY_WIDTH - PLANT_MONSTER_FRAME_WIDTH) / 2;
+    int spriteY = 50;  // Below moisture bar, above temperature/time
+    
+    engine.display.drawBitmap(spriteX, spriteY, 
+                             PLANT_MONSTER_FRAME_WIDTH, 
+                             PLANT_MONSTER_FRAME_HEIGHT, 
+                             (uint8_t*)frameData);
+  }
 }
 
 void checkSensorConnection() {
@@ -224,7 +349,7 @@ void updateDisplay() {
   // Application title
   engine.display.drawText(
     KYWY_DISPLAY_WIDTH / 2, 8,
-    "Soil Sensor",
+    "Plant Monitor",
     Display::TextOptions().origin(Display::Origin::Text::CENTER));
   
   if (!sensorConnected) {
@@ -253,68 +378,54 @@ void updateDisplay() {
       Display::TextOptions().origin(Display::Origin::Text::CENTER));
       
   } else {
-    // === SENSOR DATA DISPLAY ===
+    // === SENSOR DATA DISPLAY WITH CENTERED SPRITE ===
     
-    // Connection status with I2C address
-    char statusText[30];
-    snprintf(statusText, sizeof(statusText), "Connected (0x%02X)", SENSOR_I2C_ADDRESS);
-    engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 22,
-      statusText,
-      Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    
-    // Temperature reading
-    char tempText[20];
-    snprintf(tempText, sizeof(tempText), "Temp: %.1f°C", temperatureC);
-    engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 40,
-      tempText,
-      Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    
-    // Raw capacitive reading (useful for calibration)
-    char capacitiveText[25];
-    snprintf(capacitiveText, sizeof(capacitiveText), "Capacitive: %d", moistureReading);
-    engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 55,
-      capacitiveText,
-      Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    
-    // Moisture percentage
     uint8_t moisturePercent = convertToMoisturePercentage();
-    char moistureText[20];
-    snprintf(moistureText, sizeof(moistureText), "Moisture: %d%%", moisturePercent);
-    engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 70,
-      moistureText,
-      Display::TextOptions().origin(Display::Origin::Text::CENTER));
     
-    // Moisture level description
-    const char* moistureDescription = getMoistureDescription(moisturePercent);
-    engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 85,
-      moistureDescription,
-      Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    
-    // Visual moisture level bar
+    // Draw moisture bar at top (like a health bar)
     drawMoistureBar(moisturePercent);
     
-    // Sensor information
+    // Draw animated plant sprite centered below the bar
+    drawPlantSprite();
+    
+    // Plant state description below sprite
+    const char* stateDescription = getPlantStateDescription();
     engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 120,
-      "I2C Capacitive Sensor",
+      KYWY_DISPLAY_WIDTH / 2, 125,
+      stateDescription,
       Display::TextOptions().origin(Display::Origin::Text::CENTER));
-      
-    // Runtime counter
-    char runtimeText[15];
-    snprintf(runtimeText, sizeof(runtimeText), "Runtime: %lus", millis() / 1000);
-    engine.display.drawText(
-      KYWY_DISPLAY_WIDTH / 2, 135,
-      runtimeText,
-      Display::TextOptions().origin(Display::Origin::Text::CENTER));
+    
+    // Temperature and time in bottom corners, 4px from edges
+    int bottomTextY = KYWY_DISPLAY_HEIGHT - 4;  // 4px from bottom edge
+    
+    char tempText[12];
+    snprintf(tempText, sizeof(tempText), "%.1f°C", temperatureC);
+    engine.display.drawText(4, bottomTextY, tempText,
+                           Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));  // Bottom left corner, 4px from edges
+    
+    char timeText[12];
+    snprintf(timeText, sizeof(timeText), "%lus", millis() / 1000);
+    engine.display.drawText(KYWY_DISPLAY_WIDTH - 4, bottomTextY, timeText,
+                           Display::TextOptions().origin(Display::Origin::Text::BASELINE_RIGHT));  // Bottom right corner, 4px from edges
   }
   
   // Update the physical display
   engine.display.update();
+}
+
+const char* getPlantStateDescription() {
+  // === PLANT STATE INTERPRETATION ===
+  
+  switch (currentPlantState) {
+    case PLANT_NORMAL:
+      return "Happy";
+    case PLANT_THIRSTY:
+      return "Thirsty";
+    case PLANT_WATERING:
+      return "Drinking!";
+    default:
+      return "Unknown";
+  }
 }
 
 const char* getMoistureDescription(uint8_t percentage) {
@@ -333,13 +444,13 @@ const char* getMoistureDescription(uint8_t percentage) {
 }
 
 void drawMoistureBar(uint8_t percentage) {
-  // === VISUAL MOISTURE LEVEL INDICATOR ===
+  // === VISUAL MOISTURE LEVEL INDICATOR (HEALTH BAR STYLE) ===
   
-  // Bar graph dimensions
-  const int BAR_WIDTH = 100;
+  // Bar graph dimensions - positioned at top like a health bar
+  const int BAR_WIDTH = 80;
   const int BAR_HEIGHT = 8;
-  const int BAR_X = (KYWY_DISPLAY_WIDTH - BAR_WIDTH) / 2;  // Center horizontally
-  const int BAR_Y = 100;
+  const int BAR_X = 20;    // Left side of screen
+  const int BAR_Y = 25;    // Below title
   
   // Draw border around the bar
   engine.display.drawRectangle(BAR_X - 1, BAR_Y - 1, BAR_WIDTH + 2, BAR_HEIGHT + 2,
@@ -357,4 +468,9 @@ void drawMoistureBar(uint8_t percentage) {
     engine.display.fillRectangle(BAR_X, BAR_Y, fillWidth, BAR_HEIGHT,
                                 Display::Object2DOptions().color(0x00));  // Black fill
   }
+  
+  // Add percentage label to the right of the bar (aligned with bar center)
+  char percentText[8];
+  snprintf(percentText, sizeof(percentText), "%d%%", percentage);
+  engine.display.drawText(BAR_X + BAR_WIDTH + 8, BAR_Y, percentText);  // Moved up 4px to align with bar
 }
