@@ -89,6 +89,9 @@ const uint8_t* normalFrames[] = {plant_monster_frame_0, plant_monster_frame_1, p
 const uint8_t* thirstyFrames[] = {plant_monster_frame_6, plant_monster_frame_7, plant_monster_frame_8};
 const uint8_t* wateringFrames[] = {plant_monster_frame_3, plant_monster_frame_4, plant_monster_frame_5};
 
+// Debug display mode
+bool showDebugInfo = false;
+
 void setup() {
   // === HARDWARE INITIALIZATION ===
   
@@ -155,8 +158,28 @@ void loop() {
   // Update sprite animation frame
   updateSpriteAnimation();
   
+  // Check for button input to toggle debug mode
+  handleButtonInput();
+  
   // Small delay to prevent overwhelming the processor
   delay(50);
+}
+
+void handleButtonInput() {
+  // === BUTTON INPUT HANDLING ===
+  
+  // Check if right button is pressed to toggle debug mode
+  if (engine.input.buttonRightPressed) {
+    showDebugInfo = !showDebugInfo;  // Toggle debug display
+    
+    // Update display immediately to show change
+    updateDisplay();
+    
+    // Wait for button release to prevent rapid toggling
+    while (engine.input.buttonRightPressed) {
+      delay(10);
+    }
+  }
 }
 
 void updatePlantState() {
@@ -395,8 +418,26 @@ void updateDisplay() {
       stateDescription,
       Display::TextOptions().origin(Display::Origin::Text::CENTER));
     
-    // Temperature and time in bottom corners, 4px from edges
-    int bottomTextY = KYWY_DISPLAY_HEIGHT - 4;  // 4px from bottom edge
+    // Debug information (shown when right button is pressed)
+    // Position between status message and bottom corner text
+    if (showDebugInfo) {
+      char rawText[20];
+      snprintf(rawText, sizeof(rawText), "Raw: %d", moistureReading);
+      engine.display.drawText(
+        KYWY_DISPLAY_WIDTH / 2, 140,
+        rawText,
+        Display::TextOptions().origin(Display::Origin::Text::CENTER));
+      
+      char addressText[20];
+      snprintf(addressText, sizeof(addressText), "I2C: 0x%02X", SENSOR_I2C_ADDRESS);
+      engine.display.drawText(
+        KYWY_DISPLAY_WIDTH / 2, 153,
+        addressText,
+        Display::TextOptions().origin(Display::Origin::Text::CENTER));
+    }
+    
+    // Temperature and time in bottom corners - FIXED POSITION, never moves
+    int bottomTextY = KYWY_DISPLAY_HEIGHT - 4;  // Always 4px from bottom edge
     
     char tempText[12];
     snprintf(tempText, sizeof(tempText), "%.1f°C", temperatureC);
