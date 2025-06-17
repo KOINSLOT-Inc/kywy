@@ -432,6 +432,53 @@ def generate_header_file(
         sys.exit(1)
 
 
+def format_header_file(output_path):
+    """
+    Apply clang-format to the generated header file if clang-format is available.
+    
+    Args:
+        output_path: Path to the header file to format
+    """
+    import subprocess
+    import shutil
+    
+    # Check if clang-format is available
+    clang_format_cmd = None
+    for cmd in ['clang-format', 'clang-format-14', 'clang-format-15', 'clang-format-16']:
+        if shutil.which(cmd):
+            clang_format_cmd = cmd
+            break
+    
+    if clang_format_cmd is None:
+        print("clang-format not found - skipping code formatting")
+        return False
+    
+    try:
+        print(f"Formatting header file with {clang_format_cmd}...")
+        
+        # Run clang-format in-place on the generated file
+        result = subprocess.run(
+            [clang_format_cmd, '-i', output_path],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            print("Header file formatted successfully")
+            return True
+        else:
+            print(f"clang-format warning: {result.stderr}")
+            return False
+            
+    except subprocess.TimeoutExpired:
+        print("clang-format timed out - skipping formatting")
+        return False
+    except Exception as e:
+        print(f"Error running clang-format: {e}")
+        return False
+
+
 def main():
     """Main function with command line argument parsing."""
     parser = argparse.ArgumentParser(
@@ -640,6 +687,9 @@ For sprite sheets:
             sprite_rows=args.sprite_rows,
         )
 
+        # Format the generated header file with clang-format
+        format_header_file(args.output)
+
         print("-" * 50)
         print("Sprite sheet conversion complete!")
         print(f"\nTo use in your Kywy project:")
@@ -680,6 +730,9 @@ For sprite sheets:
             [img.size[1]],
             input_filename,
         )
+
+        # Format the generated header file with clang-format
+        format_header_file(args.output)
 
         print("-" * 50)
         print("Conversion complete!")
