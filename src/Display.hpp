@@ -198,10 +198,10 @@ struct PinMap {
 
 class Driver {
 public:
-  Driver() {};
+  Driver() {}
   Driver(PinMap pins)
-    : pins(pins) {};
-  virtual ~Driver() {};
+    : pins(pins) {}
+  virtual ~Driver() {}
 
   PinMap pins;
   virtual uint16_t getWidth() = 0;
@@ -240,7 +240,7 @@ public:
     return 168;
   };
 
-  MBED_SPI_DRIVER() {};
+  MBED_SPI_DRIVER() {}
   ~MBED_SPI_DRIVER() {
     delete mbedSPI;
   };
@@ -290,9 +290,9 @@ private:
 
 class Display {
 public:
-  Display() {};
+  Display() {}
   Display(Driver::Driver *driver)
-    : driver(driver) {};
+    : driver(driver) {}
 
   void setup();
   void clear();
