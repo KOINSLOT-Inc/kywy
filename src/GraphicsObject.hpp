@@ -16,13 +16,13 @@ public:
   bool isVisible();
   void setVisible(bool visible);
   // onSetVisible is a hook to perform actions after the object is set visible
-  virtual void onSetVisible() {};
+  virtual void onSetVisible() {}
 
   Display::Display *display;
 
   // onSetDisplay is a hook to perform calculations once the display interface
   // is available
-  virtual void onSetDisplay() {};
+  virtual void onSetDisplay() {}
 
   int16_t x = 0;
   int16_t y = 0;
