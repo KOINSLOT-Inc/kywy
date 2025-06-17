@@ -23,6 +23,12 @@ This example demonstrates how to read data from an I2C capacitive soil moisture 
 - Displays real-time sensor data with visual indicators
 - Implements robust I2C communication with error handling
 
+### Interactive Controls
+- **Right Button**: Toggle debug information display
+  - Shows raw sensor reading (capacitive touch value)
+  - Shows I2C device address
+  - Press again to hide debug information
+
 ### Sprite Animations
 The plant monster sprite has three different animation states based on sensor readings:
 
@@ -43,6 +49,7 @@ The plant monster sprite has three different animation states based on sensor re
 - **Top**: Moisture level bar (health bar style) with percentage on the right
 - **Center**: Animated 64x64 pixel plant monster sprite
 - **Middle**: Plant state description ("Happy", "Thirsty", "Drinking!")
+- **Debug mode** (when right button pressed): Raw sensor value and I2C address
 - **Bottom corners**: Temperature (left) and runtime (right)
 
 ## Educational Value
@@ -53,6 +60,8 @@ This example teaches:
 - **Sprite Animation**: Frame-based animation systems
 - **State Machines**: Behavior changes based on sensor input
 - **Real-time Programming**: Non-blocking animation updates
+- **User Interface**: Interactive debug mode with button input
+- **Display Management**: Dynamic layout adjustments
 
 ## Sprite Sheet Information
 
