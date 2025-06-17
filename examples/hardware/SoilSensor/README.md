@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 # Soil Sensor with Plant Monster Sprite
 
 This example demonstrates how to read data from an I2C capacitive soil moisture sensor while displaying an animated plant monster sprite that reacts to the moisture levels.
