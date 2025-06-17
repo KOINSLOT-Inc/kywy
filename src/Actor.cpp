@@ -23,8 +23,8 @@ void queueEventCallback(Actor *actor, Message *message) {
   handlerMutex.unlock();
 };
 
-void Actor::initialize() {};
-void Actor::teardown() {};
+void Actor::initialize() {}
+void Actor::teardown() {}
 
 Actor::Actor() {
   this->event_handler = new events::Event<void(Actor *, Message *)>(&this->queue, queueEventCallback);
