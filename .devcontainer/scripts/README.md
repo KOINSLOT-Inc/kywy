@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 # Kywy Development Scripts
 
 This directory contains helpful scripts for Kywy development.
