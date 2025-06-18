@@ -50,6 +50,7 @@ jobs:
           fqbn: "arduino:mbed_rp2040:pico"
           sketch-paths: |
             - examples/games
+            - examples/hardware
 
       - name: Collect UF2 files
         run: |
