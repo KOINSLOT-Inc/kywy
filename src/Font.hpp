@@ -58,7 +58,7 @@ public:
   uint8_t *bitmap = nullptr;
 
   Character(uint8_t *character);
-  Character(){};
+  Character() {}
 };
 
 class Font {
