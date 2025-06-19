@@ -1,0 +1,227 @@
+// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include "Kywy.hpp"
+#include "GameScenesWrapper.hpp"
+
+Kywy::Engine engine;
+
+// Multi-Game Launcher Scene Manager
+class MultiLauncherManager : public Kywy::Scene {
+private:
+  std::unique_ptr<Kywy::MenuSystem> mainMenu;
+  std::shared_ptr<Kywy::SceneManager> sceneManager;
+  bool isInGame = false;
+  Kywy::Engine* engineRef = nullptr;
+  
+public:
+  MultiLauncherManager(std::shared_ptr<Kywy::SceneManager> sm) : Scene("MultiLauncher"), sceneManager(sm) {
+    createMainMenu();
+  }
+  
+  void setEngineReference(Kywy::Engine* engine) override {
+    engineRef = engine;
+  }
+  
+  void createMainMenu() {
+    std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
+      Kywy::MenuSystem::createLabel("=== KYWY GAMES ==="),
+      Kywy::MenuSystem::createAction("Snake", [this]() { 
+        launchGame("Snake"); 
+      }),
+      Kywy::MenuSystem::createAction("2D Tennis", [this]() { 
+        launchGame("2DTennis"); 
+      }),
+      Kywy::MenuSystem::createAction("Asteroids", [this]() { 
+        launchGame("Asteroids"); 
+      }),
+      Kywy::MenuSystem::createAction("Pong Scene", [this]() { 
+        launchGame("PongScene"); 
+      }),
+      Kywy::MenuSystem::createAction("Slime Jumper", [this]() { 
+        launchGame("SlimeJumper"); 
+      }),
+      Kywy::MenuSystem::createAction("Spelunker", [this]() { 
+        launchGame("Spelunker"); 
+      }),
+      Kywy::MenuSystem::createAction("Exit", [this]() { 
+        // Exit the launcher
+        engine.stop();
+      })
+    };
+    
+    Kywy::MenuSystem::MenuOptions menuOptions;
+    menuOptions.x = 20;
+    menuOptions.y = 30;
+    menuOptions.itemHeight = 12;
+    menuOptions.pointer = '>';
+    menuOptions.font = Kywy::Display::Font::intel_one_mono_8_pt;
+    
+    // Note: Menu will be created when we have access to display in enter()
+  }
+  
+  void launchGame(const std::string& gameName) {
+    isInGame = true;
+    
+    // Create the appropriate game scene based on the name
+    std::shared_ptr<Kywy::Scene> gameScene = nullptr;
+    
+    if (gameName == "Snake") {
+      gameScene = GameScenesWrapper::createSnakeGameScene();
+    } else if (gameName == "2DTennis") {
+      gameScene = GameScenesWrapper::create2DTennisGameScene();
+    } else if (gameName == "Asteroids") {
+      gameScene = GameScenesWrapper::createAsteroidsGameScene();
+    } else if (gameName == "PongScene") {
+      gameScene = GameScenesWrapper::createPongGameScene();
+    } else if (gameName == "SlimeJumper") {
+      gameScene = GameScenesWrapper::createSlimeJumperGameScene();
+    } else if (gameName == "Spelunker") {
+      gameScene = GameScenesWrapper::createSpelunkerGameScene();
+    }
+    
+    if (gameScene) {
+      // Set up the game scene with a callback to return to the launcher
+      gameScene->setExitCallback([this]() {
+        returnToLauncher();
+      });
+      
+      // Push the game scene to the scene manager
+      sceneManager->pushScene(gameScene);
+    }
+  }
+  
+  void returnToLauncher() {
+    isInGame = false;
+    // Pop back to the launcher scene
+    sceneManager->popScene();
+    // Clear display and show main menu again
+    engine.display.clear();
+  }
+  
+  void enter() override {
+    Scene::enter();
+    isInGame = false;
+    
+    if (!engineRef) return;
+    
+    // Create menu now that we have access to the engine
+    std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
+      Kywy::MenuSystem::createLabel("=== KYWY GAMES ==="),
+      Kywy::MenuSystem::createAction("Snake", [this]() { 
+        launchGame("Snake"); 
+      }),
+      Kywy::MenuSystem::createAction("2D Tennis", [this]() { 
+        launchGame("2DTennis"); 
+      }),
+      Kywy::MenuSystem::createAction("Asteroids", [this]() { 
+        launchGame("Asteroids"); 
+      }),
+      Kywy::MenuSystem::createAction("Pong Scene", [this]() { 
+        launchGame("PongScene"); 
+      }),
+      Kywy::MenuSystem::createAction("Slime Jumper", [this]() { 
+        launchGame("SlimeJumper"); 
+      }),
+      Kywy::MenuSystem::createAction("Spelunker", [this]() { 
+        launchGame("Spelunker"); 
+      }),
+      Kywy::MenuSystem::createAction("Exit", [this]() { 
+        // Exit the launcher
+        // engineRef->stop();  // Uncomment when engine.stop() is available
+      })
+    };
+    
+    Kywy::MenuSystem::MenuOptions menuOptions;
+    menuOptions.x = 20;
+    menuOptions.y = 30;
+    menuOptions.itemHeight = 12;
+    menuOptions.pointer = '>';
+    menuOptions.font = Kywy::Display::Font::intel_one_mono_8_pt;
+    
+    mainMenu = std::make_unique<Kywy::MenuSystem>(engineRef->display, menuItems, menuOptions);
+    engineRef->display.clear();
+  }
+  
+  void render(Kywy::Display::Display& display) override {
+    if (!isInGame) {
+      display.clear();
+      
+      // Draw title
+      Kywy::Display::TextOptions titleOpt;
+      titleOpt._color = BLACK;
+      titleOpt._font = Kywy::Display::Font::intel_one_mono_8_pt;
+      
+      display.drawText(35, 15, "KYWY GAMES", titleOpt);
+      
+      // Render main menu
+      if (mainMenu) {
+        mainMenu->renderMenuContent();
+      }
+      
+      display.update();
+    }
+  }
+  
+  void handleInput(int signal, void* data) override {
+    if (isInGame) {
+      // Let the scene manager handle game input
+      if (sceneManager) {
+        sceneManager->handleInput(signal, data);
+      }
+      return;
+    }
+    
+    // Handle main menu input
+    switch (signal) {
+      case Kywy::Events::D_PAD_UP_PRESSED:
+        if (mainMenu) {
+          mainMenu->previousOptionNoRender();
+        }
+        break;
+        
+      case Kywy::Events::D_PAD_DOWN_PRESSED:
+        if (mainMenu) {
+          mainMenu->nextOptionNoRender();
+        }
+        break;
+        
+      case Kywy::Events::BUTTON_RIGHT_PRESSED:
+        if (mainMenu) {
+          mainMenu->selectOptionNoRender();
+        }
+        break;
+        
+      case Kywy::Events::BUTTON_LEFT_PRESSED:
+        // Back button - exit launcher
+        engine.stop();
+        break;
+    }
+  }
+  
+  void update(float deltaTime) override {
+    if (isInGame && sceneManager) {
+      // Update the current game scene
+      sceneManager->update(deltaTime);
+    }
+  }
+};
+
+void setup() {
+  engine.start();
+  
+  // Create the scene manager
+  auto sceneManager = std::make_shared<Kywy::SceneManager>(engine);
+  
+  // Create and push the launcher scene
+  auto launcherScene = std::make_shared<MultiLauncherManager>(sceneManager);
+  sceneManager->pushScene(launcherScene);
+  
+  // Start the scene manager actor
+  sceneManager->start();
+}
+
+void loop() {
+  delay(1000);
+}

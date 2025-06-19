@@ -82,13 +82,14 @@ public:
 
   struct MenuOptions {
     MenuOptions()
-      : x(10), y(10), itemHeight(10), pointer('>') {}
+      : x(10), y(10), itemHeight(10), pointer('>'), textColor(0x00) {}
     int x = 0;
     int y = 8;
     int itemHeight = 12;
     char pointer = '>';  // Character to indicate the current selection
     uint8_t *font = Display::Font::intel_one_mono_8_pt;
     uint8_t *labelFont = Display::Font::intel_one_mono_8_pt;
+    uint16_t textColor = 0x00;  // Text color for menu items
   };
 
   struct ScrollOptions {

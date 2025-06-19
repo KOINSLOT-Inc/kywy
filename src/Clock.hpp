@@ -24,6 +24,12 @@ struct ClockOptions {
 };
 
 class Clock : public Actor::Actor {
+public:
+  // Debug control
+  static bool debugMode;
+  static void setDebugMode(bool enabled) { debugMode = enabled; }
+  static bool isDebugMode() { return debugMode; }
+
 private:
   // The number of ms between a Clock tick
   std::chrono::milliseconds tickDuration = std::chrono::milliseconds(33);

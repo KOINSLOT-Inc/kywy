@@ -10,6 +10,13 @@
 
 namespace Kywy {
 
+// Static debug flag
+bool SceneManager::debugMode = false;
+
+// Debug macro for SceneManager
+#define SM_DEBUG(...) do { if (SceneManager::debugMode) { Serial.print("SceneManager: "); Serial.println(__VA_ARGS__); } } while(0)
+#define SM_DEBUG_PRINT(...) do { if (SceneManager::debugMode) { Serial.print("SceneManager: "); Serial.print(__VA_ARGS__); } } while(0)
+
 //==============================================================================
 // Scene Implementation
 //==============================================================================
@@ -55,21 +62,58 @@ void Scene::clearSprites() {
   sprites.clear();
 }
 
-void Scene::addGraphicsObject(std::shared_ptr<GraphicsObject> obj) {
-  if (obj && std::find(graphicsObjects.begin(), graphicsObjects.end(), obj) == graphicsObjects.end()) {
-    graphicsObjects.push_back(obj);
-  }
+
+
+//==============================================================================
+// SceneManager Implementation
+//==============================================================================
+
+SceneManager::SceneManager(Engine& engine) 
+  : engine(engine), transitionInProgress(false) {
+  
+  // Initialize base Actor
+  Actor::Actor::initialize();
 }
 
-void Scene::removeGraphicsObject(std::shared_ptr<GraphicsObject> obj) {
-  auto it = std::find(graphicsObjects.begin(), graphicsObjects.end(), obj);
-  if (it != graphicsObjects.end()) {
-    graphicsObjects.erase(it);
-  }
+SceneManager::~SceneManager() {
+  clearScenes();
 }
 
-void Scene::clearGraphicsObjects() {
-  graphicsObjects.clear();
+void SceneManager::handle(::Actor::Message* message) {
+  if (SceneManager::debugMode) {
+    SM_DEBUG_PRINT("received message with signal: ");
+    Serial.println(message->signal);
+  }
+  
+  switch (message->signal) {
+    case Kywy::Events::TICK:
+      {
+        SM_DEBUG("received TICK");
+        
+        // Update with fixed delta time (assuming 60 FPS for now)
+        float deltaTime = 1.0f / 60.0f; // ~1/60 second in seconds (0.01667f)
+        update(deltaTime);
+        render();
+      }
+      break;
+      
+    // Forward input events to the current scene
+    case Kywy::Events::D_PAD_UP_PRESSED:
+    case Kywy::Events::D_PAD_DOWN_PRESSED:
+    case Kywy::Events::D_PAD_LEFT_PRESSED:
+    case Kywy::Events::D_PAD_RIGHT_PRESSED:
+    case Kywy::Events::BUTTON_LEFT_PRESSED:
+    case Kywy::Events::BUTTON_RIGHT_PRESSED:
+      {
+        SM_DEBUG("received input event, forwarding to current scene");
+        forwardInputToCurrentScene(message->signal, message->data);
+      }
+      break;
+      
+    default:
+      SM_DEBUG("received unknown message signal");
+      break;
+  }
 }
 
 //==============================================================================
@@ -79,7 +123,7 @@ void Scene::clearGraphicsObjects() {
 void MenuScene::initialize() {
   Scene::initialize();
   if (menuSystem) {
-    // Menu system will be started when scene becomes active
+    // Menu system will be initialized when scene becomes active
   }
 }
 
@@ -163,7 +207,7 @@ void SplashScene::enter() {
 }
 
 void SplashScene::update(float deltaTime) {
-  timer += static_cast<uint16_t>(deltaTime);
+  timer += static_cast<uint16_t>(deltaTime * 1000); // Convert to milliseconds
   
   if (timer >= displayDuration) {
     if (onSplashComplete) {
@@ -183,51 +227,14 @@ void SplashScene::render(Display::Display& display) {
     
     // Render the splash bitmap
     display.drawBitmap(x, y, width, height, const_cast<uint8_t*>(splashData));
-    display.update();
   }
 }
+
+
 
 //==============================================================================
 // SceneManager Implementation
 //==============================================================================
-
-SceneManager::SceneManager(Engine& engine) : engine(engine) {
-  allocateTransitionBuffers();
-}
-
-SceneManager::~SceneManager() {
-  clearScenes();
-  deallocateTransitionBuffers();
-}
-
-void SceneManager::handle(::Actor::Message* message) {
-  if (!message) return;
-  
-  switch (message->signal) {
-    case Kywy::Events::TICK:
-      {
-        // Update with fixed delta time (assuming 60 FPS for now)
-        float deltaTime = 16.67f; // ~1/60 second in milliseconds
-        update(deltaTime);
-        render();
-      }
-      break;
-      
-    // Forward input events to current scene
-    case Kywy::Events::BUTTON_LEFT_PRESSED:
-    case Kywy::Events::BUTTON_RIGHT_PRESSED:
-    case Kywy::Events::D_PAD_UP_PRESSED:
-    case Kywy::Events::D_PAD_DOWN_PRESSED:
-    case Kywy::Events::D_PAD_LEFT_PRESSED:
-    case Kywy::Events::D_PAD_RIGHT_PRESSED:
-      forwardInputToCurrentScene(message->signal, message->data);
-      break;
-      
-    default:
-      // Handle other messages as needed
-      break;
-  }
-}
 
 void SceneManager::initialize() {
   Actor::initialize();
@@ -235,29 +242,50 @@ void SceneManager::initialize() {
 }
 
 void SceneManager::pushScene(std::shared_ptr<Scene> scene, const SceneTransition& transition) {
+  if (SceneManager::debugMode) {
+    SM_DEBUG_PRINT("pushScene called with scene: ");
+    if (scene) {
+      Serial.println(scene->getName().c_str());
+    } else {
+      Serial.println("NULL");
+      return;
+    }
+  }
   if (!scene) return;
   
   std::shared_ptr<Scene> currentScene = getCurrentScene();
+  if (SceneManager::debugMode) {
+    SM_DEBUG_PRINT("Current scene: ");
+    if (currentScene) {
+      Serial.println(currentScene->getName().c_str());
+    } else {
+      Serial.println("NULL");
+    }
+  }
   
   // Initialize the new scene
+  SM_DEBUG("Initializing new scene");
   scene->initialize();
   
   // Add to stack
+  SM_DEBUG("Adding scene to stack");
   sceneStack.push_back(scene);
+  if (SceneManager::debugMode) {
+    SM_DEBUG_PRINT("Stack size now: ");
+    Serial.println(sceneStack.size());
+  }
   
   // Handle overlay scenes
   if (scene->isOverlay && currentScene) {
+    SM_DEBUG("Scene is overlay, handling pause");
     if (scene->pauseUnderlying) {
       currentScene->pause();
     }
   }
   
-  // Start transition
-  if (transition.type != TransitionType::IMMEDIATE && currentScene) {
-    startTransition(currentScene, scene, transition);
-  } else {
-    activateScene(scene);
-  }
+  // Always activate scene immediately - any animations should be handled by the scene itself
+  SM_DEBUG("Activating scene immediately");
+  activateScene(scene);
   
   // Publish scene change event
   ::Actor::Message msg(Kywy::SceneEvents::SCENE_PUSHED, scene.get());
@@ -343,19 +371,44 @@ bool SceneManager::hasScene(const std::string& name) const {
 }
 
 void SceneManager::update(float deltaTime) {
+  SM_DEBUG("update called with deltaTime: " + String(deltaTime, 4));
+  
   if (transitionInProgress) {
     updateTransition(deltaTime);
     return;
   }
   
-  // Update active scenes (from bottom to top)
-  for (auto& scene : sceneStack) {
-    if (scene && scene->isActive()) {
-      scene->update(deltaTime);
-      
-      // If scene is not an overlay, don't update scenes below it
-      if (!scene->isOverlay) {
-        break;
+  SM_DEBUG(String(sceneStack.size()) + " scenes in stack");
+  
+  // Update active scenes (from top to bottom - most recent first)
+  for (int i = sceneStack.size() - 1; i >= 0; i--) {
+    auto& scene = sceneStack[i];
+    if (scene) {
+      if (SceneManager::debugMode) {
+        SM_DEBUG_PRINT("Scene ");
+        Serial.print(scene->sceneName.c_str());
+        Serial.print(" state: ");
+        Serial.println(static_cast<int>(scene->getState()));
+      }
+      if (scene->isActive()) {
+        if (SceneManager::debugMode) {
+          SM_DEBUG_PRINT("Updating active scene: ");
+          Serial.println(scene->sceneName.c_str());
+        }
+        scene->update(deltaTime);
+        
+        // If scene is not an overlay, don't update scenes below it
+        if (!scene->isOverlay) {
+          break;
+        }
+      } else {
+        if (SceneManager::debugMode) {
+          SM_DEBUG_PRINT("Skipping inactive scene: ");
+          Serial.print(scene->sceneName.c_str());
+          Serial.print(" (state: ");
+          Serial.print(static_cast<int>(scene->getState()));
+          Serial.println(")");
+        }
       }
     }
   }
@@ -541,10 +594,16 @@ void SceneManager::renderSlideTransition(float progress, bool horizontal, bool p
 
 void SceneManager::activateScene(std::shared_ptr<Scene> scene) {
   if (scene) {
+    if (SceneManager::debugMode) {
+      SM_DEBUG_PRINT("Activating scene: ");
+      Serial.println(scene->getName().c_str());
+    }
+    
     // Set engine reference for scenes that need it
     scene->setEngineReference(&engine);
     
     scene->enter();
+    SM_DEBUG("Scene entered, state should be ACTIVE");
     
     // Set display reference for graphics objects
     for (auto& obj : scene->graphicsObjects) {
@@ -552,7 +611,7 @@ void SceneManager::activateScene(std::shared_ptr<Scene> scene) {
         obj->setDisplay(&engine.display);
       }
     }
-    
+
     for (auto& sprite : scene->sprites) {
       if (sprite) {
         sprite->setDisplay(&engine.display);

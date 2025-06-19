@@ -169,6 +169,11 @@ public:
   SceneManager(Engine& engine);
   ~SceneManager();
   
+  // Debug control
+  static bool debugMode;
+  static void setDebugMode(bool enabled) { debugMode = enabled; }
+  static bool isDebugMode() { return debugMode; }
+  
   // Actor interface
   void handle(::Actor::Message* message) override;
   void initialize() override;

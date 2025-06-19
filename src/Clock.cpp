@@ -7,6 +7,12 @@
 
 namespace Kywy {
 
+// Static debug flag
+bool Clock::debugMode = false;
+
+// Debug macro for Clock
+#define CLOCK_DEBUG(...) do { if (Clock::debugMode) { Serial.print("Clock: "); Serial.println(__VA_ARGS__); } } while(0)
+
 void clockTickCallback(Clock *clock) {
   if (clock->options.getClickToClick()) {
     if (Serial.available()) {
@@ -17,8 +23,8 @@ void clockTickCallback(Clock *clock) {
     } else {
       return;
     }
-  }
-
+  }  
+  CLOCK_DEBUG("Publishing TICK message");
   clock->publish(&clock->tickMessage);
 };
 
@@ -35,11 +41,13 @@ void Clock::setTickDuration(int milliseconds) {
 }
 
 void Clock::initialize() {
+  Serial.println("Clock: Initializing with tickDuration: " + String((int)tickDuration.count()) + "ms");
   this->tickMessage.signal = Kywy::Events::TICK;
   this->clock.call_every(tickDuration,
                          mbed::callback(&clockTickCallback, this));
   clockThread.start(
     mbed::callback(&(this->clock), &events::EventQueue::dispatch_forever));
+  Serial.println("Clock: Initialization complete");
 }
 
 void Clock::handle(::Actor::Message *message) {

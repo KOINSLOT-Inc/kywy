@@ -1,0 +1,472 @@
+// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include "Kywy.hpp"
+
+using namespace Kywy;
+
+Engine engine;
+std::unique_ptr<SceneManager> sceneManager;
+
+// Simple Snake Game Scene - Self-contained version
+class SimpleSnakeGameScene : public Scene {
+private:
+  bool startScreen = true;
+  bool gameOver = false;
+  int score = 0;
+  
+  // Simplified game state for demonstration
+  int snakeX = 50;
+  int snakeY = 50;
+  int foodX = 100;
+  int foodY = 100;
+  int direction = 0; // 0=right, 1=down, 2=left, 3=up
+  
+  std::function<void()> exitCallback;
+
+public:
+  SimpleSnakeGameScene() : Scene("SimpleSnake") {}
+  
+  void setExitCallback(std::function<void()> callback) {
+    exitCallback = callback;
+  }
+  
+  void enter() override {
+    Scene::enter();
+    startScreen = true;
+    gameOver = false;
+    score = 0;
+    showSplashScreen();
+  }
+  
+  void showSplashScreen() {
+    // Splash screen will be rendered in render() method
+  }
+  
+  void startGame() {
+    startScreen = false;
+    gameOver = false;
+    score = 0;
+    snakeX = 50;
+    snakeY = 50;
+    foodX = 100;
+    foodY = 100;
+    direction = 0;
+  }
+  
+  void moveSnake() {
+    switch (direction) {
+      case 0: snakeX += 5; break; // right
+      case 1: snakeY += 5; break; // down
+      case 2: snakeX -= 5; break; // left
+      case 3: snakeY -= 5; break; // up
+    }
+    
+    // Simple boundary checking
+    if (snakeX < 5 || snakeX > 135 || snakeY < 5 || snakeY > 160) {
+      gameOver = true;
+    }
+    
+    // Simple food collision
+    if (abs(snakeX - foodX) < 10 && abs(snakeY - foodY) < 10) {
+      score += 10;
+      foodX = 20 + (rand() % 100);
+      foodY = 20 + (rand() % 120);
+    }
+  }
+
+  void render(Display::Display& display) override {
+    display.clear();
+    
+    Display::TextOptions textOpt;
+    textOpt._color = BLACK;
+    textOpt._font = Display::Font::intel_one_mono_8_pt;
+    
+    if (startScreen) {
+      display.drawText(50, 40, "SNAKE DEMO", textOpt);
+      display.drawText(20, 60, "Arrow keys to move", textOpt);
+      display.drawText(30, 75, "Press A to start", textOpt);
+      display.drawText(30, 90, "Press B to exit", textOpt);
+    } else if (gameOver) {
+      display.drawText(50, 40, "GAME OVER", textOpt);
+      char scoreText[32];
+      snprintf(scoreText, sizeof(scoreText), "Score: %d", score);
+      display.drawText(50, 60, scoreText, textOpt);
+      display.drawText(30, 80, "Press A to restart", textOpt);
+      display.drawText(30, 95, "Press B to exit", textOpt);
+    } else {
+      // Draw game
+      char scoreText[32];
+      snprintf(scoreText, sizeof(scoreText), "Score: %d", score);
+      display.drawText(5, 10, scoreText, textOpt);
+      
+      // Draw snake (simple rectangle)
+      for (int x = snakeX; x < snakeX + 8; x++) {
+        for (int y = snakeY; y < snakeY + 8; y++) {
+          display.drawPixel(x, y, BLACK);
+        }
+      }
+      
+      // Draw food (simple rectangle)
+      for (int x = foodX; x < foodX + 6; x++) {
+        for (int y = foodY; y < foodY + 6; y++) {
+          display.drawPixel(x, y, BLACK);
+        }
+      }
+    }
+    
+    display.update();
+  }
+
+  void handleInput(int signal, void* data) override {
+    switch (signal) {
+      case Events::D_PAD_LEFT_PRESSED:
+        if (!startScreen && !gameOver && direction != 0) {
+          direction = 2; // left
+        }
+        break;
+        
+      case Events::D_PAD_RIGHT_PRESSED:
+        if (!startScreen && !gameOver && direction != 2) {
+          direction = 0; // right
+        }
+        break;
+        
+      case Events::D_PAD_UP_PRESSED:
+        if (!startScreen && !gameOver && direction != 1) {
+          direction = 3; // up
+        }
+        break;
+        
+      case Events::D_PAD_DOWN_PRESSED:
+        if (!startScreen && !gameOver && direction != 3) {
+          direction = 1; // down
+        }
+        break;
+        
+      case Events::BUTTON_RIGHT_PRESSED:  // A button
+        if (startScreen || gameOver) {
+          startGame();
+        }
+        break;
+        
+      case Events::BUTTON_LEFT_PRESSED:  // B button
+        if (startScreen || gameOver) {
+          if (exitCallback) {
+            exitCallback();
+          }
+        }
+        break;
+    }
+  }
+
+  void update(float deltaTime) override {
+    if (!startScreen && !gameOver) {
+      static int moveCounter = 0;
+      moveCounter++;
+      if (moveCounter >= 20) { // Move every 20 frames (slow down the game)
+        moveSnake();
+        moveCounter = 0;
+      }
+    }
+  }
+};
+
+// Simple Tennis Game Scene
+class SimpleTennisGameScene : public Scene {
+private:
+  bool startScreen = true;
+  bool gameOver = false;
+  int player1Score = 0;
+  int player2Score = 0;
+  
+  int ballX = 72;
+  int ballY = 84;
+  int ballVelX = 2;
+  int ballVelY = 1;
+  int paddleY = 70;
+  
+  std::function<void()> exitCallback;
+
+public:
+  SimpleTennisGameScene() : Scene("SimpleTennis") {}
+  
+  void setExitCallback(std::function<void()> callback) {
+    exitCallback = callback;
+  }
+  
+  void enter() override {
+    Scene::enter();
+    startScreen = true;
+    gameOver = false;
+    player1Score = 0;
+    player2Score = 0;
+  }
+  
+  void startGame() {
+    startScreen = false;
+    gameOver = false;
+    player1Score = 0;
+    player2Score = 0;
+    ballX = 72;
+    ballY = 84;
+    ballVelX = 2;
+    ballVelY = 1;
+    paddleY = 70;
+  }
+
+  void render(Display::Display& display) override {
+    display.clear();
+    
+    Display::TextOptions textOpt;
+    textOpt._color = BLACK;
+    textOpt._font = Display::Font::intel_one_mono_8_pt;
+    
+    if (startScreen) {
+      display.drawText(45, 40, "TENNIS DEMO", textOpt);
+      display.drawText(25, 60, "Up/Down to move", textOpt);
+      display.drawText(30, 75, "Press A to start", textOpt);
+      display.drawText(30, 90, "Press B to exit", textOpt);
+    } else if (gameOver) {
+      display.drawText(50, 40, "GAME OVER", textOpt);
+      char scoreText[32];
+      snprintf(scoreText, sizeof(scoreText), "Final: %d - %d", player1Score, player2Score);
+      display.drawText(20, 60, scoreText, textOpt);
+      display.drawText(30, 80, "Press A to restart", textOpt);
+      display.drawText(30, 95, "Press B to exit", textOpt);
+    } else {
+      // Draw score
+      char scoreText[32];
+      snprintf(scoreText, sizeof(scoreText), "%d - %d", player1Score, player2Score);
+      display.drawText(60, 10, scoreText, textOpt);
+      
+      // Draw player paddle
+      for (int y = paddleY; y < paddleY + 20; y++) {
+        for (int x = 5; x < 9; x++) {
+          display.drawPixel(x, y, BLACK);
+        }
+      }
+      
+      // Draw AI paddle (simple tracking)
+      int aiPaddleY = ballY - 10;
+      if (aiPaddleY < 10) aiPaddleY = 10;
+      if (aiPaddleY > 140) aiPaddleY = 140;
+      
+      for (int y = aiPaddleY; y < aiPaddleY + 20; y++) {
+        for (int x = 135; x < 139; x++) {
+          display.drawPixel(x, y, BLACK);
+        }
+      }
+      
+      // Draw ball
+      for (int x = ballX; x < ballX + 4; x++) {
+        for (int y = ballY; y < ballY + 4; y++) {
+          display.drawPixel(x, y, BLACK);
+        }
+      }
+      
+      // Draw center line
+      for (int y = 0; y < 168; y += 8) {
+        for (int i = 0; i < 4; i++) {
+          display.drawPixel(72, y + i, BLACK);
+        }
+      }
+    }
+    
+    display.update();
+  }
+
+  void handleInput(int signal, void* data) override {
+    switch (signal) {
+      case Events::D_PAD_UP_PRESSED:
+        if (!startScreen && !gameOver) {
+          paddleY -= 5;
+          if (paddleY < 10) paddleY = 10;
+        }
+        break;
+        
+      case Events::D_PAD_DOWN_PRESSED:
+        if (!startScreen && !gameOver) {
+          paddleY += 5;
+          if (paddleY > 140) paddleY = 140;
+        }
+        break;
+        
+      case Events::BUTTON_RIGHT_PRESSED:
+        if (startScreen || gameOver) {
+          startGame();
+        }
+        break;
+        
+      case Events::BUTTON_LEFT_PRESSED:
+        if (startScreen || gameOver) {
+          if (exitCallback) {
+            exitCallback();
+          }
+        }
+        break;
+    }
+  }
+
+  void update(float deltaTime) override {
+    if (!startScreen && !gameOver) {
+      // Move ball
+      ballX += ballVelX;
+      ballY += ballVelY;
+      
+      // Ball collision with top/bottom
+      if (ballY <= 10 || ballY >= 154) {
+        ballVelY = -ballVelY;
+      }
+      
+      // Ball collision with paddles
+      if (ballX <= 9 && ballY >= paddleY && ballY <= paddleY + 20) {
+        ballVelX = abs(ballVelX);
+      }
+      
+      int aiPaddleY = ballY - 10;
+      if (aiPaddleY < 10) aiPaddleY = 10;
+      if (aiPaddleY > 140) aiPaddleY = 140;
+      
+      if (ballX >= 131 && ballY >= aiPaddleY && ballY <= aiPaddleY + 20) {
+        ballVelX = -abs(ballVelX);
+      }
+      
+      // Scoring
+      if (ballX <= 0) {
+        player2Score++;
+        ballX = 72; ballY = 84; ballVelX = 2; ballVelY = 1;
+        if (player2Score >= 3) gameOver = true;
+      } else if (ballX >= 140) {
+        player1Score++;
+        ballX = 72; ballY = 84; ballVelX = -2; ballVelY = 1;
+        if (player1Score >= 3) gameOver = true;
+      }
+    }
+  }
+};
+
+// Main Launcher Menu Scene
+class LauncherMenuScene : public Scene {
+private:
+  std::unique_ptr<MenuSystem> mainMenu;
+  
+public:
+  LauncherMenuScene() : Scene("LauncherMenu") {}
+  
+  void enter() override {
+    Scene::enter();
+    
+    // Create menu items
+    std::vector<MenuSystem::MenuItem> menuItems = {
+      MenuSystem::createLabel("=== KYWY GAMES ==="),
+      MenuSystem::createAction("Snake Demo", [this]() { 
+        launchSnakeGame();
+      }),
+      MenuSystem::createAction("Tennis Demo", [this]() { 
+        launchTennisGame();
+      }),
+      MenuSystem::createAction("Exit", [this]() { 
+        showExitMessage();
+      })
+    };
+    
+    MenuSystem::MenuOptions menuOptions;
+    menuOptions.x = 20;
+    menuOptions.y = 40;
+    menuOptions.itemHeight = 15;
+    menuOptions.pointer = '>';
+    menuOptions.font = Display::Font::intel_one_mono_8_pt;
+    
+    mainMenu = std::make_unique<MenuSystem>(engine.display, menuItems, menuOptions);
+  }
+  
+  void launchSnakeGame() {
+    auto snakeScene = std::make_shared<SimpleSnakeGameScene>();
+    snakeScene->setExitCallback([this]() {
+      sceneManager->popScene();
+    });
+    sceneManager->pushScene(snakeScene);
+  }
+  
+  void launchTennisGame() {
+    auto tennisScene = std::make_shared<SimpleTennisGameScene>();
+    tennisScene->setExitCallback([this]() {
+      sceneManager->popScene();
+    });
+    sceneManager->pushScene(tennisScene);
+  }
+  
+  void showExitMessage() {
+    engine.display.clear();
+    Display::TextOptions textOpt;
+    textOpt._color = BLACK;
+    textOpt._font = Display::Font::intel_one_mono_8_pt;
+    engine.display.drawText(20, 60, "Thanks for playing!", textOpt);
+    engine.display.drawText(15, 80, "Reset to play again", textOpt);
+    engine.display.update();
+  }
+
+  void render(Display::Display& display) override {
+    display.clear();
+    
+    // Draw title
+    Display::TextOptions titleOpt;
+    titleOpt._color = BLACK;
+    titleOpt._font = Display::Font::intel_one_mono_8_pt;
+    
+    display.drawText(30, 20, "KYWY LAUNCHER", titleOpt);
+    
+    // Render main menu
+    if (mainMenu) {
+      mainMenu->renderMenuContent();
+    }
+    
+    display.update();
+  }
+
+  void handleInput(int signal, void* data) override {
+    switch (signal) {
+      case Events::D_PAD_UP_PRESSED:
+        if (mainMenu) {
+          mainMenu->previousOptionNoRender();
+        }
+        break;
+        
+      case Events::D_PAD_DOWN_PRESSED:
+        if (mainMenu) {
+          mainMenu->nextOptionNoRender();
+        }
+        break;
+        
+      case Events::BUTTON_RIGHT_PRESSED:
+        if (mainMenu) {
+          mainMenu->selectOptionNoRender();
+        }
+        break;
+        
+      case Events::BUTTON_LEFT_PRESSED:
+        showExitMessage();
+        break;
+    }
+  }
+};
+
+void setup() {
+  engine.start();
+  
+  // Create the scene manager
+  sceneManager = std::make_unique<SceneManager>(engine);
+  
+  // Create and push the launcher scene
+  auto launcherScene = std::make_shared<LauncherMenuScene>();
+  sceneManager->pushScene(launcherScene);
+  
+  // Start the scene manager actor
+  sceneManager->start();
+}
+
+void loop() {
+  delay(1000);
+}
