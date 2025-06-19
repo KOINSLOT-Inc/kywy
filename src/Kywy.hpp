@@ -16,6 +16,7 @@
 #include "Sprite.hpp"
 #include "SpriteSheet.hpp"
 #include "MenuSystem.hpp"
+#include "SceneManager.hpp"
 
 namespace Kywy {
 

@@ -93,6 +93,86 @@ void MenuSystem::displayMenu() {
   display.update();
 }
 
+void MenuSystem::renderMenuContent() {
+  if (paused) return;
+
+  // Don't clear or update display - just render content
+  int startY = options.y + 5;
+  int indentWidth = 8;  // Width in pixels for each indent level (increased for better visibility)
+
+  // Build the flattened menu structure for display and navigation
+  buildFlattenedMenu();
+
+  // Calculate how many items we can display from the flattened menu
+  int displayCount = std::min(scrollOptions.visibleItems, (int)flattenedMenu.size() - scrollOptions.startIndex);
+
+  // Draw the visible portion of the flattened menu
+  for (int i = 0; i < displayCount; ++i) {
+    int itemIndex = scrollOptions.startIndex + i;
+    if (itemIndex >= flattenedMenu.size()) break;
+
+    const FlatMenuItem& flatItem = flattenedMenu[itemIndex];
+    const MenuItem* item = flatItem.item;
+    int indentLevel = flatItem.indentLevel;
+    bool isSubmenuItem = flatItem.isSubmenuItem;
+
+    if (!item) continue;
+
+    // Check if this is the selected item in the flattened list
+    bool isSelected = (itemIndex == flattenedSelectedIndex);
+
+    // Prepare text with appropriate indentation and selection indicator
+    std::string itemText;
+
+    // Add selection indicator or indentation space
+    itemText = isSelected ? std::string(1, options.pointer) : " ";
+
+    // Add the actual label
+    itemText += item->label;
+
+    int yPosition = startY + i * options.itemHeight;
+    int xPosition = options.x + (indentLevel * indentWidth);  // Apply indentation
+
+    Display::TextOptions textOptions;
+    textOptions._color = 0x00;
+    textOptions._origin = Display::Origin::Text::BASELINE_LEFT;
+    textOptions._font = options.font;
+
+    // Handle menu item types for drawing
+    switch (item->type) {
+      case MenuItemType::TOGGLE:
+        {
+          bool toggleState = *(item->toggleable);
+          itemText += toggleState ? " [X]" : " [ ]";
+          break;
+        }
+      case MenuItemType::ACTION:
+      default:
+        break;
+      case MenuItemType::LABEL:
+        itemText += " ";
+        textOptions._font = options.labelFont;
+        break;
+      case MenuItemType::OPTION:
+        itemText += ": ";
+        // Use optionValueProvider if available, otherwise use the static optionValue
+        if (item->optionValueProvider) {
+          itemText += item->optionValueProvider();
+        } else {
+          itemText += item->optionValue;
+        }
+        break;
+      case MenuItemType::SUBMENU:
+        // Show different indicator based on expanded state
+        itemText += item->expanded ? " V" : " >";
+        break;
+    }
+
+    display.drawText(xPosition, yPosition, itemText.c_str(), textOptions);
+  }
+  // Don't call display.update() here
+}
+
 void MenuSystem::nextOption() {
   if (items.empty()) return;
 
@@ -294,7 +374,7 @@ void MenuSystem::selectOption() {
           itemPtr->action();
           unpause();
           buildFlattenedMenu();  // Rebuild in case menu structure changed
-          displayMenu();
+          // Don't call displayMenu() here - let scene handle rendering
         }
         return;
       case MenuItemType::SUBMENU:
@@ -331,7 +411,7 @@ void MenuSystem::selectOption() {
         unpause();
         // Redraw the menu to show the updated option value
         buildFlattenedMenu();  // Rebuild in case menu structure changed
-        displayMenu();
+        // Don't call displayMenu() here - let scene handle rendering
       }
       return;
     case MenuItemType::SUBMENU:
@@ -340,7 +420,7 @@ void MenuSystem::selectOption() {
         item.expanded = !item.expanded;
         // No need to call action, just redraw with expanded/collapsed submenu
         buildFlattenedMenu();  // Rebuild with new expanded state
-        displayMenu();
+        // Don't call displayMenu() here - let scene handle rendering
         return;
       }
       break;
@@ -465,6 +545,24 @@ void MenuSystem::start(Kywy::Engine& engine) {
   // Build the flattened menu before displaying
   buildFlattenedMenu();
   displayMenu();
+}
+
+void MenuSystem::startWithoutInputHandler(Kywy::Engine& engine) {
+  // Just build the flattened menu, don't create input handler or call displayMenu
+  buildFlattenedMenu();
+}
+
+// Scene-friendly versions that don't call displayMenu()
+void MenuSystem::nextOptionNoRender() {
+  nextOption();
+}
+
+void MenuSystem::previousOptionNoRender() {
+  previousOption();
+}
+
+void MenuSystem::selectOptionNoRender() {
+  selectOption();
 }
 
 }  // namespace Kywy

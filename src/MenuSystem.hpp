@@ -111,9 +111,15 @@ public:
   MenuSystem(Display::Display &display, const std::vector<MenuItem> &items, const MenuOptions &options = MenuOptions());
 
   void displayMenu();
+  void renderMenuContent();  // Render menu without clearing/updating display
   void nextOption();
   void previousOption();
   void selectOption();
+  
+  // Scene-friendly versions that don't call displayMenu()
+  void nextOptionNoRender();
+  void previousOptionNoRender();
+  void selectOptionNoRender();
 
   bool paused = false;
 
@@ -137,6 +143,7 @@ public:
   void handleBackAction();
 
   void start(Kywy::Engine &engine);  // Start the menu system with an engine reference
+  void startWithoutInputHandler(Kywy::Engine &engine);  // Start without creating input handler
 
   // Method to get the state of a toggleable menu item
   bool getToggleableState(size_t index) const {
