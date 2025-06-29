@@ -26,6 +26,13 @@ void queueEventCallback(Actor *actor, Message *message) {
 void Actor::initialize(){};
 void Actor::teardown(){};
 
+void Actor::enable() {
+  enabled = true;
+};
+void Actor::disable() {
+  enabled = false;
+};
+
 Actor::Actor() {
   this->event_handler = new events::Event<void(Actor *, Message *)>(&this->queue, queueEventCallback);
 }
@@ -113,7 +120,10 @@ void Actor::publish(Message *message) {
       // no need to iterate over rest of nullptrs in the array
       return;
     }
-    subscribers[i]->dispatch(message);
+
+    if (subscribers[i]->enabled) {  // don't send events to disabled actors
+      subscribers[i]->dispatch(message);
+    }
 
     i++;
   }
