@@ -6,8 +6,8 @@
 
 # Setup environment and add scripts to path
 chmod +x .devcontainer/scripts/*
-echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.bashrc
-echo 'export PATH="$PATH:/workspaces/kywy/.devcontainer/scripts"' >> ~/.zshrc
+echo 'export PATH="$PATH:/workspaces/kywy/scripts"' >> ~/.bashrc
+echo 'export PATH="$PATH:/workspaces/kywy/scripts"' >> ~/.zshrc
 
 # Welcome message
 chmod +x .devcontainer/welcome-message.sh
