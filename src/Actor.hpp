@@ -38,6 +38,9 @@ private:
 
   Actor *subscribers[MAX_SUBSCRIBERS] = {};
 
+  // used to control scenes (clusters of actors)
+  bool enabled = true;
+
 public:
   Actor();
   ~Actor();
@@ -49,6 +52,9 @@ public:
 
   virtual void initialize();
   virtual void teardown();
+
+  void enable();
+  void disable();
 
   void dispatch(Message *message);
   void publish(Message *message);

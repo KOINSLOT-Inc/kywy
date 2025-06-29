@@ -6,6 +6,7 @@
 #define KYWY_LIB_KYWY 1
 
 #include "Actor.hpp"
+#include "Scene.hpp"
 #include "Display.hpp"
 #include "Battery.hpp"
 #include "Font.hpp"
