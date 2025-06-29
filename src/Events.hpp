@@ -32,6 +32,10 @@ typedef enum : int {
   D_PAD_CENTER_PRESSED,
   D_PAD_CENTER_RELEASED,
 
+  // Scene Events
+  SCENE_ENTER,
+  SCENE_EXIT,
+
   // User Event Boundary
   USER_EVENTS,
 
