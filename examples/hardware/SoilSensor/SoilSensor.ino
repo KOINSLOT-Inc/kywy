@@ -85,9 +85,9 @@ unsigned long lastStateChangeTime = 0;
 uint8_t wateringLoopCount = 0;  // Count loops during watering animation
 
 // Sprite frame arrays for each animation state
-const uint8_t* normalFrames[] = { plant_monster_frame_0, plant_monster_frame_1, plant_monster_frame_2 };
-const uint8_t* thirstyFrames[] = { plant_monster_frame_6, plant_monster_frame_7, plant_monster_frame_8 };
-const uint8_t* wateringFrames[] = { plant_monster_frame_3, plant_monster_frame_4, plant_monster_frame_5 };
+const uint8_t* normalFrames[] = { PLANT_frame_0, PLANT_frame_1, PLANT_frame_2 };
+const uint8_t* thirstyFrames[] = { PLANT_frame_6, PLANT_frame_7, PLANT_frame_8 };
+const uint8_t* wateringFrames[] = { PLANT_frame_3, PLANT_frame_4, PLANT_frame_5 };
 
 // Debug display mode
 bool showDebugInfo = false;
@@ -260,12 +260,12 @@ void drawPlantSprite() {
 
   // Draw sprite centered horizontally, positioned below moisture bar
   if (frameData != nullptr) {
-    int spriteX = (KYWY_DISPLAY_WIDTH - PLANT_MONSTER_FRAME_WIDTH) / 2;
+    int spriteX = (KYWY_DISPLAY_WIDTH - PLANT_FRAME_WIDTH) / 2;
     int spriteY = 50;  // Below moisture bar, above temperature/time
 
     engine.display.drawBitmap(spriteX, spriteY,
-                              PLANT_MONSTER_FRAME_WIDTH,
-                              PLANT_MONSTER_FRAME_HEIGHT,
+                              PLANT_FRAME_WIDTH,
+                              PLANT_FRAME_HEIGHT,
                               (uint8_t*)frameData);
   }
 }
