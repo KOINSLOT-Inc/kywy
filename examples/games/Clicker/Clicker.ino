@@ -13,9 +13,9 @@
 // Press the RIGHT button to click the cookie and get points!
 
 #include "Kywy.hpp"
-#include "cookie.hpp" 
+#include "cookie.hpp"
 
-Kywy::Engine engine;        // This starts the kywy firmware and engine
+Kywy::Engine engine;  // This starts the kywy firmware and engine
 
 // Game variables - these store our game information
 // Here we are creating some global values to track important information for our game
@@ -31,22 +31,22 @@ int cookieY = KYWY_DISPLAY_HEIGHT / 2;  // Middle of screen vertically
 
 
 void setup() {
-  engine.start(); // This will start up the kywy engine along with things like the display, usb, buttons, etc.
+  engine.start();  // This will start up the kywy engine along with things like the display, usb, buttons, etc.
 }
 
 void loop() {
   // Check if RIGHT button was just pressed (not held down)
   // Only count if button is pressed now AND was not pressed before
-  if (engine.input.buttonRightPressed && !wasButtonPressed) { // Button was just pressed and was not pressed during the last loop
-    cookieCount++;           // Add one more cookie
-    showAnimation = true;    // Start the click animation  
-    animationTime = 0;       // Reset animation timer
+  if (engine.input.buttonRightPressed && !wasButtonPressed) {  // Button was just pressed and was not pressed during the last loop
+    cookieCount++;                                             // Add one more cookie
+    showAnimation = true;                                      // Start the click animation
+    animationTime = 0;                                         // Reset animation timer
   }
-  
+
   // Remember if button is pressed for next time
   // This will save the current state of the button for the next loop
-  wasButtonPressed = engine.input.buttonRightPressed; 
-  
+  wasButtonPressed = engine.input.buttonRightPressed;
+
   // Update the animation
   if (showAnimation) {
     animationTime++;
@@ -54,30 +54,30 @@ void loop() {
       showAnimation = false;
     }
   }
-  
+
   // Clear the screen
   engine.display.clear();
-  
+
   // Draw the score at the top
-  String scoreText = "Cookies: " + String(cookieCount); // Create text to show score
-  engine.display.drawText(cookieX, 20, scoreText.c_str(), // Draw the score text to the screen buffer
-    Display::TextOptions().origin(Display::Origin::Text::CENTER)); // Center the text
+  String scoreText = "Cookies: " + String(cookieCount);                                   // Create text to show score
+  engine.display.drawText(cookieX, 20, scoreText.c_str(),                                 // Draw the score text to the screen buffer
+                          Display::TextOptions().origin(Display::Origin::Text::CENTER));  // Center the text
 
   // Draw the cookie picture in the center
   // Here we are using some of the variable that were defined when we included cookie.hpp
   engine.display.drawBitmap(
     cookieX - COOKIE_WIDTH / 2,   // Left edge of cookie
-    cookieY - COOKIE_HEIGHT / 2,  // Top edge of cookie  
+    cookieY - COOKIE_HEIGHT / 2,  // Top edge of cookie
     COOKIE_WIDTH, COOKIE_HEIGHT,
     cookie_data);
-  
+
   // Draw click animation (circles around cookie when clicked)
   if (showAnimation) {
     int circleSize = 70 + (animationTime * 2);  // Circle grows bigger over time
     engine.display.drawCircle(cookieX, cookieY, circleSize,
-      Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER));
+                              Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER));
   }
-  
+
   // Show everything on screen
   engine.display.update();
 }
