@@ -142,7 +142,11 @@ engine.display.drawText(cookieX, 20, scoreText.c_str(),
   Display::TextOptions().origin(Display::Origin::Text::CENTER));
 
 // Draw the cookie picture
-engine.display.drawBitmap(/*...*/);
+engine.display.drawBitmap(
+    cookieX - COOKIE_WIDTH / 2,   // Left edge of cookie
+    cookieY - COOKIE_HEIGHT / 2,  // Top edge of cookie
+    COOKIE_WIDTH, COOKIE_HEIGHT,
+    cookie_data);
 
 // Draw animation circles
 if (showAnimation) {
@@ -158,9 +162,18 @@ Drawing happens in steps:
 
 1. **Clear** - Erase everything from last time
 2. **Draw text** - Show the cookie count at the top
-3. **Draw cookie** - Show the cookie picture in the center
+3. **Draw bitmap** - Show the cookie picture using the image data from `cookie.hpp`
 4. **Draw animation** - If clicking, show expanding circles
 5. **Update** - Actually display everything on the screen
+
+#### Understanding Bitmap Drawing
+
+The `drawBitmap()` function takes several parameters:
+- **X, Y position**: Where to place the image (we center it by subtracting half the width/height)
+- **Width, Height**: Size of the image (defined in `cookie.hpp`)
+- **Image data**: The actual pixel information (`cookie_data` array)
+
+The image data comes from the `cookie.hpp` file, which was created using the [Kywy Drawing Editor](https://github.com/KOINSLOT-Inc/kywy-web-tools). Each number in the array represents the color of one pixel!
 
 ## Try It Yourself!
 
@@ -171,7 +184,48 @@ Drawing happens in steps:
 3. Upload the code to your Kywy device
 4. Press the RIGHT button to click cookies!
 
-### Step 2: Experiment and Learn
+### Step 2: Create Your Own Images
+
+Want to replace the cookie with your own drawing? You can use the **Kywy Drawing Editor** to create custom images!
+
+#### Using the Kywy Drawing Editor
+
+1. **Visit the Editor**: Go to [https://github.com/KOINSLOT-Inc/kywy-web-tools](https://github.com/KOINSLOT-Inc/kywy-web-tools)
+2. **Draw Your Image**: Use the web-based drawing tools to create your custom image
+3. **Generate Code**: The editor automatically converts your drawing into a `.hpp` file format
+4. **Replace the File**: Use the generated code to replace `cookie.hpp` with your custom image
+
+#### Understanding Image Files
+
+The `cookie.hpp` file contains your image data in a special format:
+
+```cpp
+// This is how images are stored as code
+uint8_t cookie_data[3024] = {
+  0xFF, 0xFF, 0xFF, 0xFF, // Each number represents pixel colors
+  0xFF, 0xFF, 0xFF, 0xFF, // 0xFF = white, 0x00 = black
+  // ... thousands more numbers for all the pixels
+};
+
+// These tell us the image size
+#define COOKIE_WIDTH 144   // 144 pixels wide
+#define COOKIE_HEIGHT 168  // 168 pixels tall
+```
+
+**Why This Format?**
+- **Memory Efficient**: Images are stored directly in your device's memory
+- **Fast Drawing**: No need to load files - the image data is part of your program
+- **Custom Graphics**: You can create any image you want for your games!
+
+#### Try These Custom Images
+
+Replace your cookie with:
+- **Your Pet**: Draw your dog, cat, or favorite animal
+- **Your Face**: Create a simple self-portrait
+- **Food Items**: Pizza, hamburger, ice cream cone
+- **Game Characters**: Simple sprites for your own games
+
+### Step 3: Experiment and Learn
 
 Try making these changes to see how the code works:
 
@@ -230,11 +284,22 @@ You used functions like `engine.display.clear()` to do specific tasks.
 
 Now that you understand the basics, you could try:
 
-- Adding sound effects when clicking
-- Creating different types of cookies worth different points
-- Adding upgrades that increase points per click
-- Creating a high score system
-- Adding more animations and visual effects
+- **Custom Graphics**: Use the [Kywy Drawing Editor](https://github.com/KOINSLOT-Inc/kywy-web-tools) to create your own images
+- **Sound Effects**: Adding sound effects when clicking (if your device supports it)
+- **Different Cookie Types**: Creating different types of cookies worth different points
+- **Upgrades System**: Adding upgrades that increase points per click
+- **High Score System**: Saving and displaying the best scores
+- **More Animations**: Adding particle effects, color changes, or moving elements
+- **Multiple Levels**: Different backgrounds or challenges as you progress
+
+### Learn More About Graphics
+
+Want to understand how computer graphics work? Check out our **[Image Format Tutorial](../graphics_basics/index.md)** _(coming soon!)_ to learn:
+
+- How pixels and colors work in computers
+- Why we use hexadecimal numbers for colors
+- How to optimize images for small devices
+- Advanced drawing techniques and animations
 
 ## Common Questions
 
@@ -249,5 +314,14 @@ A: If we didn't clear it, old drawings would stay and create a mess. Clearing gi
 
 **Q: How fast does the loop run?**
 A: Very fast! Many times per second. That's why the animation looks smooth.
+
+**Q: What's inside the `cookie.hpp` file?**
+A: It's your cookie image converted into numbers! Each pixel becomes a number that tells the computer what color to display. You can create your own using the [Kywy Drawing Editor](https://github.com/KOINSLOT-Inc/kywy-web-tools).
+
+**Q: Can I use my own images?**
+A: Yes! Draw anything you want in the Kywy Drawing Editor, and it will generate the `.hpp` file for you. Replace `cookie.hpp` with your custom image file.
+
+**Q: Why are images stored as code instead of image files?**
+A: Storing images as code makes them load faster and saves memory on your device. It's a common technique in embedded programming!
 
 Congratulations! You've built your first game and learned fundamental programming concepts. Keep experimenting and have fun! 🍪🎮
