@@ -38,11 +38,8 @@ $(ARDUINO_LINT): $(CACHE)
 
 CLANG_FORMAT := $(CACHE)/.clang-format
 $(CLANG_FORMAT): $(CACHE) .clang-format
-	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try installing clang-format" && exit 1)
-	@if clang-format --version | grep -v -q '14.0'; then \
-		echo "WARNING: clang-format version 14.0 preferred, but found: $$(clang-format --version)"; \
-		echo "         Continuing with project-defined style, but CI may require v14.0"; \
-	fi
+	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
+	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
 	@touch $(CLANG_FORMAT)
 
 DOXYGEN := $(CACHE)/.doxygen
