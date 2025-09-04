@@ -1,5 +1,5 @@
 ---
-title: "Cookie Clicker Tutorial"
+title: "First Game: Cookie Clicker"
 hide:
   - footer
 ---
@@ -10,9 +10,9 @@ SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# Cookie Clicker Tutorial
+# First Game: Cookie Clicker
 
-_audience: beginner
+_audience: beginner_
 
 Learn programming fundamentals by building a fun Cookie Clicker game! This tutorial teaches you how to use variables, handle input, and create simple animations.
 

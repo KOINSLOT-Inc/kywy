@@ -18,3 +18,4 @@ __pycache__
 output
 .secrets
 *.log
+TODO.md
