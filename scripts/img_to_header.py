@@ -435,59 +435,65 @@ def generate_header_file(
 def format_header_file(output_path):
     """
     Apply clang-format to the generated header file if clang-format is available.
-    
+
     Args:
         output_path: Path to the header file to format
     """
     import subprocess
     import shutil
-    
+
     # Check if clang-format is available, prioritizing version 14 for CI compatibility
     clang_format_cmd = None
-    for cmd in ['clang-format-14', 'clang-format-15', 'clang-format-16', 'clang-format']:
+    for cmd in [
+        "clang-format-14",
+        "clang-format-15",
+        "clang-format-16",
+        "clang-format",
+    ]:
         if shutil.which(cmd):
             clang_format_cmd = cmd
             break
-    
+
     if clang_format_cmd is None:
         print("clang-format not found - skipping code formatting")
         return False
-    
+
     # Check version and warn if not 14.0
     try:
         version_result = subprocess.run(
-            [clang_format_cmd, '--version'],
-            capture_output=True,
-            text=True,
-            timeout=10
+            [clang_format_cmd, "--version"], capture_output=True, text=True, timeout=10
         )
         if version_result.returncode == 0:
             version_output = version_result.stdout.strip()
-            if '14.0' not in version_output:
-                print(f"WARNING: clang-format version 14.0 preferred for CI compatibility")
+            if "14.0" not in version_output:
+                print(
+                    f"WARNING: clang-format version 14.0 preferred for CI compatibility"
+                )
                 print(f"         Found: {version_output}")
-                print(f"         Using project-defined style, but CI may require reformatting")
+                print(
+                    f"         Using project-defined style, but CI may require reformatting"
+                )
     except Exception:
         pass  # Continue even if version check fails
-    
+
     try:
         print(f"Formatting header file with {clang_format_cmd}...")
-        
+
         # Run clang-format in-place on the generated file
         result = subprocess.run(
-            [clang_format_cmd, '-i', output_path],
+            [clang_format_cmd, "-i", output_path],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
-        
+
         if result.returncode == 0:
             print("Header file formatted successfully")
             return True
         else:
             print(f"clang-format warning: {result.stderr}")
             return False
-            
+
     except subprocess.TimeoutExpired:
         print("clang-format timed out - skipping formatting")
         return False
