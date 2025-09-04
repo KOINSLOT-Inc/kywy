@@ -18,11 +18,11 @@ typedef enum : uint8_t {
 
 struct Message {
   Message()
-    : directive(DIRECTIVE_HANDLE), signal(0), data(nullptr){};
+    : directive(DIRECTIVE_HANDLE), signal(0), data(nullptr) {}
   Message(int signal)
-    : directive(DIRECTIVE_HANDLE), signal(signal), data(nullptr){};
+    : directive(DIRECTIVE_HANDLE), signal(signal), data(nullptr) {}
   Message(int signal, void *data)
-    : directive(DIRECTIVE_HANDLE), signal(signal), data(data){};
+    : directive(DIRECTIVE_HANDLE), signal(signal), data(data) {}
   Directive directive;
   int signal;
   void *data;
