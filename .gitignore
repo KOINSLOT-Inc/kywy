@@ -19,3 +19,4 @@ output
 .secrets
 *.log
 TODO.md
+.vscode

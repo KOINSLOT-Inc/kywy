@@ -31,6 +31,12 @@ for asset in os.listdir("assets"):
     if asset.endswith(".license"):
         continue
 
-    with open(f"assets/{asset}", "rb") as asset_file:
+    asset_path = f"assets/{asset}"
+
+    # Skip directories for now - we could recursively copy them later if needed
+    if os.path.isdir(asset_path):
+        continue
+
+    with open(asset_path, "rb") as asset_file:
         with mkdocs_gen_files.open(f"assets/{asset}", "wb") as f:
             f.write(asset_file.read())
