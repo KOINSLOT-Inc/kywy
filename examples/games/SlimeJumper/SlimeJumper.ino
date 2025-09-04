@@ -314,8 +314,6 @@ public:
 
   int padding = 5;
 
-  int angle = 0;
-
   bool buttonLeftPressed = false;
   bool buttonRightPressed = false;
 
@@ -385,18 +383,6 @@ public:
           slime.setFrame(1);
         } else {
           slime.setFrame(0);
-        }
-
-        if(engine.input.dPadLeftPressed){
-          angle+=5;
-          slime.setRotation(angle);
-        }
-        if(engine.input.dPadRightPressed){
-          angle-=5;
-          slime.setRotation(angle);
-        }
-        if (angle >= 360){
-        angle = 0;
         }
 
         slime.setPosition(xPosition, yPosition);

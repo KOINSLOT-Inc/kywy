@@ -65,10 +65,14 @@ public:
 
         if(engine.input.dPadLeftPressed){
           angle+=5;
+          score +=1;
+          slime.setFrame(score%3);
           slime.setRotation(angle);
         }
         if(engine.input.dPadRightPressed){
           angle-=5;
+          score-=1;
+          slime.setFrame(score%3);
           slime.setRotation(angle);
         }
 
