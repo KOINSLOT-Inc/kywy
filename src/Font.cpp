@@ -232,7 +232,7 @@ void Display::drawText(int16_t x, int16_t y, const char *text,
                                   // but we need to flip that
                  .color(options.getColor())
                  .origin(Origin::Object2D::BOTTOM_LEFT)
-                .rotation(options.getRotation()));
+                 .rotation(options.getRotation()));
 
     originX += currentChar.deviceWidthX;
   }

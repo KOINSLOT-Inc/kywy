@@ -132,7 +132,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
   } else {
     byteCount = (width * height) / 8;
   }
-// Has to be outside loop for some reason
+  // Has to be outside loop for some reason
   uint8_t resized[byteCount];
   uint8_t output[byteCount];
 
@@ -142,7 +142,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
       resized[i] = 0;
       output[i] = 0;
     }
-//Padding
+    //Padding
     int old_bytes_per_row = (width + 7) / 8;
     int new_bytes_per_row = new_width / 8;
 
@@ -175,7 +175,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
     double m10 = -sinA, m11 = cosA;
     double tx = -cx * m00 - cy * m01 + cx;
     double ty = -cx * m10 - cy * m11 + cy;
-//bitmask to optimize search
+    //bitmask to optimize search
     const uint8_t bit_mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
     for (int y = 0; y < height; ++y) {
