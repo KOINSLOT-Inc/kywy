@@ -31,11 +31,10 @@ bool wasRightButtonPressed = false;  // Was the right button pressed last time w
 bool wasLeftButtonPressed = false;   // Was the left button pressed last time we checked?
 
 void setup() {
-  engine.start();  // This will start up the kywy engine along with things like the display, usb, buttons, etc.
-  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen); // Draw the starting screen
-  engine.display.drawText(centerX, centerY-20, "Go Right"); // Draw text
-  engine.display.drawText(centerX-60, centerY-20, "Go Left"); // Draw text
-
+  engine.start();                                                                         // This will start up the kywy engine along with things like the display, usb, buttons, etc.
+  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Draw the starting screen
+  engine.display.drawText(centerX, centerY - 20, "Go Right");                             // Draw text
+  engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                         // Draw text
 }
 
 void loop() {
@@ -44,37 +43,35 @@ void loop() {
 
   // Check if RIGHT button was just pressed (not held down)
   if (engine.input.buttonRightPressed && !wasRightButtonPressed) {
-    if (!onRightScreen && !onLeftScreen) {  // We're on the start screen
-      engine.display.clear(); // Clear the screen and draw the right screen
-      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, rightScreen); // Change to right screen
-      onRightScreen = true; //Track that we're on the right screen
-      onLeftScreen = false; //Track that we're not on the left screen
-    }
-    else if (onLeftScreen) {  // We're on the left screen - go back to start
-      engine.display.clear(); // Clear the screen and draw the start screen
-      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen); // Change to start screen
-      onLeftScreen = false; //Track that we're not on the left screen
-      onRightScreen = false; //Track that we're not on the right screen
-      engine.display.drawText(centerX, centerY-20, "Go Right"); // Draw text
-      engine.display.drawText(centerX-60, centerY-20, "Go Left"); // Draw text
+    if (!onRightScreen && !onLeftScreen) {                                                    // We're on the start screen
+      engine.display.clear();                                                                 // Clear the screen and draw the right screen
+      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, rightScreen);  // Change to right screen
+      onRightScreen = true;                                                                   //Track that we're on the right screen
+      onLeftScreen = false;                                                                   //Track that we're not on the left screen
+    } else if (onLeftScreen) {                                                                // We're on the left screen - go back to start
+      engine.display.clear();                                                                 // Clear the screen and draw the start screen
+      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Change to start screen
+      onLeftScreen = false;                                                                   //Track that we're not on the left screen
+      onRightScreen = false;                                                                  //Track that we're not on the right screen
+      engine.display.drawText(centerX, centerY - 20, "Go Right");                             // Draw text
+      engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                         // Draw text
     }
   }
 
   // Check if LEFT button was just pressed (not held down)
   if (engine.input.buttonLeftPressed && !wasLeftButtonPressed) {
-    if (!onRightScreen && !onLeftScreen) {  // We're on the start screen
-      engine.display.clear(); // Clear the screen and draw the left screen
-      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, leftScreen); // Change to left screen
-      onLeftScreen = true; //Track that we're on the left screen
-      onRightScreen = false; //Track that we're not on the right screen
-    }
-    else if (onRightScreen) {  // We're on the right screen - go back to start
-      engine.display.clear(); // Clear the screen and draw the start screen
-      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen); // Change to start screen
-      onRightScreen = false; //Track that we're not on the right screen
-      onLeftScreen = false; //Track that we're not on the left screen
-      engine.display.drawText(centerX, centerY-20, "Go Right"); // Draw text
-      engine.display.drawText(centerX-60, centerY-20, "Go Left"); // Draw text
+    if (!onRightScreen && !onLeftScreen) {                                                    // We're on the start screen
+      engine.display.clear();                                                                 // Clear the screen and draw the left screen
+      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, leftScreen);   // Change to left screen
+      onLeftScreen = true;                                                                    //Track that we're on the left screen
+      onRightScreen = false;                                                                  //Track that we're not on the right screen
+    } else if (onRightScreen) {                                                               // We're on the right screen - go back to start
+      engine.display.clear();                                                                 // Clear the screen and draw the start screen
+      engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Change to start screen
+      onRightScreen = false;                                                                  //Track that we're not on the right screen
+      onLeftScreen = false;                                                                   //Track that we're not on the left screen
+      engine.display.drawText(centerX, centerY - 20, "Go Right");                             // Draw text
+      engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                         // Draw text
     }
   }
 
