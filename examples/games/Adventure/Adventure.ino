@@ -21,6 +21,7 @@ Kywy::Engine engine;  // This starts the kywy firmware and engine
 // It will be useful to know where the center of the screen is
 int centerX = KYWY_DISPLAY_WIDTH / 2;   // Middle of screen horizontally
 int centerY = KYWY_DISPLAY_HEIGHT / 2;  // Middle of screen vertically
+uint16_t textWidth, textHeight;         //Need to store information about the text size
 
 //Variables to track which screen we're on
 bool onRightScreen = false;
@@ -30,11 +31,24 @@ bool onLeftScreen = false;
 bool wasRightButtonPressed = false;  // Was the right button pressed last time we checked?
 bool wasLeftButtonPressed = false;   // Was the left button pressed last time we checked?
 
+// Make a function to draw text boxes for us
+void drawText() {
+  //Right text
+  engine.display.getTextSize("Go Right", textWidth, textHeight);                                                                     //Get size of text
+  engine.display.fillRectangle(centerX + 5, centerY - 25, textWidth + 10, textHeight + 10, Display::Object2DOptions().color(0xFF));  //Draw a white rectangle background for text
+  engine.display.drawRectangle(centerX + 5, centerY - 25, textWidth + 10, textHeight + 10, Display::Object2DOptions().color(0x00));  //Draw a rectangle outline for text
+  engine.display.drawText(centerX + 10, centerY - 20, "Go Right");                                                                   // Draw text
+  //Left text
+  engine.display.getTextSize("Go Left", textWidth, textHeight);                                              //Get size of text
+  engine.display.fillRectangle(centerX - 65, centerY - 25, 60, 20, Display::Object2DOptions().color(0xFF));  //Draw a white rectangle background for text
+  engine.display.drawRectangle(centerX - 65, centerY - 25, 60, 20, Display::Object2DOptions().color(0x00));  //Draw a rectangle outline for text
+  engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                                            // Draw text                             // Draw text
+}
+
 void setup() {
   engine.start();                                                                         // This will start up the kywy engine along with things like the display, usb, buttons, etc.
   engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Draw the starting screen
-  engine.display.drawText(centerX, centerY - 20, "Go Right");                             // Draw text
-  engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                         // Draw text
+  drawText();                                                                             // Draw text
 }
 
 void loop() {
@@ -52,9 +66,8 @@ void loop() {
       engine.display.clear();                                                                 // Clear the screen and draw the start screen
       engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Change to start screen
       onLeftScreen = false;                                                                   //Track that we're not on the left screen
-      onRightScreen = false;                                                                  //Track that we're not on the right screen
-      engine.display.drawText(centerX, centerY - 20, "Go Right");                             // Draw text
-      engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                         // Draw text
+      onRightScreen = false;
+      drawText();  // Draw text
     }
   }
 
@@ -70,8 +83,7 @@ void loop() {
       engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Change to start screen
       onRightScreen = false;                                                                  //Track that we're not on the right screen
       onLeftScreen = false;                                                                   //Track that we're not on the left screen
-      engine.display.drawText(centerX, centerY - 20, "Go Right");                             // Draw text
-      engine.display.drawText(centerX - 60, centerY - 20, "Go Left");                         // Draw text
+      drawText();                                                                             // Draw text
     }
   }
 
