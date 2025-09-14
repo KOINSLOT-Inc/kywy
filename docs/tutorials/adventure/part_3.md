@@ -1,5 +1,5 @@
 ---
-title: "Part 3: Adding New Choices and Screens"
+title: "Part 3: Optional: Adding Win/Lose States"
 ---
 
 <!--
@@ -8,91 +8,97 @@ SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# Part 3: Adding New Choices and Screens
+# Part 3: Optional: Adding Win/Lose States
 
-Now that you understand the basic structure, let's learn how to extend the game with new choices and screens. This is where the real fun begins!
+This part is optional! If you want to add simple win/lose conditions to your game, you can check if the player reaches a certain score or if their health gets too low.
 
-## Adding a New Choice
+## Simple Win Condition
 
-Currently, the game only has left and right choices. Let's add an "up" choice using the d-pad up button.
-
-### Step 1: Add the Choice Handler
-
-Find the `if/else` statements in the `loop()` function and add a new condition:
+Add this check after your choices to see if the player won:
 
 ```cpp
-if (choice == Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED) {
-  // Show left screen
+void loop() {
+  // Show start screen
   engine.display.clear();
-  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, leftScreen);
-  drawBottomText("You found a reward!");
+  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);
+  drawInstructionText();
   engine.display.update();
-} else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
-  // Show right screen
-  engine.display.clear();
-  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, rightScreen);
-  drawBottomText("You are attacked!");
-  engine.display.update();
-} else if (choice == Kywy::Events::KywyEvents::D_PAD_UP_PRESSED) {
-  // NEW: Show up screen
-  engine.display.clear();
-  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen); // Reuse start screen for now
-  drawBottomText("You climbed to higher ground!");
-  engine.display.update();
+
+  ButtonEvent choice = waitForInput();
+
+  if (choice == Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED) {
+    // Show left screen
+    engine.display.clear();
+    engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, leftScreen);
+    score += 10;  // Good choice gives points
+    drawBottomText("You found treasure! (+10 points)");
+  } else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
+    // Show right screen
+    engine.display.clear();
+    engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, rightScreen);
+    health -= 10;  // Bad choice hurts you
+    drawBottomText("You were attacked! (-10 health)");
+  }
+
+  // SECOND CHOICE
+  choice = waitForInput();
+
+  if (choice == Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED) {
+    // Second good choice
+    engine.display.clear();
+    drawColoredScreen(0x07E0); // Green for success
+    score += 15;  // More points for second good choice
+    drawBottomText("You made another good choice! (+15 points)");
+  } else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
+    // Second bad choice
+    engine.display.clear();
+    drawColoredScreen(0xF800); // Red for danger
+    health -= 15;  // More damage for second bad choice
+    drawBottomText("Another bad choice! (-15 health)");
+  }
+
+  // CHECK WIN/LOSE CONDITIONS
+  if (score >= 10) {
+    // WIN! Player reached 10 points
+    engine.display.clear();
+    drawColoredScreen(0x07E0); // Green for victory
+    drawBottomText("YOU WIN! You reached 10 points!");
+    waitForInput(); // Wait for player to see the message
+  } else if (health <= 0) {
+    // LOSE! Player's health is too low
+    engine.display.clear();
+    drawColoredScreen(0xF800); // Red for defeat
+    drawBottomText("GAME OVER! Your health is too low!");
+    waitForInput(); // Wait for player to see the message
+  }
+
+  // Loop back to start for new game
 }
 ```
 
-### Step 2: Update the Input Function
+## How It Works
 
-Make sure the `waitForInput()` function can detect the up button:
+**Win Condition:**
+- If `score >= 10` → Player wins! Shows green screen with "YOU WIN!"
+- This happens when they make good choices that give points
 
-```cpp
-if (leftPressed && !wasLeftPressed) {
-  pressed = Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED;
-} else if (rightPressed && !wasRightPressed) {
-  pressed = Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED;
-} else if (upPressed && !wasUpPressed) {  // Add this
-  pressed = Kywy::Events::KywyEvents::D_PAD_UP_PRESSED;
-}
-```
+**Lose Condition:**
+- If `health <= 0` → Player loses! Shows red screen with "GAME OVER!"
+- This happens when they make too many bad choices
 
-### Step 3: Update the Start Screen Text
-
-Modify the `drawText()` function to mention the new choice:
-
-```cpp
-// In drawText() function:
-engine.display.drawText(centerX + 10, centerY - 30, "Go Right");
-engine.display.drawText(centerX - 60, centerY - 20, "Go Left");
-engine.display.drawText(centerX - 40, centerY + 10, "Go Up");  // Add this line
-```
-
-## Adding New Screens
-
-To add truly unique screens, you'll need to create new bitmap images. For now, you can reuse existing screens or create simple colored backgrounds.
-
-### Creating a Simple Colored Screen
-
-```cpp
-// Add this function for a colored screen
-void drawColoredScreen(uint16_t color) {
-  engine.display.clear();
-  engine.display.fillRectangle(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, Display::Object2DOptions().color(color));
-}
-
-// Use it in your choice:
-} else if (choice == Kywy::Events::KywyEvents::D_PAD_UP_PRESSED) {
-  drawColoredScreen(0x07E0); // Green screen
-  drawBottomText("You found a peaceful meadow!");
-  engine.display.update();
-}
-```
+**No Condition Met:**
+- Game continues normally, loops back to start
 
 ## Your Challenge
 
-1. **Add an "up" choice** that shows a different outcome
-2. **Add a "down" choice** with another unique result
-3. **Create different colored backgrounds** for each choice
-4. **Experiment with different story messages**
+1. **Add the win/lose checks** after your second choice
+2. **Test winning**: Make choices that give you +10 points or more
+3. **Test losing**: Make choices that hurt your health until it reaches 0
+4. **Try different combinations** to see when you win or lose
 
-Try these modifications and see how they change the gameplay. Which choices feel most interesting to you?
+**Questions to consider:**
+- How many good choices do you need to win?
+- How many bad choices before you lose?
+- What happens if you don't meet either condition?
+
+This is completely optional - your game works fine without win/lose conditions! In the next part, we'll explore nested if statements for more complex logic.

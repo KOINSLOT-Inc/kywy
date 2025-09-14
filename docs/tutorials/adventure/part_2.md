@@ -1,5 +1,5 @@
 ---
-title: "Part 2: Understanding the Game Structure"
+title: "Part 2: Adding More Choices to Your Story"
 ---
 
 <!--
@@ -8,85 +8,81 @@ SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# Part 2: Understanding the Game Structure
+# Part 2: Adding More Choices to Your Story
 
-Now that you've seen the Adventure game in action, let's dive into how it works. We'll explore the main components and learn how they fit together.
+Now that you understand the basic structure, let's add one more choice to your adventure. We'll keep it simple - just add a second choice after your first one.
 
-## The Main Loop
+## Adding a Second Choice
 
-The heart of any Arduino program is the `loop()` function. Here's how the Adventure game is structured:
+Your current game has one choice. Let's add a second choice that comes right after:
 
 ```cpp
 void loop() {
   // Show start screen
   engine.display.clear();
   engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);
-  drawText();
+  drawInstructionText();
   engine.display.update();
 
-  // Wait for input
   ButtonEvent choice = waitForInput();
 
   if (choice == Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED) {
     // Show left screen
     engine.display.clear();
     engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, leftScreen);
-    drawBottomText("You found a reward!");
-    engine.display.update();
+    score += 10;  // Good choice gives points
+    drawBottomText("You found treasure! (+10 points)");
   } else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
     // Show right screen
     engine.display.clear();
     engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, rightScreen);
-    drawBottomText("You are attacked!");
-    engine.display.update();
+    health -= 10;  // Bad choice hurts you
+    drawBottomText("You were attacked! (-10 health)");
   }
 
-  waitForInput();
+  // SECOND CHOICE - Add this after your first choice
+  choice = waitForInput();
+
+  if (choice == Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED) {
+    // Second good choice
+    engine.display.clear();
+    drawColoredScreen(0x07E0); // Green for success
+    score += 15;  // More points for second good choice
+    drawBottomText("You made another good choice! (+15 points)");
+  } else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
+    // Second bad choice
+    engine.display.clear();
+    drawColoredScreen(0xF800); // Red for danger
+    health -= 15;  // More damage for second bad choice
+    drawBottomText("Another bad choice! (-15 health)");
+  }
+
   // Loop back to start
 }
 ```
 
-## Key Components
+## What This Does
 
-### 1. Screen Management
-- `engine.display.clear()` - Clears the screen for new content
-- `engine.display.drawBitmap()` - Draws background images
-- `engine.display.update()` - Shows all changes on screen
+**First Choice:**
+- **Left (Good)**: +10 points, shows left screen
+- **Right (Bad)**: -10 health, shows right screen
 
-### 2. Input Handling
-- `waitForInput()` - Waits for player input and returns which button was pressed
-- Uses d-pad left/right for choices
+**Second Choice:**
+- **Left (Good)**: +15 points, shows green success screen
+- **Right (Bad)**: -15 health, shows red danger screen
 
-### 3. Text Display
-- `drawText()` - Shows the choice options on the start screen
-- `drawBottomText()` - Shows story results on choice screens
+## Your Challenge
 
-## Helper Functions
+1. **Add the second choice** after your existing first choice
+2. **Test both paths**:
+   - Left → Left: Should give +25 total points
+   - Left → Right: Should give +10 points, -15 health
+   - Right → Left: Should give -10 health, +15 points
+   - Right → Right: Should give -25 total health
 
-The game uses several helper functions to keep the code organized:
+**Questions to consider:**
+- How do your score and health change with different combinations?
+- Which sequence gives the best results?
+- Which sequence gives the worst results?
 
-### `waitForInput()`
-```cpp
-ButtonEvent waitForInput() {
-  ButtonEvent pressed = Kywy::Events::KywyEvents::INPUT;
-  // ... input detection logic ...
-  return pressed;
-}
-```
-
-### `drawBottomText()`
-```cpp
-void drawBottomText(const char* text) {
-  // ... text drawing logic ...
-}
-```
-
-## Your Task: Modify the Story Text
-
-Try changing the story text that appears when you make choices. In the `drawBottomText()` calls, replace the current messages with your own creative story outcomes.
-
-For example:
-- Change "You found a reward!" to "You discovered a hidden treasure!"
-- Change "You are attacked!" to "A mysterious figure approaches!"
-
-Upload your changes and test them on your Kywy device. How does changing the story text affect the gameplay experience?
+In the next part, we'll add win/lose conditions based on your final score and health!
