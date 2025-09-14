@@ -10,9 +10,11 @@
 //   -How to draw pictures and text on screen
 //   -How to add story text to game screens
 //   -How to create and use helper functions for code reuse
+//
+// Note that we create some helper functions that are a bit complicated in this example, but dont worry, most of the action is in the main loop function at the bottom!
 
-#include "Kywy.hpp"    // Main kywy library for controlling the KYWY
-#include "screens.hpp" // This file includes all of our images for the game
+#include "Kywy.hpp"     // Main kywy library for controlling the KYWY
+#include "screens.hpp"  // This file includes all of our images for the game
 
 Kywy::Engine engine;  // This starts the kywy firmware and engine
 
@@ -30,35 +32,36 @@ using ButtonEvent = Kywy::Events::KywyEvents;
 // Dont worry too much about what this function is doing, just know it waits for a button press and returns which button was pressed
 ButtonEvent waitForInput() {
   ButtonEvent pressed = Kywy::Events::KywyEvents::INPUT;  // Use INPUT as NONE equivalent
-  
+
   // Check initial state of buttons
   bool initialLeftPressed = engine.input.dPadLeftPressed;
   bool initialRightPressed = engine.input.dPadRightPressed;
-  
+
   // Track previous state to make sure a button was not already held down from the last time we checked
   bool wasLeftPressed = initialLeftPressed;
   bool wasRightPressed = initialRightPressed;
-  
+
   while (pressed == Kywy::Events::KywyEvents::INPUT) {
     bool leftPressed = engine.input.dPadLeftPressed;
     bool rightPressed = engine.input.dPadRightPressed;
-    
+
     // Detect button press: current is pressed AND previous was not pressed
     if (leftPressed && !wasLeftPressed) {
       pressed = Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED;
     } else if (rightPressed && !wasRightPressed) {
       pressed = Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED;
     }
-    
+
     wasLeftPressed = leftPressed;
     wasRightPressed = rightPressed;
     engine.display.update();
-    delay(10); // Small delay before we check the buttons again
+    delay(10);  // Small delay before we check the buttons again
   }
   return pressed;
 }
 
-// Make a function to draw text boxes for us
+// Make a function to draw instructiontext boxes for us
+// This will add the "Go Left" and "Go Right" text boxes to the screen
 void drawInstructionText() {
   //Right text
   engine.display.getTextSize("Go Right", textWidth, textHeight);                                                                     //Get size of text
@@ -81,43 +84,45 @@ void drawBottomText(const char* text) {
   engine.display.drawText(5, KYWY_DISPLAY_HEIGHT - textHeight - 5, text);
 }
 
+// The setup function runs once when you press reset or power the board
+// We will use this to start the kywy engine
 void setup() {
   engine.start();  // This will start up the kywy engine along with things like the display, usb, buttons, etc.
 }
 
 // Game variable initialization
-int score = 0; // Player score
-int health = 100; // Player health
+// These are variables that we can use to keep track of the player's progress in the game
+// You can add more variables such as inventory items, experience points, etc to keep track of more complex game mechanics
+int score = 0;     // Player score
+int health = 100;  // Player health
 
 // The main game loop
 // Edit this!!
 void loop() {
   // Show start screen
   engine.display.clear();
-  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen); // Draws the start screen bitmap
-  drawInstructionText(); // Adds the standard text options for going left or right
+  engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, startScreen);  // Draws the start screen bitmap
+  drawInstructionText();                                                                  // Adds the standard text options for going left or right
 
-  // Wait for input
-  ButtonEvent choice = waitForInput(); // Wait for a button to be pressed and store it into choice
+  ButtonEvent choice = waitForInput();  // Wait for a button to be pressed and store it into choice
 
   if (choice == Kywy::Events::KywyEvents::D_PAD_LEFT_PRESSED) {
     // Show left screen
-    engine.display.clear(); // Clear the old screen to prepare for new one
+    engine.display.clear();  // Clear the old screen to prepare for new one
     engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, leftScreen);
-    score += 10; // Increase score for going left
+    score += 10;  // Increase score for going left
     // Add text at the bottom of the screen
     drawBottomText("You found a reward!");
-  } 
-  else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
+  } else if (choice == Kywy::Events::KywyEvents::D_PAD_RIGHT_PRESSED) {
     // Show right screen
-    engine.display.clear(); // Clear the old screen to prepare for new one
+    engine.display.clear();  // Clear the old screen to prepare for new one
     engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, rightScreen);
-    health -= 10; // Decrease health for going right
+    health -= 10;  // Decrease health for going right
     // Add text at the bottom of the screen
     drawBottomText("You were attacked!");
   }
 
-  choice = waitForInput(); // Wait for a button to be pressed and store it into choice
+  choice = waitForInput();  // Wait for a button to be pressed and store it into choice
   // Here we get an input again, but we dont do anything with it
   // You can use this to add more screens and choices to your game
   // But for now, we'll just loop back to the start
