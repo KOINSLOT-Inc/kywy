@@ -30,18 +30,18 @@ const int PLAYER_SIZE = 8;  // 8x8 pixel sprite
 const int MOVE_SPEED = 8;   // Move 8 pixels at a time (1 tile)
 
 // Start and finish positions (top-left and bottom-right)
-const int START_X = 0;      // Top-left corner
+const int START_X = 0;  // Top-left corner
 const int START_Y = 0;
 const int FINISH_X = KYWY_DISPLAY_WIDTH - PLAYER_SIZE;   // Bottom-right corner
 const int FINISH_Y = KYWY_DISPLAY_HEIGHT - PLAYER_SIZE;  // Bottom-right corner
 
 // Player position variables
-int playerX = START_X;      // Starting X position (in pixels)
-int playerY = START_Y;      // Starting Y position (in pixels)
+int playerX = START_X;  // Starting X position (in pixels)
+int playerY = START_Y;  // Starting Y position (in pixels)
 
 // Simple 8x8 player sprite (Smiley face)
 uint8_t playerSprite[64] = {
-    0xC3, 0xBD, 0x5A, 0x7E, 0x5A, 0x66, 0xBD, 0xC3
+  0xC3, 0xBD, 0x5A, 0x7E, 0x5A, 0x66, 0xBD, 0xC3
 };
 
 // Helper function to check if a rectangular area has any walls
@@ -51,7 +51,7 @@ bool isWall(int x, int y, int width = 1, int height = 1) {
     for (int checkX = x; checkX < x + width; checkX++) {
       // Check bounds
       if (checkX < 0 || checkX >= MAZE_EXAMPLE_WIDTH || checkY < 0 || checkY >= MAZE_EXAMPLE_HEIGHT) {
-        return true; // Out of bounds is treated as wall
+        return true;  // Out of bounds is treated as wall
       }
 
       // Calculate byte index in the bitmap array
@@ -66,11 +66,11 @@ bool isWall(int x, int y, int width = 1, int height = 1) {
       // We shift 1 left by (7 - bitPosition) because bits are stored MSB first
       uint8_t mask = 1 << (7 - bitPosition);
       if ((maze_example_data[byteIndex] & mask) == 0) {
-        return true; // Found a wall pixel
+        return true;  // Found a wall pixel
       }
     }
   }
-  return false; // No walls found in the area
+  return false;  // No walls found in the area
 }
 
 // Helper function to check if player reached the goal
@@ -146,23 +146,23 @@ void loop() {
   if (reachedGoal(playerX, playerY)) {
     // Win screen - clear and draw centered box
     engine.display.clear();
-    
+
     // Draw centered white box with black border
     int boxWidth = 120;
     int boxHeight = 60;
     int boxX = (KYWY_DISPLAY_WIDTH - boxWidth) / 2;
     int boxY = (KYWY_DISPLAY_HEIGHT - boxHeight) / 2;
-    
+
     // White background
     engine.display.fillRectangle(boxX, boxY, boxWidth, boxHeight, Display::Object2DOptions().color(0xFF));
     // Black border
     engine.display.drawRectangle(boxX, boxY, boxWidth, boxHeight, Display::Object2DOptions().color(0x00));
-    
+
     // Center the text
     int textY = boxY + 15;
     engine.display.drawText(boxX + 35, textY, "YOU WIN!");
     engine.display.drawText(boxX + 5, textY + 15, "RIGHT to restart");
-    
+
     engine.display.update();
 
     // First, wait for right button to be released (in case it's currently pressed)
@@ -178,9 +178,9 @@ void loop() {
     // Reset player position
     playerX = START_X;
     playerY = START_Y;
-    return; // Restart the game
+    return;  // Restart the game
   }
 
   engine.display.update();
-  delay(100); // Small delay for smooth movement
+  delay(100);  // Small delay for smooth movement
 }
