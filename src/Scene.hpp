@@ -19,8 +19,8 @@ private:
   ::Actor::Message sceneExitMessage = ::Actor::Message(Kywy::Events::KywyEvents::SCENE_EXIT);
 
 public:
-  Scene() {};
-  ~Scene() {};
+  Scene(){};
+  ~Scene(){};
 
   void add(Actor::Actor *actor);
   void remove(Actor::Actor *actor);
