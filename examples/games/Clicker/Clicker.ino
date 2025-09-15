@@ -60,7 +60,7 @@ void loop() {
 
   // Draw the score at the top
   String scoreText = "Cookies: " + String(cookieCount);                                   // Create text to show score
-  engine.display.drawText(cookieX, 20, scoreText.c_str(),                                 // Draw the score text to the screen buffer
+  engine.display.drawText(cookieX, 20, scoreText,                                         // Draw the score text to the screen buffer - no .c_str() needed!
                           Display::TextOptions().origin(Display::Origin::Text::CENTER));  // Center the text
 
   // Draw the cookie picture in the center

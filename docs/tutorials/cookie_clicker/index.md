@@ -137,7 +137,7 @@ engine.display.clear();
 
 // Draw the score
 String scoreText = "Cookies: " + String(cookieCount);
-engine.display.drawText(cookieX, 20, scoreText.c_str(),
+engine.display.drawText(cookieX, 20, scoreText,
   Display::TextOptions().origin(Display::Origin::Text::CENTER));
 
 // Draw the cookie picture
