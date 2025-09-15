@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
 #
-# SPDX-License-Identifier: GP	@clang-format -i $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/")-3.0-or-later
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 .PHONY: help
 help:
