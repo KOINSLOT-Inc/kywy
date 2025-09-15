@@ -322,11 +322,7 @@ public:
 
   void drawText(int16_t x, int16_t y, const char *text,
                 TextOptions options = TextOptions());
-  void drawText(int16_t x, int16_t y, const String &text,
-                TextOptions options = TextOptions());
   void getTextSize(const char *text, uint16_t &width, uint16_t &height,
-                   TextOptions options = TextOptions());
-  void getTextSize(const String &text, uint16_t &width, uint16_t &height,
                    TextOptions options = TextOptions());
   void setFont(uint8_t *font);
 
