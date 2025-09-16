@@ -16,7 +16,7 @@ Congratulations! You've mastered game loops, win/lose states, and nested if stat
 
 The HPP generator is an online tool that converts images into C++ header files that can be used in your Kywy games. It takes any image and converts it into the format your game needs.
 
-For detailed instructions on how to create HPP files from images, see the [Image Generation Guide](../guides/images.md).
+For detailed instructions on how to create HPP files from images, see the [Image Generation Guide](../../guides/images.md).
 
 Once you have your HPP file, here's how to use it in your game:
 

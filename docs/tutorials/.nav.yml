@@ -4,5 +4,6 @@
 
 nav:
   - index.md
+  - adventure/
   - 'First Game: Cookie Clicker': cookie_clicker/index.md
   - bouncing_ball/

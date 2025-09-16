@@ -1,6 +1,12 @@
-# SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
-#
-# SPDX-License-Identifier: GPL-3.0-or-later
+---
+title: "Part 6: Code Explanation"
+---
+
+<!--
+SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
 
 # Bonus: Understanding Helper Functions
 
