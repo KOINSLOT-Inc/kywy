@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 nav:
-  - index.md
-  - 'First Game: Cookie Clicker': cookie_clicker/index.md
-  - 'Maze Game: Custom Images & Collision': maze_game.md
-  - bouncing_ball/
+	- index.md
+	- 'Bouncing Ball': bouncing_ball/.nav.yml
+	- 'Cookie Clicker': cookie_clicker/index.md
+	- 'Maze Game': maze/index.md

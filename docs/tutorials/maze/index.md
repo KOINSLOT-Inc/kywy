@@ -1,5 +1,7 @@
 ---
 title: "Maze Game Tutorial: Custom Images & Collision Detection"
+tags:
+  - intermediate
 ---
 
 <!-- hide previous page button that links outside of tutorial -->
@@ -22,6 +24,7 @@ Welcome to the maze game tutorial! This tutorial will teach you how to create an
 - Adding your own sprites and images
 - Understanding the game structure
 
+Ask questions, share your creations, and discuss with others on the discord:  
 <a href="https://discord.gg/zAYym57Fy6"><img alt="Discord" src="https://img.shields.io/discord/1172988360063725629?style=for-the-badge&logo=discord" /></a>
 
 ## What You'll Learn
@@ -103,10 +106,11 @@ Create a simple black and white image (144×168 pixels) where:
 
 Use the Kywy Drawing Editor or online tools to convert your image:
 
-1. Go to the [Kywy Drawing Editor](https://kywy.org/draw)
-2. Upload your maze image
-3. Set dimensions to 144×168
-4. Export as C++ header file
+1. Go to the [Kywy Drawing Editor](https://tools.kywy.io/drawing-editor.html)
+2. Upload your maze image using the import function on the top right
+3. Adjust settings to your liking
+4. Edit your image
+5. On the right side under export edit the name of your file and click export.
 
 ### Step 3: Replace the Maze Data
 
@@ -117,10 +121,6 @@ Replace the `maze_example.hpp` file with your custom maze:
 uint8_t my_maze_data[3024] = {
   // Your maze bytes here...
 };
-
-// Update dimensions if different
-#define MY_MAZE_WIDTH 144
-#define MY_MAZE_HEIGHT 168
 ```
 
 ### Step 4: Update the Game Code
@@ -131,11 +131,13 @@ Update the maze game to use your custom data:
 #include "my_maze.hpp"  // Your custom maze
 
 // Update the draw call
-engine.display.drawBitmap(0, 0, MY_MAZE_WIDTH, MY_MAZE_HEIGHT, my_maze_data);
+engine.display.drawBitmap(0, 0, MY_MAZE_WIDTH, MY_MAZE_HEIGHT, my_maze_data); //replace my_maze with your maze name
 
 // Update collision detection
 int bytesPerRow = MY_MAZE_WIDTH / 8;
 ```
+
+make sure change the name of your maze to what you named it!
 
 ## Customizing Sprites
 

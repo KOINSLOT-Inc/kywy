@@ -2,4 +2,9 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-title: The Basics with a Bouncing Ball
+nav:
+  - part_1.md
+  - part_2.md
+  - part_3.md
+  - part_4.md
+  - part_5.md
