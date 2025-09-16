@@ -237,4 +237,14 @@ void Display::drawText(int16_t x, int16_t y, const char *text,
   }
 };
 
+void Display::drawText(int16_t x, int16_t y, const String &text,
+                       TextOptions options) {
+  drawText(x, y, text.c_str(), options);
+}
+
+void Display::getTextSize(const String &text, uint16_t &width, uint16_t &height,
+                          TextOptions options) {
+  getTextSize(text.c_str(), width, height, options);
+}
+
 }  // namespace Display

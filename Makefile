@@ -39,7 +39,19 @@ $(ARDUINO_LINT): $(CACHE)
 CLANG_FORMAT := $(CACHE)/.clang-format
 $(CLANG_FORMAT): $(CACHE) .clang-format
 	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
-	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
+	@if clang-format --version | grep -q '14.0'; then \
+		echo "clang-format v14.0 found (preferred version)"; \
+	elif clang-format --version | grep -E -q '1[4-9]\.|[2-9][0-9]\.'; then \
+		ver=$$(clang-format --version | grep -o '[0-9]\+\.[0-9]\+'); \
+		echo "clang-format v$$ver found (using as fallback - results may vary from v14.0)"; \
+		read -p "clang-format version >14 detected. Continue anyway? [y/N]: " yn; \
+		case $$yn in \
+			[Yy]*) ;; \
+			*) echo "Aborting as requested."; exit 1;; \
+		esac; \
+	else \
+		echo "clang-format version too old, v14.0+ required" && exit 1; \
+	fi
 	@touch $(CLANG_FORMAT)
 
 DOXYGEN := $(CACHE)/.doxygen
@@ -72,7 +84,7 @@ lint-arduino-code: $(ARDUINO_LINT) $(CLANG_FORMAT)
 		exit_code=$$?; \
 		touch .development; \
 		exit $$exit_code;
-	@clang-format --dry-run  **/*.cpp **/*.hpp **/*.ino
+	@clang-format --dry-run $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/")
 
 .PHONY: format-arduino-code
 format-arduino-code: $(CLANG_FORMAT)
