@@ -1,13 +1,10 @@
 ---
 title: "Maze Game Tutorial: Custom Images & Collision Detection"
+hide:
+  -footer
 tags:
   - intermediate
 ---
-
-<!-- hide previous page button that links outside of tutorial -->
-<style>
-  .md-footer__link--prev:not([hidden]) { display: none }
-</style>
 
 <!--
 SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.

@@ -174,7 +174,7 @@ The `drawBitmap()` function takes several parameters:
 - **Width, Height**: Size of the image (defined in `cookie.hpp`)
 - **Image data**: The actual pixel information (`cookie_data` array)
 
-The image data comes from the `cookie.hpp` file, which was created using the [Kywy Drawing Editor](tools.kywy.io/drawing-editor). Each number in the array represents the color of one pixel!
+The image data comes from the `cookie.hpp` file, which was created using the [Kywy Drawing Editor](https://tools.kywy.io/drawing-editor). Each number in the array represents the color of one pixel!
 
 ## Try It Yourself!
 
