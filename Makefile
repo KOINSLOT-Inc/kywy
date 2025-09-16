@@ -42,7 +42,13 @@ $(CLANG_FORMAT): $(CACHE) .clang-format
 	@if clang-format --version | grep -q '14.0'; then \
 		echo "clang-format v14.0 found (preferred version)"; \
 	elif clang-format --version | grep -E -q '1[4-9]\.|[2-9][0-9]\.'; then \
-		echo "clang-format v$$(clang-format --version | grep -o '[0-9]\+\.[0-9]\+') found (using as fallback - results may vary from v14.0)"; \
+		ver=$$(clang-format --version | grep -o '[0-9]\+\.[0-9]\+'); \
+		echo "clang-format v$$ver found (using as fallback - results may vary from v14.0)"; \
+		read -p "clang-format version >14 detected. Continue anyway? [y/N]: " yn; \
+		case $$yn in \
+			[Yy]*) ;; \
+			*) echo "Aborting as requested."; exit 1;; \
+		esac; \
 	else \
 		echo "clang-format version too old, v14.0+ required" && exit 1; \
 	fi
