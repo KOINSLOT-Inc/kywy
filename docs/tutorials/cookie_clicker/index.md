@@ -440,7 +440,7 @@ Now that you understand the basics, you could try:
 
 ### Learn More About Graphics
 
-Want to understand how computer graphics work? Check out our **[Image Format Tutorial](../graphics_basics/index.md)** _(coming soon!)_ to learn:
+Want to understand how computer graphics work? Check out our **[Image Format Tutorial](../../guides/images.md)**:
 
 - How pixels and colors work in computers
 - Why we use hexadecimal numbers for colors
