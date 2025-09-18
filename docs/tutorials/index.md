@@ -26,3 +26,9 @@ Learn programming fundamentals by building a fun Cookie Clicker game! This tutor
 _audience: beginner_
 
 Learn basic Kywy concepts by making a ball bounce around the screen.
+
+### [Choose Your Own Adventure](./adventure/part_1.md)
+
+_audience: beginner to intermediate_
+
+Create interactive stories and games! Learn about game structure, user input, branching narratives, and advanced features while building your own choose-your-own-adventure game. **Bonus:** Part 6 covers helper functions in detail - essential programming concepts!

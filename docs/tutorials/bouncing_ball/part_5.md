@@ -410,7 +410,7 @@ And there we have it! A Kywy style ball bouncing around the screen and respondin
 !!! info
 
     The full list of events that you can recieve from the Kywy engine is
-    [here](../../../kywy/namespace_kywy_1_1_events/#enum-kywyevents).
+    [here](../../kywy/namespaceKywy_1_1Events.md).
 
     You can also create your own events to publish and handle! For more advanced Actor techniques check out our [Actors
-    Guide](../../../guides/actors).
+    Guide](../../guides/actors.md).
