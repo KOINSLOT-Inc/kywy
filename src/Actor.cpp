@@ -23,8 +23,15 @@ void queueEventCallback(Actor *actor, Message *message) {
   handlerMutex.unlock();
 };
 
-void Actor::initialize(){};
-void Actor::teardown(){};
+void Actor::initialize() {}
+void Actor::teardown() {}
+
+void Actor::enable() {
+  enabled = true;
+};
+void Actor::disable() {
+  enabled = false;
+};
 
 void Actor::enable() {
   enabled = true;
