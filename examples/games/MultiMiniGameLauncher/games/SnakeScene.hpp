@@ -1,12 +1,52 @@
-// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+// SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include "Kywy.hpp"
+#ifndef SNAKE_SCENE_HPP
+#define SNAKE_SCENE_HPP
 
-Kywy::Engine engine;
+#include <Kywy.hpp>
 
-const uint8_t splashScreen[] = {
+using namespace Kywy;
+
+class SnakeScene : public Scene, public Actor::Actor {
+public:
+  bool startScreen = true;
+  bool gameOver = false;
+  int highScore = 0;
+
+  int initialTicksPerMove = 8;
+  int ticksPerMove = initialTicksPerMove;
+  int ticksSinceLastMove = 0;
+
+  int xDirection = 1;
+  int yDirection = 0;
+  int newXDirection = 1;
+  int newYDirection = 0;
+
+  static const int sectionSize = 8;
+  static const int sectionSeparation = 3;
+
+  static const int screenBorder = 2;
+  static const int blockSize = sectionSize + sectionSeparation;
+  static const int rows = KYWY_DISPLAY_HEIGHT / blockSize;
+  static const int columns = KYWY_DISPLAY_WIDTH / blockSize;
+  static const int numBlocks = rows * columns;
+  static const int minBlockX = screenBorder;
+  static const int minBlockY = screenBorder;
+  static const int maxBlockX = screenBorder + blockSize * (columns - 1);
+  static const int maxBlockY = screenBorder + blockSize * (rows - 1);
+
+  int sectionX[numBlocks + 1] = { 0 };
+  int sectionY[numBlocks + 1] = { 0 };
+
+  int foodX = 0;
+  int foodY = 0;
+
+  int length = 2;
+
+  // Snake splash screen bitmap
+  static inline constexpr uint8_t splashScreen[3024] = {
   0x3f, 0x7c, 0x3f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xc9, 0xf9, 0xf2, 0x3e, 0x79, 0x3e, 0xfb, 0x7d, 0xb6,
   0xdb, 0x6d, 0xb6, 0xdb, 0xf6, 0xfe, 0xdb, 0x6f, 0x7b, 0xcf, 0xf8, 0xdb,
@@ -261,52 +301,19 @@ const uint8_t splashScreen[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-class gameManager : public Actor::Actor {
-public:
-  bool startScreen = true;
-  bool gameOver = false;
-  int highScore = 0;
-
-  int initialTicksPerMove = 8;
-  int ticksPerMove = initialTicksPerMove;
-  int ticksSinceLastMove = 0;
-
-  int xDirection = 1;
-  int yDirection = 0;
-  int newXDirection = 1;
-  int newYDirection = 0;
-
-  static const int sectionSize = 8;
-  static const int sectionSeparation = 3;
-
-  static const int screenBorder = 2;
-  static const int blockSize = sectionSize + sectionSeparation;
-  static const int rows = KYWY_DISPLAY_HEIGHT / blockSize;
-  static const int columns = KYWY_DISPLAY_WIDTH / blockSize;
-  static const int numBlocks = rows * columns;
-  static const int minBlockX = screenBorder;
-  static const int minBlockY = screenBorder;
-  static const int maxBlockX = screenBorder + blockSize * (columns - 1);
-  static const int maxBlockY = screenBorder + blockSize * (rows - 1);
-
-  int sectionX[numBlocks + 1] = { 0 };
-  int sectionY[numBlocks + 1] = { 0 };
-
-  int foodX = 0;
-  int foodY = 0;
-
-  int length = 2;
-
   void drawHead() {
-    engine.display.fillRectangle(sectionX[length - 1], sectionY[length - 1], sectionSize, sectionSize);
+    Display::Display& display = Scene::getEngine()->display;
+    display.fillRectangle(sectionX[length - 1], sectionY[length - 1], sectionSize, sectionSize);
   };
 
   void drawTail() {
-    engine.display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize);
+    Display::Display& display = Scene::getEngine()->display;
+    display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize);
   };
 
   void eraseTail() {
-    engine.display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize, Display::Object2DOptions().color(WHITE));
+    Display::Display& display = Scene::getEngine()->display;
+    display.fillRectangle(sectionX[0], sectionY[0], sectionSize, sectionSize, Display::Object2DOptions().color(WHITE));
   };
 
   void shiftSectionLists() {
@@ -317,6 +324,8 @@ public:
   }
 
   void moveSnake() {
+    Display::Display& display = Scene::getEngine()->display;
+    
     // add new head
     sectionX[length] = sectionX[length - 1] + blockSize * xDirection;
     sectionY[length] = sectionY[length - 1] + blockSize * yDirection;
@@ -339,17 +348,18 @@ public:
       if (sectionX[length] == sectionX[i] && sectionY[length] == sectionY[i]) {
         gameOver = true;
         highScore = fmax(length, highScore);
-        unsubscribe(&engine.clock);
-        engine.display.clear();
-        engine.display.drawText(5, 5, "GAME OVER");
+        this->unsubscribe(&Scene::getEngine()->clock);
+        display.clear();
+        display.drawText(5, 5, "GAME OVER");
         char msg[32];
         snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)length);
-        engine.display.drawText(5, 15, msg);
+        display.drawText(5, 15, msg);
         snprintf(msg, sizeof(msg), "High Score: %d", highScore);
-        engine.display.drawText(5, 25, msg);
-        engine.display.drawText(5, 45, "Press left button");
-        engine.display.drawText(5, 55, "to try again.");
-        engine.display.update();
+        display.drawText(5, 25, msg);
+        display.drawText(5, 45, "Press right button");
+        display.drawText(5, 55, "to try again.");
+        display.drawText(5, 65, "Press left to exit.");
+        display.update();
         return;
       }
     }
@@ -368,6 +378,7 @@ public:
   }
 
   void dropFood() {
+    Display::Display& display = Scene::getEngine()->display;
     int candidateFoodX, candidateFoodY;
     bool retry;
 
@@ -393,10 +404,11 @@ public:
     foodX = candidateFoodX;
     foodY = candidateFoodY;
 
-    engine.display.drawRectangle(foodX, foodY, sectionSize, sectionSize);
+    display.drawRectangle(foodX, foodY, sectionSize, sectionSize);
   }
 
   void startGame() {
+    Display::Display& display = Scene::getEngine()->display;
     gameOver = false;
     ticksPerMove = initialTicksPerMove;
     ticksSinceLastMove = 0;
@@ -416,18 +428,34 @@ public:
     drawHead();
     drawTail();
     dropFood();
-    engine.display.update();
-    subscribe(&engine.clock);
+    display.update();
+    this->subscribe(&Scene::getEngine()->clock);
   };
 
-  void initialize() {
-    gameOver = true;
-    engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
-    engine.display.update();
-    subscribe(&engine.input);
+public:
+  SnakeScene() : Scene(false, true) {}
+
+  virtual void initialize() override {
+    // Don't subscribe to input here - do it in onEnter to avoid early activation
   }
 
-  void handle(::Actor::Message *message) {
+  virtual void onEnter() override {
+    startScreen = true;
+    gameOver = true;
+    add(this);
+    
+    // Start the actor (this calls initialize())
+    this->start();
+    
+    // Subscribe to input ONLY on splash screen - NOT to clock yet
+    this->subscribe(&Scene::getEngine()->input);
+    
+    Display::Display& display = Scene::getEngine()->display;
+    display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
+    display.update();
+  }
+
+  void handle(::Actor::Message *message) override {
     switch (message->signal) {
       case Kywy::Events::D_PAD_LEFT_PRESSED:
         if (xDirection != 1) {
@@ -454,6 +482,11 @@ public:
         }
         break;
       case Kywy::Events::TICK:
+        // Don't process ticks during splash screen
+        if (startScreen || gameOver) {
+          break;
+        }
+        
         ticksSinceLastMove++;
 
         if (ticksSinceLastMove >= ticksPerMove) {
@@ -461,38 +494,45 @@ public:
           yDirection = newYDirection;
           moveSnake();
           ticksSinceLastMove = 0;
-          engine.display.update();
+          Scene::getEngine()->display.update();
         }
         break;
       case Kywy::Events::BUTTON_LEFT_PRESSED:
-        if (!gameOver) {
-          break;
+        // Exit with left button regardless of game state
+        Scene::triggerExit();
+        return;
+      case Kywy::Events::BUTTON_RIGHT_PRESSED:
+        if (startScreen) {
+          // Start game from splash screen
+          startScreen = false;
+          Scene::getEngine()->display.clear();
+          startGame();
+        } else if (gameOver) {
+          // Restart game when game over
+          Scene::getEngine()->display.clear();
+          startGame();
         }
-
-        engine.display.clear();
-        startGame();
-        subscribe(&engine.clock);
-        break;
-      case Kywy::Events::INPUT_PRESSED:
-        if (!startScreen) {
-          break;
-        }
-
-        startScreen = false;
-        engine.display.clear();
-        startGame();
-        subscribe(&engine.clock);
         break;
     }
   }
 
-} gameManager;
+  virtual void onExit() override {
+    // Immediately clear display before stopping actor
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    display.update();
+    
+    // Unsubscribe from all inputs before stopping
+    this->unsubscribe(&Scene::getEngine()->input);
+    this->unsubscribe(&Scene::getEngine()->clock);
+    
+    // Stop the actor 
+    this->stop();
+    remove(this);
+  }
+};
 
-void setup() {
-  engine.start();
-  gameManager.start();
-}
+// Global instance for the launcher
+SnakeScene snakeScene;
 
-void loop() {
-  delay(1000);
-}
+#endif // SNAKE_SCENE_HPP

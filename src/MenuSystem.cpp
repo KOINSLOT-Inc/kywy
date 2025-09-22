@@ -519,9 +519,10 @@ void MenuSystem::enterScene(Scene* scene) {
   
   currentScene = scene;
   
-  // Unsubscribe menu input handler to prevent conflicts
+  // Unsubscribe menu input handler completely to prevent conflicts
   if (inputHandler) {
     inputHandler->disable();
+    inputHandler->unsubscribe(&engine->input);
   }
   
   // Clear display when entering scene
@@ -552,14 +553,16 @@ void MenuSystem::exitScene() {
 void MenuSystem::onSceneExit() {
   currentScene = nullptr;
   
-  // Clear display when exiting scene
+  // Immediately clear display and update to prevent flashing
   if (engine) {
     engine->display.clear();
+    engine->display.update();
   }
   
-  // Re-enable menu input handler
+  // Re-enable and re-subscribe menu input handler
   if (inputHandler) {
     inputHandler->enable();
+    inputHandler->subscribe(&engine->input);
   }
   
   unpause();

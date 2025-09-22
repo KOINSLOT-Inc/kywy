@@ -1,12 +1,41 @@
-// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+// SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include "Kywy.hpp"
+#ifndef TENNIS_SCENE_HPP
+#define TENNIS_SCENE_HPP
 
-Kywy::Engine engine;
+#include <Kywy.hpp>
 
-const uint8_t splashScreen[] = {
+using namespace Kywy;
+
+class TennisScene : public Scene, public Actor::Actor {
+public:
+  bool startScreen = true;
+  int highScore = 0;
+
+  int score, opponentScore;
+  bool gameOver, inPoint;
+  int yDirection;
+  
+  // Countdown state
+  bool inCountdown;
+  int countdownNumber;
+  int countdownTicks;
+  static const int ticksPerCountdownStep = 20; // About 500ms at typical tick rate
+
+  int ballX, ballY, ballXVelocity, ballYVelocity;
+
+  static const int movesPerTick = 4;
+  static const int ballRadius = 5;
+  static const int paddleLength = 30;
+  static const int paddleWidth = 5;
+  static const int screenBorder = 2;
+
+  int paddleY, opponentPaddleY;
+
+  // Tennis splash screen bitmap - full size for 144x168
+  static inline constexpr uint8_t splashScreen[3024] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -259,30 +288,12 @@ const uint8_t splashScreen[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
-class gameManager : public Actor::Actor {
-public:
-  bool startScreen = true;
-  int highScore = 0;
-
-  int score, opponentScore;
-  bool gameOver, inPoint;
-  int yDirection;
-
-  int ballX, ballY, ballXVelocity, ballYVelocity;
-
-  static const int movesPerTick = 4;
-  static const int ballRadius = 5;
-  static const int paddleLength = 30;
-  static const int paddleWidth = 5;
-  static const int screenBorder = 2;
-
-  int paddleY, opponentPaddleY;
+}; 
 
   void preparePoint() {
-    engine.display.clear();
-    unsubscribe(&engine.clock);
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    this->unsubscribe(&Scene::getEngine()->clock);
     inPoint = false;
     paddleY = KYWY_DISPLAY_HEIGHT / 2 - paddleLength / 2;
     opponentPaddleY = paddleY;
@@ -304,65 +315,87 @@ public:
   };
 
   void endGame() {
-    unsubscribe(&engine.clock);
+    Display::Display& display = Scene::getEngine()->display;
+    this->unsubscribe(&Scene::getEngine()->clock);
     gameOver = true;
-    engine.display.clear();
+    display.clear();
     if (score >= 5) {
-      engine.display.drawText(5, 5, "You win!");
+      display.drawText(5, 5, "You win!");
     } else {
-      engine.display.drawText(5, 5, "You lose...");
+      display.drawText(5, 5, "You lose...");
     }
     char msg[32];
     snprintf(msg, sizeof(msg), "Score: %d - %d", (uint16_t)score, (uint16_t)opponentScore);
-    engine.display.drawText(5, 18, msg);
-    engine.display.drawText(5, 45, "Press left button");
-    engine.display.drawText(5, 55, "to try again.");
-    engine.display.update();
-  }
-
-  void initialize() {
-    engine.display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
-    engine.display.update();
-    subscribe(&engine.input);
+    display.drawText(5, 18, msg);
+    display.drawText(5, 35, "Press right button");
+    display.drawText(5, 45, "to try again.");
+    display.drawText(5, 55, "Press left to exit.");
+    display.update();
   }
 
   void drawPaddlesAndBall() {
-    engine.display.fillRectangle(screenBorder, paddleY, paddleWidth, paddleLength);
-    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH - screenBorder - paddleWidth, opponentPaddleY, paddleWidth, paddleLength);
+    Display::Display& display = Scene::getEngine()->display;
+    display.fillRectangle(screenBorder, paddleY, paddleWidth, paddleLength);
+    display.fillRectangle(KYWY_DISPLAY_WIDTH - screenBorder - paddleWidth, opponentPaddleY, paddleWidth, paddleLength);
     if (inPoint) {
-      engine.display.fillCircle(ballX, ballY, ballRadius * 2 + 1, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER));
+      display.fillCircle(ballX, ballY, ballRadius * 2 + 1, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER));
     }
   }
 
   void drawScore() {
+    Display::Display& display = Scene::getEngine()->display;
     char msg[24];
     snprintf(msg, sizeof(msg), "%d - %d", (uint16_t)score, (uint16_t)opponentScore);
-    engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, 8, msg, Display::TextOptions().origin(Display::Origin::Text::CENTER));
+    display.drawText(KYWY_DISPLAY_WIDTH / 2, 8, msg, Display::TextOptions().origin(Display::Origin::Text::CENTER));
   }
 
   void countdown() {
-    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
-    engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "3", Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    engine.display.update();
-    delay(500);
-    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
-    engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "2", Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    engine.display.update();
-    delay(500);
-    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
-    engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "1", Display::TextOptions().origin(Display::Origin::Text::CENTER));
-    engine.display.update();
-    delay(500);
-    engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
-    engine.display.update();
-    ballXVelocity = random(2) == 1 ? -5 : 5;
-    ballYVelocity = (random(2) == 1 ? -1 : 1) * random(3);
-    inPoint = true;
-    subscribe(&engine.clock);
+    inCountdown = true;
+    countdownNumber = 3;
+    countdownTicks = 0;
+    
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    drawPaddlesAndBall();
+    drawScore();
+    display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
+    display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "3", Display::TextOptions().origin(Display::Origin::Text::CENTER));
+    display.update();
+    
+    // Subscribe to clock if not already subscribed (startGame doesn't subscribe anymore)
+    this->subscribe(&Scene::getEngine()->clock);
   }
 
-  void handle(::Actor::Message *message) {
+public:
+  TennisScene() : Scene(false, true) {
+    inCountdown = false;
+    countdownNumber = 0;
+    countdownTicks = 0;
+  }
+
+  virtual void initialize() override {
+    // Don't subscribe to input here - do it in onEnter to avoid early activation
+  }
+
+  virtual void onEnter() override {
+    startScreen = true;
+    gameOver = true;
+    add(this);
+    
+    // Start the actor (this calls initialize())
+    this->start();
+    
+    // Subscribe to input AFTER starting the actor
+    this->subscribe(&Scene::getEngine()->input);
+    
+    Display::Display& display = Scene::getEngine()->display;
+    display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
+    display.update();
+  }
+
+  void handle(::Actor::Message *message) override {
     int distanceFromMiddleOfOpponentPaddle;
+    Display::Display& display = Scene::getEngine()->display;
 
     switch (message->signal) {
       case Kywy::Events::D_PAD_UP_PRESSED:
@@ -378,6 +411,40 @@ public:
         yDirection = 0;
         break;
       case Kywy::Events::TICK:
+        // Don't process ticks during splash screen or game over
+        if (startScreen || gameOver) {
+          break;
+        }
+        
+        // Handle countdown
+        if (inCountdown) {
+          countdownTicks++;
+          if (countdownTicks >= ticksPerCountdownStep) {
+            countdownTicks = 0;
+            countdownNumber--;
+            
+            Display::Display& display = Scene::getEngine()->display;
+            display.clear();
+            drawPaddlesAndBall();
+            drawScore();
+            
+            if (countdownNumber > 0) {
+              char countStr[2];
+              snprintf(countStr, sizeof(countStr), "%d", countdownNumber);
+              display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
+              display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, countStr, Display::TextOptions().origin(Display::Origin::Text::CENTER));
+            } else {
+              // Countdown finished, start the point
+              inCountdown = false;
+              ballXVelocity = random(2) == 1 ? -5 : 5;
+              ballYVelocity = (random(2) == 1 ? -1 : 1) * random(3);
+              inPoint = true;
+            }
+            display.update();
+          }
+          break;
+        }
+        
         // move paddle
         paddleY += yDirection * movesPerTick;
 
@@ -451,36 +518,45 @@ public:
           ballYVelocity = -1 * abs(ballYVelocity);
         }
 
-
-        engine.display.clear();
+        display.clear();
         drawScore();
         drawPaddlesAndBall();
-        engine.display.update();
-        break;
-      case Kywy::Events::INPUT_PRESSED:
-        if (!startScreen) {
-          break;
-        }
-
-        startScreen = false;
-        startGame();
+        display.update();
         break;
       case Kywy::Events::BUTTON_LEFT_PRESSED:
-        if (!gameOver) {
-          break;
+        // Always allow exit with left button, regardless of game state
+        Scene::triggerExit();
+        return;
+      case Kywy::Events::BUTTON_RIGHT_PRESSED:
+        if (startScreen) {
+          // Start game from splash screen
+          startScreen = false;
+          startGame();
+        } else if (gameOver) {
+          // Restart game when game over
+          startGame();
         }
-        startGame();
         break;
     }
   }
 
-} gameManager;
+  virtual void onExit() override {
+    // Immediately clear display before stopping actor
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    display.update();
+    
+    // Unsubscribe from all inputs before stopping
+    this->unsubscribe(&Scene::getEngine()->input);
+    this->unsubscribe(&Scene::getEngine()->clock);
+    
+    // Stop the actor 
+    this->stop();
+    remove(this);
+  }
+};
 
-void setup() {
-  engine.start();
-  gameManager.start();
-}
+// Global instance for the launcher
+TennisScene tennisScene;
 
-void loop() {
-  delay(1000);
-}
+#endif // TENNIS_SCENE_HPP

@@ -4,20 +4,14 @@
 
 #include <Kywy.hpp>
 
-// Include all game scenes
-#include "games/Snake.cpp"
-#include "games/2DTennis.cpp"
-#include "games/SlimeJumper.cpp"
-#include "games/Spelunker.cpp"
+// Include all game scenes (single-file, self-contained)
+#include "games/SnakeScene.hpp"
+#include "games/TennisScene.hpp"
+#include "games/ClickerScene.hpp"
 
 using namespace Kywy;
 
-// Create game scene instances
-SnakeScene snakeScene;
-TennisScene tennisScene;
-ClickerScene clickerScene;
-SlimeJumperScene slimeJumperScene;
-SpelunkerScene spelunkerScene;
+
 
 Kywy::Engine engine;  // This starts the kywy firmware and engine
 MenuSystem* mainMenu;  // Global menu system pointer
@@ -29,13 +23,6 @@ void setup() {
   // Set static engine reference for scenes
   Scene::setEngine(&engine);
   
-  // Initialize all scenes
-  snakeScene.initialize();
-  tennisScene.initialize();
-  clickerScene.initialize();
-  slimeJumperScene.initialize();
-  spelunkerScene.initialize();
-  
   // Create menu system with default options
   mainMenu = new MenuSystem(engine.display);
   
@@ -45,13 +32,10 @@ void setup() {
   mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("2D Tennis", &tennisScene);
   mainMenu->addSceneItem("Cookie Clicker", &clickerScene);
-  mainMenu->addSceneItem("Slime Jumper", &slimeJumperScene);
-  mainMenu->addSceneItem("Spelunker", &spelunkerScene);
   
   // Start the menu system directly
   mainMenu->start(engine);
 }
 
 void loop() {
-  delay(1000);
 }
