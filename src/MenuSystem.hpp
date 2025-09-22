@@ -7,13 +7,15 @@
 
 #include "Display.hpp"
 #include "Font.hpp"
+#include "Scene.hpp"
 #include <vector>
 #include <string>
 
 namespace Kywy {
 
-// Forward declaration
+// Forward declarations
 class Engine;
+class MenuInputHandler;
 
 class MenuSystem {
 public:
@@ -24,6 +26,7 @@ public:
     SUBMENU,  // Submenu item
     OPTION,   // Option item
     LABEL,    // Header item
+    SCENE,    // Scene launch item
   };
 
   struct MenuItem {
@@ -34,6 +37,7 @@ public:
     std::string optionValue = "";                                // Value for OPTION type menu items
     std::function<std::string()> optionValueProvider = nullptr;  // Function to get current option value
     MenuSystem *submenu = nullptr;                               // Pointer to submenu for SUBMENU type
+    Scene *scene = nullptr;                                      // Pointer to scene for SCENE type
     bool expanded = false;                                       // Flag to track if a submenu is expanded
 
     // Constructor for action items (type defaults to ACTION)
@@ -49,10 +53,10 @@ public:
     MenuItem(const std::string &label, MenuItemType type, bool *toggleable,
              const std::function<void()> &action, const std::string &optionValue = "",
              const std::function<std::string()> &optionValueProvider = nullptr,
-             MenuSystem *submenu = nullptr)
+             MenuSystem *submenu = nullptr, Scene *scene = nullptr)
       : label(label), type(type), toggleable(toggleable), action(action),
         optionValue(optionValue), optionValueProvider(optionValueProvider),
-        submenu(submenu), expanded(false) {
+        submenu(submenu), scene(scene), expanded(false) {
     }
   };
 
@@ -69,20 +73,50 @@ public:
     return MenuItem(label, MenuItemType::LABEL, nullptr, nullptr);
   }
 
-  static MenuItem createOption(const std::string &label, const std::string &optionValue,
-                               const std::function<void()> &action = nullptr,
-                               const std::function<std::string()> &optionValueProvider = nullptr) {
-    return MenuItem(label, MenuItemType::OPTION, nullptr, action, optionValue, optionValueProvider);
+  // Simple scene helper - just provide the scene and the menu handles everything
+  static MenuItem createSceneItem(const std::string &label, Scene *scene) {
+    MenuItem item(label, MenuItemType::SCENE, nullptr, nullptr, "", nullptr, nullptr, scene);
+    return item;
   }
 
-  static MenuItem createSubmenu(const std::string &label, MenuSystem *submenu) {
-    // No action needed - the submenu will be toggled in selectOption
-    return MenuItem(label, MenuItemType::SUBMENU, nullptr, nullptr, "", nullptr, submenu);
+  // Enhanced scene helper - creates and adds scene item to menu automatically
+  void addSceneItem(const std::string &label, Scene *scene) {
+    items.push_back(createSceneItem(label, scene));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  // Template helper - creates scene instance and adds to menu in one call
+  template<typename SceneType>
+  void createAndAddScene(const std::string &label) {
+    SceneType* scene = new SceneType();
+    items.push_back(createSceneItem(label, scene));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  // Enhanced menu item adding methods
+  void addItem(const MenuItem &item) {
+    items.push_back(item);
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  void addActionItem(const std::string &label, const std::function<void()> &action) {
+    items.push_back(createAction(label, action));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  void addToggleItem(const std::string &label, bool *toggleable, const std::function<void()> &action = nullptr) {
+    items.push_back(createToggle(label, toggleable, action));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  void addLabelItem(const std::string &label) {
+    items.push_back(createLabel(label));
+    menuDirty = true;  // Mark menu for rebuild
   }
 
   struct MenuOptions {
     MenuOptions()
-      : x(10), y(10), itemHeight(10), pointer('>') {}
+      : x(0), y(10), itemHeight(12), pointer('>') {}  // Changed x from 10 to 0 for far left
     int x = 0;
     int y = 8;
     int itemHeight = 12;
@@ -108,12 +142,23 @@ public:
 
   ScrollOptions scrollOptions;
 
+  // Default constructor with empty menu items
+  MenuSystem(Display::Display &display, const MenuOptions &options = MenuOptions())
+    : MenuSystem(display, {}, options) {}
+
   MenuSystem(Display::Display &display, const std::vector<MenuItem> &items, const MenuOptions &options = MenuOptions());
 
   void displayMenu();
   void nextOption();
   void previousOption();
   void selectOption();
+
+  // Scene state management
+  void enterScene(Scene* scene);
+  void exitScene();
+  void onSceneExit();
+  Scene* getCurrentScene() const { return currentScene; }
+  bool isInScene() const { return currentScene != nullptr; }
 
   bool paused = false;
 
@@ -146,8 +191,6 @@ public:
     return false;  // Return false if index is out of bounds or not toggleable
   }
 
-
-
 private:
   struct FlatMenuItem {
     const MenuItem *item;  // Pointer to the actual menu item
@@ -166,13 +209,20 @@ private:
   size_t selectedIndex;                     // Index in main menu
   size_t flattenedSelectedIndex = 0;        // Index in flattened menu
   std::vector<FlatMenuItem> flattenedMenu;  // The flattened menu for display
+  
+  // Scene management
+  Scene* currentScene = nullptr;            // Currently active scene
+  Kywy::Engine* engine = nullptr;           // Engine reference for scene management
+  
+  // Performance optimization
+  MenuInputHandler* inputHandler = nullptr; // Single input handler for performance
+  bool menuDirty = true;                    // Flag to track if menu needs rebuilding
 
   // Helper methods for submenu handling
   void buildFlattenedMenu();   // Build the flattened menu structure
   void syncSelectedIndices();  // Sync main menu index with flattened index
-
-public:
-  std::vector<MenuItem> items;
+  
+  std::vector<MenuItem> items;  // The menu items
 };
 
 }  // namespace Kywy

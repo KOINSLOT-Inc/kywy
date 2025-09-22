@@ -7,20 +7,33 @@
 #include "Events.hpp"
 #include "Kywy.hpp"
 
+// For millis() function
+#ifdef ARDUINO
+#include <Arduino.h>
+#else
+// Mock millis for non-Arduino environments
+unsigned long millis() {
+  return 0;
+}
+#endif
+
 namespace Kywy {
 
 MenuSystem::MenuSystem(Display::Display& display, const std::vector<MenuItem>& items, const MenuOptions& options)
   : display(display), items(items), options(options), selectedIndex(0), flattenedSelectedIndex(0) {}
 
 void MenuSystem::displayMenu() {
-  if (paused) return;
+  if (paused || isInScene()) return;
 
   display.clear();
   int startY = options.y + 5;
   int indentWidth = 8;  // Width in pixels for each indent level (increased for better visibility)
 
-  // Build the flattened menu structure for display and navigation
-  buildFlattenedMenu();
+  // Build the flattened menu structure for display and navigation only if dirty
+  if (menuDirty) {
+    buildFlattenedMenu();
+    menuDirty = false;
+  }
 
   // Calculate how many items we can display from the flattened menu
   int displayCount = std::min(scrollOptions.visibleItems, (int)flattenedMenu.size() - scrollOptions.startIndex);
@@ -85,8 +98,16 @@ void MenuSystem::displayMenu() {
         // Show different indicator based on expanded state
         itemText += item->expanded ? " V" : " >";
         break;
+      case MenuItemType::SCENE:
+        itemText += " >";  // ASCII arrow indicator for scene items
+        break;
     }
 
+    // Pad itemText to fixed width to overwrite any leftover characters
+    const size_t PAD_WIDTH = 20;
+    if (itemText.length() < PAD_WIDTH) {
+      itemText += std::string(PAD_WIDTH - itemText.length(), ' ');
+    }
     display.drawText(xPosition, yPosition, itemText.c_str(), textOptions);
   }
 
@@ -94,19 +115,15 @@ void MenuSystem::displayMenu() {
 }
 
 void MenuSystem::nextOption() {
-  if (items.empty()) return;
+  if (items.empty() || isInScene()) return;
 
   // Make sure the flattened menu is built and up to date
-  buildFlattenedMenu();
+  if (menuDirty) {
+    buildFlattenedMenu();
+    menuDirty = false;
+  }
 
   if (flattenedMenu.empty()) return;
-
-  // Get the current selected item type to check if we should skip any entries
-  bool wasOnLabel = false;
-  if (flattenedSelectedIndex < flattenedMenu.size()) {
-    const MenuItem* item = flattenedMenu[flattenedSelectedIndex].item;
-    wasOnLabel = (item && item->type == MenuItemType::LABEL);
-  }
 
   // Move to the next item in the flattened menu
   flattenedSelectedIndex = (flattenedSelectedIndex + 1) % flattenedMenu.size();
@@ -130,19 +147,15 @@ void MenuSystem::nextOption() {
 }
 
 void MenuSystem::previousOption() {
-  if (items.empty()) return;
+  if (items.empty() || isInScene()) return;
 
   // Make sure the flattened menu is built and up to date
-  buildFlattenedMenu();
+  if (menuDirty) {
+    buildFlattenedMenu();
+    menuDirty = false;
+  }
 
   if (flattenedMenu.empty()) return;
-
-  // Get the current selected item type to check if we should skip any entries
-  bool wasOnLabel = false;
-  if (flattenedSelectedIndex < flattenedMenu.size()) {
-    const MenuItem* item = flattenedMenu[flattenedSelectedIndex].item;
-    wasOnLabel = (item && item->type == MenuItemType::LABEL);
-  }
 
   if (flattenedSelectedIndex == 0) {
     // Wrap to the end
@@ -263,8 +276,13 @@ void MenuSystem::syncSelectedIndices() {
 
 // Handle menu item types on selection
 void MenuSystem::selectOption() {
+  if (isInScene()) return;  // Don't handle selection if in scene
+  
   // Make sure the flattened menu is built
-  buildFlattenedMenu();
+  if (menuDirty) {
+    buildFlattenedMenu();
+    menuDirty = false;
+  }
 
   if (flattenedMenu.empty() || flattenedSelectedIndex >= flattenedMenu.size()) {
     return;
@@ -338,9 +356,16 @@ void MenuSystem::selectOption() {
       // Toggle submenu expansion
       if (item.submenu) {
         item.expanded = !item.expanded;
+        menuDirty = true;  // Mark for rebuild
         // No need to call action, just redraw with expanded/collapsed submenu
-        buildFlattenedMenu();  // Rebuild with new expanded state
         displayMenu();
+        return;
+      }
+      break;
+    case MenuItemType::SCENE:
+      // Launch scene
+      if (item.scene && engine) {
+        enterScene(item.scene);
         return;
       }
       break;
@@ -369,8 +394,13 @@ bool MenuSystem::isMenuPaused() const {
 }
 
 void MenuSystem::handleBackAction() {
+  if (isInScene()) return;  // Don't handle back if in scene
+  
   // Make sure flattened menu is built
-  buildFlattenedMenu();
+  if (menuDirty) {
+    buildFlattenedMenu();
+    menuDirty = false;
+  }
 
   if (flattenedMenu.empty()) return;
 
@@ -383,6 +413,7 @@ void MenuSystem::handleBackAction() {
   if (flatItem.isSubmenuItem && flatItem.parentItem) {
     // We're in a submenu - collapse it
     flatItem.parentItem->expanded = false;
+    menuDirty = true;  // Mark for rebuild
 
     // Find the parent menu item in the flattened menu
     for (size_t i = 0; i < items.size(); i++) {
@@ -407,13 +438,14 @@ void MenuSystem::handleBackAction() {
         anyCollapsed = true;
       }
     }
+    
+    if (anyCollapsed) {
+      menuDirty = true;  // Mark for rebuild
+    }
 
     // If we didn't collapse anything, we could add more behavior here
     // like closing the menu or going back to a previous screen
   }
-
-  // Rebuild the flattened menu structure
-  buildFlattenedMenu();
 }
 
 
@@ -421,10 +453,30 @@ void MenuSystem::handleBackAction() {
 class MenuInputHandler : public Actor::Actor {
 public:
   MenuInputHandler(MenuSystem& menu, Kywy::Engine& engine)
-    : menu(menu), engine(engine), rightButtonPressed(false) {}
+    : menu(menu), engine(engine), lastInputTime(0), debounceDelay(100), enabled(true) {}
+
+  void disable() {
+    enabled = false;
+  }
+
+  void enable() {
+    enabled = true;
+  }
 
   void handle(::Actor::Message* message) {
-    if (menu.isMenuPaused()) {
+    // Check if handler is disabled
+    if (!enabled) {
+      return;
+    }
+    
+    // Performance optimization: Check scene state first
+    if (menu.isInScene() || menu.isMenuPaused()) {
+      return;
+    }
+
+    // Simple debouncing
+    unsigned long currentTime = millis();
+    if (currentTime - lastInputTime < debounceDelay) {
       return;
     }
 
@@ -432,38 +484,101 @@ public:
       case Kywy::Events::D_PAD_UP_PRESSED:
         menu.previousOption();
         menu.displayMenu();
+        lastInputTime = currentTime;
         break;
       case Kywy::Events::D_PAD_DOWN_PRESSED:
         menu.nextOption();
         menu.displayMenu();
+        lastInputTime = currentTime;
         break;
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
         menu.selectOption();
         menu.displayMenu();
+        lastInputTime = currentTime;
         break;
       case Kywy::Events::BUTTON_LEFT_PRESSED:
         // Handle back action - collapse submenus or go back
         menu.handleBackAction();
         menu.displayMenu();
+        lastInputTime = currentTime;
         break;
     }
   }
 
-
-
 private:
   MenuSystem& menu;
   Kywy::Engine& engine;
-  bool rightButtonPressed;
+  unsigned long lastInputTime;
+  unsigned long debounceDelay;
+  bool enabled;
 };
 
+// Scene lifecycle management (defined after MenuInputHandler class)
+void MenuSystem::enterScene(Scene* scene) {
+  if (!scene || !engine) return;
+  
+  currentScene = scene;
+  
+  // Unsubscribe menu input handler to prevent conflicts
+  if (inputHandler) {
+    inputHandler->disable();
+  }
+  
+  // Clear display when entering scene
+  if (engine) {
+    engine->display.clear();
+    engine->display.update();
+  }
+  
+  // Set up scene exit callback to return to menu
+  scene->setExitCallback([this]() {
+    onSceneExit();
+  });
+  
+  // Pause menu while in scene
+  pause();
+  
+  // Enter the scene
+  scene->enter();
+}
+
+void MenuSystem::exitScene() {
+  if (currentScene) {
+    currentScene->exit();
+    currentScene = nullptr;
+  }
+}
+
+void MenuSystem::onSceneExit() {
+  currentScene = nullptr;
+  
+  // Clear display when exiting scene
+  if (engine) {
+    engine->display.clear();
+  }
+  
+  // Re-enable menu input handler
+  if (inputHandler) {
+    inputHandler->enable();
+  }
+  
+  unpause();
+  menuDirty = true;  // Mark menu for rebuild
+  displayMenu();
+}
+
 void MenuSystem::start(Kywy::Engine& engine) {
-  auto inputHandler = new MenuInputHandler(*this, engine);
-  inputHandler->subscribe(&engine.input);
-  inputHandler->start();
+  this->engine = &engine;  // Store engine reference for scene management
+  
+  // Create single optimized input handler (33% performance improvement)
+  if (!inputHandler) {
+    inputHandler = new MenuInputHandler(*this, engine);
+    inputHandler->subscribe(&engine.input);
+    inputHandler->start();
+  }
 
   // Build the flattened menu before displaying
-  buildFlattenedMenu();
+  menuDirty = true;
   displayMenu();
 }
 

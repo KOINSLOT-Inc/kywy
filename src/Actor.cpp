@@ -33,13 +33,6 @@ void Actor::disable() {
   enabled = false;
 };
 
-void Actor::enable() {
-  enabled = true;
-};
-void Actor::disable() {
-  enabled = false;
-};
-
 Actor::Actor() {
   this->event_handler = new events::Event<void(Actor *, Message *)>(&this->queue, queueEventCallback);
 }

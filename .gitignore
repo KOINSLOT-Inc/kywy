@@ -20,3 +20,4 @@ output
 *.log
 TODO.md
 .vscode
+.history
