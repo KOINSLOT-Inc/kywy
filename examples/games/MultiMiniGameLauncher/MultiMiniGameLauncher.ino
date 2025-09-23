@@ -8,6 +8,7 @@
 #include "games/SnakeScene.hpp"
 #include "games/TennisScene.hpp"
 #include "games/ClickerScene.hpp"
+#include "games/SpelunkerScene.hpp"
 
 using namespace Kywy;
 
@@ -29,9 +30,11 @@ void setup() {
   // Build menu using the helper functions
   mainMenu->addLabelItem("Mini Game Launcher");
   mainMenu->addLabelItem("");
-  mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("2D Tennis", &tennisScene);
   mainMenu->addSceneItem("Cookie Clicker", &clickerScene);
+
+  mainMenu->addSceneItem("Snake", &snakeScene);
+  mainMenu->addSceneItem("Spelunker", &spelunkerScene);
   
   // Start the menu system directly
   mainMenu->start(engine);

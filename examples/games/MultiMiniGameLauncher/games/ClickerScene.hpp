@@ -341,11 +341,6 @@ public:
 
   void handle(::Actor::Message* message) override {
     switch (message->signal) {
-      case Kywy::Events::BUTTON_LEFT_PRESSED:
-      case Kywy::Events::D_PAD_LEFT_PRESSED:
-        Scene::triggerExit();
-        return;
-        
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
         // Check if RIGHT button was just pressed (not held down)
         // Only count if button is pressed now AND was not pressed before
