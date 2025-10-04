@@ -36,8 +36,8 @@
 #include "my_animation.hpp"
 
 // === CONFIGURATION ===
-const int SPRITE_MOVE_SPEED = 1;         // Pixels to move per frame
-const int ANIMATION_TICKS_PER_FRAME = 5; // Update animation every 5 ticks
+const int SPRITE_MOVE_SPEED = 1;          // Pixels to move per frame
+const int ANIMATION_TICKS_PER_FRAME = 5;  // Update animation every 5 ticks
 
 // === GLOBAL VARIABLES ===
 // Kywy Engine: Manages display, input, clock subsystems
@@ -47,16 +47,16 @@ Kywy::Engine engine;
 // Inherits from Actor::Actor for event handling. Manages Sprite and coordinates movement/animation.
 class SpriteController : public Actor::Actor {
 public:
-  Sprite* sprite = nullptr;  // Handles animation frames, positioning, rendering
-  
+  Sprite *sprite = nullptr;  // Handles animation frames, positioning, rendering
+
   // Movement state: Tracks pressed D-pad directions
   bool movingUp = false;
   bool movingDown = false;
   bool movingLeft = false;
   bool movingRight = false;
-  
+
   bool playAnimation = false;  // Controls animation sequence
-  
+
   // Animation timing
   uint8_t animationTicks = 0;  // Frame progression counter
   uint8_t frameTick = 0;       // Tick counter between frame changes
@@ -67,15 +67,13 @@ public:
       my_animation_frames,
       MY_ANIMATION_FRAME_COUNT,
       MY_ANIMATION_WIDTH,
-      MY_ANIMATION_HEIGHT
-    );
+      MY_ANIMATION_HEIGHT);
 
     // Connect to display and position centrally
     sprite->setDisplay(&engine.display);
     sprite->setPosition(
       (KYWY_DISPLAY_WIDTH - MY_ANIMATION_WIDTH) / 2,
-      (KYWY_DISPLAY_HEIGHT - MY_ANIMATION_HEIGHT) / 2
-    );
+      (KYWY_DISPLAY_HEIGHT - MY_ANIMATION_HEIGHT) / 2);
     sprite->setVisible(true);
   }
 
@@ -87,35 +85,35 @@ public:
       case Kywy::Events::D_PAD_UP_PRESSED:
         movingUp = true;
         break;
-      
+
       case Kywy::Events::D_PAD_UP_RELEASED:
         movingUp = false;
         break;
-      
+
       case Kywy::Events::D_PAD_DOWN_PRESSED:
         movingDown = true;
         break;
-      
+
       case Kywy::Events::D_PAD_DOWN_RELEASED:
         movingDown = false;
         break;
-      
+
       case Kywy::Events::D_PAD_LEFT_PRESSED:
         movingLeft = true;
         break;
-      
+
       case Kywy::Events::D_PAD_LEFT_RELEASED:
         movingLeft = false;
         break;
-      
+
       case Kywy::Events::D_PAD_RIGHT_PRESSED:
         movingRight = true;
         break;
-      
+
       case Kywy::Events::D_PAD_RIGHT_RELEASED:
         movingRight = false;
         break;
-      
+
       // === ANIMATION CONTROL ===
       // Button events trigger animation state changes
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
@@ -123,7 +121,7 @@ public:
         animationTicks = 0;
         frameTick = 0;
         break;
-      
+
       case Kywy::Events::BUTTON_RIGHT_RELEASED:
         playAnimation = false;
         sprite->setFrame(0);
@@ -146,7 +144,7 @@ private:
     if (playAnimation) {
       return;
     }
-    
+
     // Calculate new position based on current D-pad state
     int16_t newX = sprite->x;
     int16_t newY = sprite->y;
@@ -175,9 +173,9 @@ private:
 
   void updateAnimation() {
     // Animation sequences
-    static const uint8_t walkSequence[] = {0, 3, 4};      // Frames 1, 4, 5
-    static const uint8_t actionSequence[] = {1, 2, 1, 2}; // Frames 2, 3, 2, 3
-    
+    static const uint8_t walkSequence[] = { 0, 3, 4 };       // Frames 1, 4, 5
+    static const uint8_t actionSequence[] = { 1, 2, 1, 2 };  // Frames 2, 3, 2, 3
+
     // Change frames every N ticks
     frameTick++;
     if (frameTick >= ANIMATION_TICKS_PER_FRAME) {
@@ -190,7 +188,7 @@ private:
         animationTicks++;
       }
     }
-    
+
     // Reset to idle when not animating
     if (!playAnimation && !(movingUp || movingDown || movingLeft || movingRight)) {
       sprite->setFrame(0);
