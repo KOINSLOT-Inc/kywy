@@ -15,13 +15,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 These tutorials will walk you through building a project with Kywy step-by-step. They're perfect for learning the
 platform in an easy, structured way.
 
-### [Maze Game: Custom Images & Collision Detection](./maze_game.md)
+### [Bouncing Ball: Graphics, Physics, and Inputs](./bouncing_ball/part_1.md)
 
-_audience: intermediate_
+_audience: beginner_
 
-Master advanced Kywy concepts including bit-packed collision detection, custom image creation, and sprite management by building your own maze game!
+Learn basic Kywy concepts by making a ball bounce around the screen.
 
-### [First Game: Cookie Clicker](./cookie_clicker/index.md)
+### [Cookie Clicker: First Game with graphics and input handling](./cookie_clicker/index.md)
 
 _audience: beginner (middle school age and up)_
 
@@ -33,8 +33,12 @@ _audience: beginner to intermediate_
 
 Create interactive stories and games! Learn about game structure, user input, branching narratives, and advanced features while building your own choose-your-own-adventure game. **Bonus:** Part 6 covers helper functions in detail - essential programming concepts!
 
+### [Maze Game: Custom Images & Collision Detection](./maze/index.md)
+
+_audience: intermediate_
+
+Master advanced Kywy concepts including bit-packed collision detection, custom image creation, and sprite management by building your own maze game!
+
 ### [The Basics with a Bouncing Ball](./bouncing_ball/part_1.md)
 
-_audience: beginner_
 
-Learn basic Kywy concepts by making a ball bounce around the screen.
