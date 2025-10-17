@@ -69,7 +69,10 @@ void Scene::exit() {
   
   active = false;
 
-  // Disable all actors, unsubscribe from clock, and send scene exit message
+  // Call virtual hook FIRST to let the scene clean up its own resources
+  onExit();
+
+  // Then disable all actors, unsubscribe from clock, and send scene exit message
   unsubscribeAllActors();
   uint8_t i = 0;
   while (i < MAX_ACTORS) {
@@ -79,6 +82,15 @@ void Scene::exit() {
     i++;
   }
 
+  // Automatic display clearing if enabled
+  if (autoClearDisplay && engine) {
+    engine->display.clear();
+  }
+
+  // If not persistent, cleanup the scene
+  if (!persistent) {
+    cleanup();
+  }
 }
 
 void Scene::subscribeAllActors() {
@@ -96,18 +108,6 @@ void Scene::unsubscribeAllActors() {
     if (actors[i]) {
       actors[i]->unsubscribe(&engine->clock);
     }
-  }
-
-  onExit();  // Call virtual hook
-
-  // Automatic display clearing if enabled
-  if (autoClearDisplay && engine) {
-    engine->display.clear();
-  }
-
-  // If not persistent, cleanup the scene
-  if (!persistent) {
-    cleanup();
   }
 }
 

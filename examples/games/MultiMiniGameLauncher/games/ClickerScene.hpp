@@ -381,8 +381,9 @@ public:
     display.clear();
     display.update();
     
-    // Unsubscribe from input before stopping
+    // Unsubscribe from all inputs before stopping
     this->unsubscribe(&Scene::getEngine()->input);
+    this->unsubscribe(&Scene::getEngine()->clock);
     
     // Stop the actor 
     this->stop();
