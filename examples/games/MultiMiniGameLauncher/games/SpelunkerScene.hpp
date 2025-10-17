@@ -15,7 +15,13 @@ typedef enum : uint16_t {
 } SpelunkerSignal;
 
 const uint8_t splashScreenBMP[] = {
-
+  // Minimal 144x168 splash screen - all white (0xFF)
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  // ... repeat pattern to fill 3024 bytes (144 * 168 / 8)
+  // For now, just make it draw text instead
 };
 
 const uint8_t spelunkerBMP[] = {
@@ -273,7 +279,11 @@ public:
     this->subscribe(&Scene::getEngine()->input);
     
     Scene::getEngine()->display.clear();
-    Scene::getEngine()->display.drawBitmap(0, 0, 144, 168, (uint8_t *)splashScreenBMP);
+    // Draw text splash screen instead of bitmap
+    Scene::getEngine()->display.drawText(20, 50, "SPELUNKER");
+    Scene::getEngine()->display.drawText(10, 70, "Press any button");
+    Scene::getEngine()->display.drawText(20, 80, "to start");
+    Scene::getEngine()->display.drawText(5, 100, "Press LEFT to exit");
     Scene::getEngine()->display.update();
   }
 
