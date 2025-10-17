@@ -48,8 +48,8 @@ $(CLANG_FORMAT): $(CACHE) .clang-format
 		read yn; \
 		if [ "$$yn" = "y" ] || [ "$$yn" = "Y" ]; then \
 			if ! grep -q '^BraceWrapping:' .clang-format 2>/dev/null; then \
-				printf '\nBraceWrapping:\n  AfterControlStatement: true\n' >> .clang-format; \
-				echo "Appended 'BraceWrapping: AfterControlStatement: true' to .clang-format"; \
+				printf '\nBraceWrapping:\n  AfterControlStatement: false\n' >> .clang-format; \
+				echo "Appended 'BraceWrapping: AfterControlStatement: false' to .clang-format"; \
 			else \
 				echo ".clang-format already contains BraceWrapping, skipping append."; \
 			fi; \
@@ -92,7 +92,7 @@ lint-arduino-code: $(ARDUINO_LINT) $(CLANG_FORMAT)
 		exit_code=$$?; \
 		touch .development; \
 		exit $$exit_code;
-	@clang-format --dry-run $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/" | grep -v ".history")
+	@clang-format --dry-run $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/" | grep -v ".history/")
 
 .PHONY: format-arduino-code
 format-arduino-code: $(CLANG_FORMAT)
