@@ -439,7 +439,7 @@ public:
     // Start and enable this actor FIRST
     this->start();
     this->enable();
-    // Then subscribe to input
+    // Then subscribe to input - persists across enter/exit
     this->subscribe(&Scene::getEngine()->input);
   }
 
@@ -456,7 +456,6 @@ public:
     gameOver = true;
     
     Display::Display& display = Scene::getEngine()->display;
-    display.clear();
     display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
     display.update();
   }
@@ -523,7 +522,7 @@ public:
   }
 
   virtual void onExit() override {
-    // Unsubscribe from clock
+    // Unsubscribe from clock if playing
     this->unsubscribe(&Scene::getEngine()->clock);
   }
 };
