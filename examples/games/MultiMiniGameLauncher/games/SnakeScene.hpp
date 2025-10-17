@@ -433,7 +433,7 @@ public:
   };
 
 public:
-  SnakeScene() : Scene(false, true) {}
+  SnakeScene() : Scene(true, true) {}  // persistent=true to avoid cleanup on exit
 
   virtual void onInitialize() override {
     // Start and enable this actor FIRST

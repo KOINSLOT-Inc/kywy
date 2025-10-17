@@ -31,7 +31,7 @@ void setup() {
   mainMenu->addLabelItem("Mini Game Launcher");
   mainMenu->addLabelItem("");
   mainMenu->addSceneItem("2D Tennis", &tennisScene);
-  mainMenu->addSceneItem("Cookie Clicker", &clickerScene);
+  mainMenu->addSceneItem("Clicker", &clickerScene);
 
   mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("Spelunker", &spelunkerScene);

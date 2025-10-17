@@ -367,7 +367,7 @@ public:
   }
 
 public:
-  TennisScene() : Scene(false, true) {
+  TennisScene() : Scene(true, true) {  // persistent=true to avoid cleanup on exit
     inCountdown = false;
     countdownNumber = 0;
     countdownTicks = 0;

@@ -528,7 +528,7 @@ private:
   }
 
 public:
-  SpelunkerScene() : Scene(false, true), columns(&spelunker) {}
+  SpelunkerScene() : Scene(true, true), columns(&spelunker) {}  // persistent=true to avoid cleanup on exit
 
   virtual void onInitialize() override {
     // Start and enable this actor FIRST

@@ -281,7 +281,7 @@ public:
   int cookieY = KYWY_DISPLAY_HEIGHT / 2;  // Middle of screen vertically
 
 public:
-  ClickerScene() : Scene(false, true) {}
+  ClickerScene() : Scene() {}  // persistent=true to avoid cleanup on exit
 
   virtual void onInitialize() override {
     // Start and enable this actor FIRST
@@ -305,7 +305,6 @@ public:
     showAnimation = false;
     animationTime = 0;
     wasButtonPressed = false;
-    
     updateDisplay();
   }
 
@@ -346,10 +345,13 @@ public:
   }
 
   void handle(::Actor::Message* message) override {
+    // Ignore messages if scene is not active
+    if (!isActive()) return;
+    
     switch (message->signal) {
       case Kywy::Events::BUTTON_LEFT_PRESSED:
         // Exit with left button
-        Scene::triggerExit();
+        this->triggerExit();
         return;
         
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
@@ -380,9 +382,10 @@ public:
         break;
     }
   }
-
-  virtual void onExit() override {
-    // Nothing to cleanup in onExit - subscriptions handled in onCleanup
+  void onExit() {
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    display.update();
   }
 };
 
