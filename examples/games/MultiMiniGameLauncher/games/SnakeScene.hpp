@@ -435,22 +435,28 @@ public:
 public:
   SnakeScene() : Scene(false, true) {}
 
-  virtual void initialize() override {
-    // Don't subscribe to input here - do it in onEnter to avoid early activation
+  virtual void onInitialize() override {
+    // Start and enable this actor FIRST
+    this->start();
+    this->enable();
+    // Then subscribe to input
+    this->subscribe(&Scene::getEngine()->input);
+  }
+
+  virtual void onCleanup() override {
+    // Unsubscribe, disable, then stop
+    this->unsubscribe(&Scene::getEngine()->input);
+    this->unsubscribe(&Scene::getEngine()->clock);
+    this->disable();
+    this->stop();
   }
 
   virtual void onEnter() override {
     startScreen = true;
     gameOver = true;
-    add(this);
-    
-    // Start the actor (this calls initialize())
-    this->start();
-    
-    // Subscribe to input ONLY on splash screen - NOT to clock yet
-    this->subscribe(&Scene::getEngine()->input);
     
     Display::Display& display = Scene::getEngine()->display;
+    display.clear();
     display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
     display.update();
   }
@@ -517,13 +523,8 @@ public:
   }
 
   virtual void onExit() override {
-    // Unsubscribe from all inputs before stopping
-    this->unsubscribe(&Scene::getEngine()->input);
+    // Unsubscribe from clock
     this->unsubscribe(&Scene::getEngine()->clock);
-    
-    // Stop the actor 
-    this->stop();
-    remove(this);
   }
 };
 

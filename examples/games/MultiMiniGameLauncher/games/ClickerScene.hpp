@@ -283,8 +283,21 @@ public:
 public:
   ClickerScene() : Scene(false, true) {}
 
-  virtual void initialize() override {
-    // Don't subscribe to input here - do it in onEnter to avoid early activation
+  virtual void onInitialize() override {
+    // Start and enable this actor FIRST
+    this->start();
+    this->enable();
+    // Then subscribe to input and clock - persists across enter/exit
+    this->subscribe(&Scene::getEngine()->input);
+    this->subscribe(&Scene::getEngine()->clock);
+  }
+
+  virtual void onCleanup() override {
+    // Unsubscribe, disable, then stop
+    this->unsubscribe(&Scene::getEngine()->input);
+    this->unsubscribe(&Scene::getEngine()->clock);
+    this->disable();
+    this->stop();
   }
 
   virtual void onEnter() override {
@@ -292,13 +305,6 @@ public:
     showAnimation = false;
     animationTime = 0;
     wasButtonPressed = false;
-    add(this);
-    
-    // Start the actor (this calls initialize())
-    this->start();
-    
-    // Subscribe to input AFTER starting the actor
-    this->subscribe(&Scene::getEngine()->input);
     
     updateDisplay();
   }
@@ -376,13 +382,7 @@ public:
   }
 
   virtual void onExit() override {
-    // Unsubscribe from all inputs before stopping
-    this->unsubscribe(&Scene::getEngine()->input);
-    this->unsubscribe(&Scene::getEngine()->clock);
-    
-    // Stop the actor 
-    this->stop();
-    remove(this);
+    // Nothing to cleanup in onExit - subscriptions handled in onCleanup
   }
 };
 

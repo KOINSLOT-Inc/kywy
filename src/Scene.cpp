@@ -69,9 +69,6 @@ void Scene::exit() {
   
   active = false;
 
-  // Call virtual hook FIRST to let the scene clean up its own resources
-  onExit();
-
   // Then disable all actors, unsubscribe from clock, and send scene exit message
   unsubscribeAllActors();
   uint8_t i = 0;
@@ -81,6 +78,9 @@ void Scene::exit() {
     actors[i]->dispatch(&sceneExitMessage);
     i++;
   }
+
+  // Call virtual hook
+  onExit();
 
   // NOTE: Display clearing is now handled by MenuSystem for better control
   // Scenes should NOT clear the display themselves

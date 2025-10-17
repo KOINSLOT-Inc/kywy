@@ -530,8 +530,19 @@ private:
 public:
   SpelunkerScene() : Scene(false, true), columns(&spelunker) {}
 
-  virtual void initialize() override {
-    // Don't subscribe to input here - do it in onEnter to avoid early activation
+  virtual void onInitialize() override {
+    // Start and enable this actor FIRST
+    this->start();
+    this->enable();
+    // Then subscribe to input - persists across enter/exit
+    this->subscribe(&Scene::getEngine()->input);
+  }
+
+  virtual void onCleanup() override {
+    // Unsubscribe, disable, then stop
+    this->unsubscribe(&Scene::getEngine()->input);
+    this->disable();
+    this->stop();
   }
 
   virtual void onEnter() override {
@@ -551,23 +562,17 @@ public:
     columns.tickCounter = 0;
     columns.numEntraceColumnsLeft = columns.numEntraceColumns;
     
-    add(this);
+    // Add child actors to scene
     add(&spelunker);
     add(&columns);
     
-    // Start the actor (this calls initialize())
-    this->start();
-    
-    // Subscribe to column manager to receive GAME_OVER messages and input
+    // Subscribe to column manager for GAME_OVER messages
     this->subscribe(&columns);
-    this->subscribe(&Scene::getEngine()->input);
     
+    // Draw splash screen
     Scene::getEngine()->display.clear();
-    // Draw text splash screen instead of bitmap
-    Scene::getEngine()->display.drawText(20, 50, "SPELUNKER");
-    Scene::getEngine()->display.drawText(10, 70, "Press any button");
-    Scene::getEngine()->display.drawText(20, 80, "to start");
-    Scene::getEngine()->display.drawText(5, 100, "Press LEFT to exit");
+    Scene::getEngine()->display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreenBMP);
+
     Scene::getEngine()->display.update();
   }
 
@@ -647,19 +652,16 @@ public:
       stopGame();
     }
     
-    // Unsubscribe from all inputs before stopping
-    this->unsubscribe(&Scene::getEngine()->input);
+    // Unsubscribe from column manager
     this->unsubscribe(&columns);
     
-    // Stop all actors (safe to call multiple times)
+    // Stop child actors
     spelunker.stop();
     columns.stop();
-    this->stop();
     
-    // Remove all actors from scene
+    // Remove child actors from scene
     remove(&spelunker);
     remove(&columns);
-    remove(this);
   }
 };
 

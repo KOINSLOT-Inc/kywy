@@ -253,6 +253,30 @@ void MenuSystem::buildFlattenedMenu() {
   } else if (flattenedSelectedIndex >= flattenedMenu.size()) {
     flattenedSelectedIndex = flattenedMenu.size() - 1;
   }
+  
+  // Skip label items - move to first non-label item if currently on a label
+  if (!flattenedMenu.empty() && flattenedSelectedIndex < flattenedMenu.size()) {
+    while (flattenedSelectedIndex < flattenedMenu.size() && 
+           flattenedMenu[flattenedSelectedIndex].item && 
+           flattenedMenu[flattenedSelectedIndex].item->type == MenuItemType::LABEL) {
+      flattenedSelectedIndex++;
+    }
+    
+    // If we went past the end, wrap back and search from beginning
+    if (flattenedSelectedIndex >= flattenedMenu.size()) {
+      flattenedSelectedIndex = 0;
+      while (flattenedSelectedIndex < flattenedMenu.size() && 
+             flattenedMenu[flattenedSelectedIndex].item && 
+             flattenedMenu[flattenedSelectedIndex].item->type == MenuItemType::LABEL) {
+        flattenedSelectedIndex++;
+      }
+      
+      // If still no non-label item found, default to 0 (all items are labels)
+      if (flattenedSelectedIndex >= flattenedMenu.size()) {
+        flattenedSelectedIndex = 0;
+      }
+    }
+  }
 }
 
 // Sync the main menu selectedIndex with the flattened menu flattenedSelectedIndex
@@ -519,25 +543,21 @@ void MenuSystem::enterScene(Scene* scene) {
   
   currentScene = scene;
   
-  // Unsubscribe menu input handler completely to prevent conflicts
+  // Pause menu and disable input handler FIRST
+  pause();
   if (inputHandler) {
-    inputHandler->disable();
     inputHandler->unsubscribe(&engine->input);
+    inputHandler->disable();
   }
   
-  // Clear display when entering scene
-  if (engine) {
-    engine->display.clear();
-    engine->display.update();
-  }
+  // Clear display before entering scene
+  engine->display.clear();
+  engine->display.update();
   
   // Set up scene exit callback to return to menu
   scene->setExitCallback([this]() {
     onSceneExit();
   });
-  
-  // Pause menu while in scene
-  pause();
   
   // Enter the scene
   scene->enter();
@@ -551,31 +571,34 @@ void MenuSystem::exitScene() {
 }
 
 void MenuSystem::onSceneExit() {
+  // Clear scene reference first
+  Scene* exitingScene = currentScene;
   currentScene = nullptr;
   
-  // Small delay to ensure display state is stable
-  #ifdef ARDUINO
-  delay(50);
-  #endif
-  
-  // Immediately clear display and update to prevent flashing
+  // Clear display immediately
   if (engine) {
     engine->display.clear();
     engine->display.update();
   }
   
-  // Re-enable and re-subscribe menu input handler
+  // Small delay for display stability
+  #ifdef ARDUINO
+  delay(10);
+  #endif
+  
+  // Re-enable menu input handler
   if (inputHandler) {
     inputHandler->enable();
     inputHandler->subscribe(&engine->input);
   }
   
+  // Unpause and force menu redraw
   unpause();
-  menuDirty = true;  // Mark menu for rebuild
-  
-  // Force rebuild and display
+  menuDirty = true;
   buildFlattenedMenu();
   menuDirty = false;
+  
+  // Display the menu
   displayMenu();
 }
 
