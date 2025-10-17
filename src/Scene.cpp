@@ -40,7 +40,7 @@ void Scene::cleanup() {
     if (active) {
       exit();  // Ensure scene is properly exited
     }
-    onCleanup();  // Call virtual hook
+    onCleanup();  // Call virtual hook - scenes that are actors should unsubscribe here
     initialized = false;
   }
 }

@@ -367,13 +367,13 @@ public:
   }
 
 public:
-  TennisScene() : Scene(true, true) {  // persistent=true to avoid cleanup on exit
+  TennisScene() : Scene(false, false) { 
     inCountdown = false;
     countdownNumber = 0;
     countdownTicks = 0;
   }
 
-  virtual void onInitialize() override {
+  void onInitialize() {
     // Start and enable this actor FIRST
     this->start();
     this->enable();
@@ -381,7 +381,7 @@ public:
     this->subscribe(&Scene::getEngine()->input);
   }
 
-  virtual void onEnter() {
+  void onEnter() {
     startScreen = true;
     gameOver = true;
     
@@ -392,6 +392,7 @@ public:
   }
 
   void handle(::Actor::Message *message) {
+    if (!isActive()) return;
     int distanceFromMiddleOfOpponentPaddle;
     Display::Display& display = Scene::getEngine()->display;
 
@@ -536,6 +537,23 @@ public:
         }
         break;
     }
+  }
+
+  void onExit() {
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    display.update();
+  }
+
+  void onCleanup() {
+    // Unsubscribe, disable, then stop
+    this->unsubscribe(&Scene::getEngine()->input);
+    this->unsubscribe(&Scene::getEngine()->clock);
+    this->disable();
+    this->stop();
+    Display::Display& display = Scene::getEngine()->display;
+    display.clear();
+    display.update();
   }
 };
 
