@@ -609,7 +609,7 @@ public:
       case Kywy::Events::BUTTON_LEFT_PRESSED:
         // Exit with left button regardless of game state
         Scene::triggerExit();
-        break;
+        return;
         
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
         // Only handle if on start screen or game over - ignore during gameplay

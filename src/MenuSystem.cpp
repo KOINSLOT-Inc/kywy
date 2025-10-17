@@ -276,6 +276,9 @@ void MenuSystem::buildFlattenedMenu() {
         flattenedSelectedIndex = 0;
       }
     }
+    
+    // Sync the main menu selectedIndex with the updated flattenedSelectedIndex
+    syncSelectedIndices();
   }
 }
 

@@ -350,7 +350,7 @@ public:
       case Kywy::Events::BUTTON_LEFT_PRESSED:
         // Exit with left button
         Scene::triggerExit();
-        break;
+        return;
         
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
         // Check if RIGHT button was just pressed (not held down)
