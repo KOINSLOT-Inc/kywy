@@ -461,20 +461,19 @@ private:
   spelunkerManager spelunker;
   columnManager columns;
 
-  void startGame() {
-    // If restarting, first clean up the previous game state
-    if (!startScreen) {
-      // Unsubscribe from previous game's events
-      spelunker.unsubscribe(&Scene::getEngine()->input);
-      spelunker.unsubscribe(&Scene::getEngine()->clock);
-      columns.unsubscribe(&Scene::getEngine()->clock);
-      this->unsubscribe(&Scene::getEngine()->clock);
-      
-      // Stop actors before reinitializing
-      spelunker.stop();
-      columns.stop();
-    }
+  void stopGame() {
+    // Unsubscribe from game events
+    spelunker.unsubscribe(&Scene::getEngine()->input);
+    spelunker.unsubscribe(&Scene::getEngine()->clock);
+    columns.unsubscribe(&Scene::getEngine()->clock);
+    this->unsubscribe(&Scene::getEngine()->clock);
     
+    // Stop actors
+    spelunker.stop();
+    columns.stop();
+  }
+
+  void resetGameState() {
     startScreen = false;
     gameOver = false;
     score = 0;
@@ -493,6 +492,16 @@ private:
       columns.topColumns[i] = 20;
       columns.bottomColumns[i] = KYWY_DISPLAY_HEIGHT - 72 - 20;
     }
+  }
+
+  void startGame() {
+    // If restarting from game over, stop the game first
+    if (!startScreen && gameOver) {
+      stopGame();
+    }
+    
+    // Reset all game state
+    resetGameState();
     
     // Initialize the objects
     spelunker.initialize();
@@ -567,12 +576,7 @@ public:
       case SpelunkerSignal::GAME_OVER:
         gameOver = true;
         highScore = fmax(score, highScore);
-        this->unsubscribe(&Scene::getEngine()->clock);
-        spelunker.unsubscribe(&Scene::getEngine()->clock);
-        spelunker.unsubscribe(&Scene::getEngine()->input);
-        columns.unsubscribe(&Scene::getEngine()->clock);
-        spelunker.stop();
-        columns.stop();
+        stopGame();
         
         Scene::getEngine()->display.clear();
         Scene::getEngine()->display.drawText(5, 5, "GAME OVER");
@@ -640,17 +644,14 @@ public:
   virtual void onExit() override {
     // Stop the game if it's running
     if (!gameOver && !startScreen) {
-      spelunker.unsubscribe(&Scene::getEngine()->input);
-      spelunker.unsubscribe(&Scene::getEngine()->clock);
-      columns.unsubscribe(&Scene::getEngine()->clock);
-      this->unsubscribe(&Scene::getEngine()->clock);
+      stopGame();
     }
     
     // Unsubscribe from all inputs before stopping
     this->unsubscribe(&Scene::getEngine()->input);
     this->unsubscribe(&columns);
     
-    // Stop all actors
+    // Stop all actors (safe to call multiple times)
     spelunker.stop();
     columns.stop();
     this->stop();
@@ -659,10 +660,6 @@ public:
     remove(&spelunker);
     remove(&columns);
     remove(this);
-    
-    // Clear display
-    Scene::getEngine()->display.clear();
-    Scene::getEngine()->display.update();
   }
 };
 

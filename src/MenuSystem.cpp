@@ -553,6 +553,11 @@ void MenuSystem::exitScene() {
 void MenuSystem::onSceneExit() {
   currentScene = nullptr;
   
+  // Small delay to ensure display state is stable
+  #ifdef ARDUINO
+  delay(50);
+  #endif
+  
   // Immediately clear display and update to prevent flashing
   if (engine) {
     engine->display.clear();
@@ -567,6 +572,10 @@ void MenuSystem::onSceneExit() {
   
   unpause();
   menuDirty = true;  // Mark menu for rebuild
+  
+  // Force rebuild and display
+  buildFlattenedMenu();
+  menuDirty = false;
   displayMenu();
 }
 

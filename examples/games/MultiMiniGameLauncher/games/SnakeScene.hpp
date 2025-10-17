@@ -517,11 +517,6 @@ public:
   }
 
   virtual void onExit() override {
-    // Immediately clear display before stopping actor
-    Display::Display& display = Scene::getEngine()->display;
-    display.clear();
-    display.update();
-    
     // Unsubscribe from all inputs before stopping
     this->unsubscribe(&Scene::getEngine()->input);
     this->unsubscribe(&Scene::getEngine()->clock);

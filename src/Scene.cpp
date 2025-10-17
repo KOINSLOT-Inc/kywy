@@ -82,10 +82,8 @@ void Scene::exit() {
     i++;
   }
 
-  // Automatic display clearing if enabled
-  if (autoClearDisplay && engine) {
-    engine->display.clear();
-  }
+  // NOTE: Display clearing is now handled by MenuSystem for better control
+  // Scenes should NOT clear the display themselves
 
   // If not persistent, cleanup the scene
   if (!persistent) {
