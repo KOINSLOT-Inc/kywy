@@ -381,15 +381,7 @@ public:
     this->subscribe(&Scene::getEngine()->input);
   }
 
-  virtual void onCleanup() override {
-    // Unsubscribe, disable, then stop
-    this->unsubscribe(&Scene::getEngine()->input);
-    this->unsubscribe(&Scene::getEngine()->clock);
-    this->disable();
-    this->stop();
-  }
-
-  virtual void onEnter() override {
+  virtual void onEnter() {
     startScreen = true;
     gameOver = true;
     
@@ -399,7 +391,7 @@ public:
     display.update();
   }
 
-  void handle(::Actor::Message *message) override {
+  void handle(::Actor::Message *message) {
     int distanceFromMiddleOfOpponentPaddle;
     Display::Display& display = Scene::getEngine()->display;
 
@@ -544,11 +536,6 @@ public:
         }
         break;
     }
-  }
-
-  virtual void onExit() override {
-    // Unsubscribe from clock
-    this->unsubscribe(&Scene::getEngine()->clock);
   }
 };
 
