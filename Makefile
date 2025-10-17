@@ -47,12 +47,7 @@ $(CLANG_FORMAT): $(CACHE) .clang-format
 		printf '%s' "clang-format version >14 detected. Continue anyway? [y/N]: "; \
 		read yn; \
 		if [ "$$yn" = "y" ] || [ "$$yn" = "Y" ]; then \
-			if ! grep -q '^BraceWrapping:' .clang-format 2>/dev/null; then \
-				printf '\nBraceWrapping:\n  AfterControlStatement: false\n' >> .clang-format; \
-				echo "Appended 'BraceWrapping: AfterControlStatement: false' to .clang-format"; \
-			else \
-				echo ".clang-format already contains BraceWrapping, skipping append."; \
-			fi; \
+			echo "Continuing with version $$ver"; \
 		else \
 			echo "Aborting as requested."; \
 			exit 1; \
