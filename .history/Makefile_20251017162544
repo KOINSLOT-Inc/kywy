@@ -92,13 +92,11 @@ lint-arduino-code: $(ARDUINO_LINT) $(CLANG_FORMAT)
 		exit_code=$$?; \
 		touch .development; \
 		exit $$exit_code;
-	@clang-format --dry-run $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/" | grep -v ".history")
+	@clang-format --dry-run $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/")
 
 .PHONY: format-arduino-code
 format-arduino-code: $(CLANG_FORMAT)
-	@find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" \) \
-		! -path "./.cache/*" ! -path "./output/*" ! -path "./.history/*" \
-		-print0 | xargs -0 -r clang-format -i
+	@clang-format -i **/*.cpp **/*.hpp **/*.ino
 
 .PHONY: compile-arduino-sketches
 compile-arduino-sketches: $(ARDUINO_CLI)
