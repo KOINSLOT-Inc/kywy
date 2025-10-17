@@ -114,6 +114,96 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
   int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
   BitmapOptions options, bool block, uint16_t blockColor) {
 
+  int byteCount = 0;
+  int new_width = 0;
+  int new_height = 0;
+
+  if (options.getRotation() != 0) {
+    new_width = ceil(width * sqrt(2));
+    new_height = ceil(height * sqrt(2));
+
+    if (new_width % 8 != 0)
+      new_width += 8 - (new_width % 8);  // Ensure multiple of 8
+
+    if (new_height % 8 != 0)
+      new_height += 8 - (new_height % 8);  // Ensure multiple of 8
+
+    byteCount = (new_width * new_height) / 8;
+  } else {
+    byteCount = (width * height) / 8;
+  }
+  // Has to be outside loop for some reason
+  uint8_t resized[byteCount];
+  uint8_t output[byteCount];
+
+  if (options.getRotation() != 0) {
+
+    for (int i = 0; i < byteCount; ++i) {
+      resized[i] = 0;
+      output[i] = 0;
+    }
+    //Padding
+    int old_bytes_per_row = (width + 7) / 8;
+    int new_bytes_per_row = new_width / 8;
+
+    int left_pad_pixels = (new_width - width) / 2;
+    int top_pad_rows = (new_height - height) / 2;
+    int byte_offset = left_pad_pixels / 8;
+
+    for (int y = 0; y < height; ++y) {
+      uint8_t *dst_row = resized + (y + top_pad_rows) * new_bytes_per_row + byte_offset;
+      const uint8_t *src_row = bitmap + y * old_bytes_per_row;
+
+      for (int b = 0; b < old_bytes_per_row; ++b) {
+        dst_row[b] = src_row[b];
+      }
+    }
+
+    x = x - left_pad_pixels;
+    y = y - top_pad_rows;
+
+    width = (int)new_width;
+    height = (int)new_height;
+
+    double angleRad = options.getRotation() * 3.1415926 / 180.0;
+    double cosA = cos(angleRad);
+    double sinA = sin(angleRad);
+    double cx = width / 2.0;
+    double cy = height / 2.0;
+
+    double m00 = cosA, m01 = sinA;
+    double m10 = -sinA, m11 = cosA;
+    double tx = -cx * m00 - cy * m01 + cx;
+    double ty = -cx * m10 - cy * m11 + cy;
+    //bitmask to optimize search
+    const uint8_t bit_mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
+        double srcX = x * m00 + y * m01 + tx;
+        double srcY = x * m10 + y * m11 + ty;
+
+        int ix = (int)(srcX + 0.5);
+        int iy = (int)(srcY + 0.5);
+
+        if (ix >= 0 && iy >= 0 && ix < width && iy < height) {
+          int srcIndex = iy * width + ix;
+          int srcByte = srcIndex / 8;
+          int srcBit = ix & 7;
+
+          if (resized[srcByte] & bit_mask[srcBit]) {
+            int dstIndex = y * width + x;
+            int dstByte = dstIndex / 8;
+            int dstBit = x & 7;
+            output[dstByte] |= bit_mask[dstBit];
+          }
+        }
+      }
+    }
+    bitmap = output;
+  }
+
+
   // we can write from an arbitrary chunk of the bitmap to an arbitrary chunk of
   // the screen buffer
   uint16_t bitmapX = 0, bitmapY = 0, bitmapWidth = width;
@@ -132,6 +222,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
 
   // index bitmap by bits instead of bytes to handle all the byte splitting
   uint16_t bitmapBitIndex = bitmapWidth * bitmapY + bitmapX;
+
 
   // precomputed values
   uint8_t bufferBitsNotToWriteToInLeftByteColumn = x % 8;

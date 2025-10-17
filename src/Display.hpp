@@ -113,6 +113,8 @@ struct TextOptions {
   Origin::Text _origin = Origin::Text::TOP_LEFT;
   uint8_t *_font = nullptr;
   bool _opaque = false;
+  bool _rotate = false;
+  int _rotation = 0;
 
   TextOptions color(uint16_t setColor) {
     _color = setColor;
@@ -145,6 +147,13 @@ struct TextOptions {
   bool getOpaque() {
     return _opaque;
   };
+  TextOptions rotation(int setRotation) {
+    _rotation = setRotation;
+    return *this;
+  };
+  uint16_t getRotation() {
+    return _rotation;
+  };
 };
 
 struct BitmapOptions {
@@ -152,6 +161,7 @@ struct BitmapOptions {
   bool _negative = false;
   Origin::Object2D _origin = Origin::Object2D::TOP_LEFT;
   bool _opaque = false;
+  int _rotation = 0;
 
   BitmapOptions color(uint16_t setColor) {
     _color = setColor;
@@ -183,6 +193,14 @@ struct BitmapOptions {
   };
   bool getOpaque() {
     return _opaque;
+  };
+
+  BitmapOptions rotation(int setRotation) {
+    _rotation = setRotation;
+    return *this;
+  };
+  uint16_t getRotation() {
+    return _rotation;
   };
 };
 

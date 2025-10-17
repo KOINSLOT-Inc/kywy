@@ -31,17 +31,21 @@ void Sprite::setNegative(bool negative) {
 void Sprite::setColor(uint16_t color) {
   this->color = color ? 0xff : 0x00;
 }
+void Sprite::setRotation(int angle) {
+  this->angle = angle;
+}
+
 
 void Sprite::draw() {
   display->drawBitmap(x, y, width, height, (uint8_t *)frames[frame],
-                      Display::BitmapOptions().negative(negative).color(color));
+                      Display::BitmapOptions().negative(negative).color(color).rotation(angle));
   lastRenderedFrame = frame;
 }
 
 void Sprite::erase(int16_t lastRenderedX, int16_t lastRenderedY) {
   display->drawBitmap(lastRenderedX, lastRenderedY, width, height,
                       (uint8_t *)frames[lastRenderedFrame],
-                      Display::BitmapOptions().negative(negative).color(!color));
+                      Display::BitmapOptions().negative(negative).color(!color).rotation(0));
 }
 
 void Sprite::translate(int16_t x, int16_t y) {
