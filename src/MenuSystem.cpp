@@ -23,28 +23,86 @@ MenuSystem::MenuSystem(Display::Display& display, const std::vector<MenuItem>& i
   : display(display), items(items), options(options), selectedIndex(0), flattenedSelectedIndex(0) {}
 
 void MenuSystem::displayMenu() {
+  #ifdef ARDUINO
+  Serial.println("displayMenu() - START");
+  Serial.print("displayMenu() - paused: ");
+  Serial.print(paused);
+  Serial.print(", isInScene(): ");
+  Serial.println(isInScene());
+  #endif
+  
   if (paused || isInScene()) return;
 
+  #ifdef ARDUINO
+  Serial.println("displayMenu() - calling display.clear()");
+  #endif
+  
   display.clear();
   int startY = options.y + 5;
   int indentWidth = 8;  // Width in pixels for each indent level (increased for better visibility)
 
   // Build the flattened menu structure for display and navigation only if dirty
   if (menuDirty) {
+    #ifdef ARDUINO
+    Serial.println("displayMenu() - building flattened menu");
+    #endif
     buildFlattenedMenu();
     menuDirty = false;
   }
 
+  #ifdef ARDUINO
+  Serial.print("displayMenu() - flattenedMenu.size(): ");
+  Serial.println(flattenedMenu.size());
+  #endif
+
   // Calculate how many items we can display from the flattened menu
   int displayCount = std::min(scrollOptions.visibleItems, (int)flattenedMenu.size() - scrollOptions.startIndex);
 
+  #ifdef ARDUINO
+  Serial.print("displayMenu() - displayCount: ");
+  Serial.println(displayCount);
+  Serial.print("displayMenu() - flattenedMenu is valid: ");
+  Serial.println(flattenedMenu.size() > 0 ? "yes" : "no");
+  Serial.print("displayMenu() - about to start drawing loop");
+  Serial.flush(); // Force output before potential crash
+  #endif
+
   // Draw the visible portion of the flattened menu
   for (int i = 0; i < displayCount; ++i) {
+    #ifdef ARDUINO
+    Serial.print("displayMenu() - drawing item ");
+    Serial.print(i);
+    Serial.flush();
+    Serial.println("");
+    #endif
+    
     int itemIndex = scrollOptions.startIndex + i;
-    if (itemIndex >= flattenedMenu.size()) break;
+    if (itemIndex >= flattenedMenu.size()) {
+      #ifdef ARDUINO
+      Serial.println("displayMenu() - itemIndex out of bounds, breaking");
+      #endif
+      break;
+    }
 
+    #ifdef ARDUINO
+    Serial.println("displayMenu() - getting flatItem");
+    Serial.flush();
+    #endif
+    
     const FlatMenuItem& flatItem = flattenedMenu[itemIndex];
     const MenuItem* item = flatItem.item;
+    
+    #ifdef ARDUINO
+    if (!item) {
+      Serial.println("displayMenu() - WARNING: item is NULL, skipping");
+      continue;
+    }
+    Serial.print("displayMenu() - item label: '");
+    Serial.print(item->label.c_str());
+    Serial.println("'");
+    Serial.flush();
+    #endif
+    
     int indentLevel = flatItem.indentLevel;
     bool isSubmenuItem = flatItem.isSubmenuItem;
 
@@ -53,17 +111,23 @@ void MenuSystem::displayMenu() {
     // Check if this is the selected item in the flattened list
     bool isSelected = (itemIndex == flattenedSelectedIndex);
 
-    // Prepare text with appropriate indentation and selection indicator
-    std::string itemText;
-
-    // Add selection indicator or indentation space
-    itemText = isSelected ? std::string(1, options.pointer) : " ";
-
-    // Add the actual label
-    itemText += item->label;
-
+    // Calculate positions first
     int yPosition = startY + i * options.itemHeight;
     int xPosition = options.x + (indentLevel * indentWidth);  // Apply indentation
+
+    // Prepare text with appropriate indentation and selection indicator
+    // Use a fixed-size buffer to avoid stack overflow from string operations
+    char itemText[24];  // Fixed buffer for menu text
+    int pos = 0;
+    
+    // Add selection indicator or indentation space
+    itemText[pos++] = isSelected ? options.pointer : ' ';
+    
+    // Add the actual label (safely copy to avoid overflow)
+    const char* label = item->label.c_str();
+    while (*label && pos < 22) {  // Leave room for padding and null terminator
+      itemText[pos++] = *label++;
+    }
 
     Display::TextOptions textOptions;
     textOptions._color = 0x00;
@@ -75,43 +139,67 @@ void MenuSystem::displayMenu() {
       case MenuItemType::TOGGLE:
         {
           bool toggleState = *(item->toggleable);
-          itemText += toggleState ? " [X]" : " [ ]";
+          const char* suffix = toggleState ? " [X]" : " [ ]";
+          while (*suffix && pos < 22) {
+            itemText[pos++] = *suffix++;
+          }
           break;
         }
       case MenuItemType::ACTION:
       default:
         break;
       case MenuItemType::LABEL:
-        itemText += " ";
+        if (pos < 22) itemText[pos++] = ' ';
         textOptions._font = options.labelFont;
         break;
       case MenuItemType::OPTION:
-        itemText += ": ";
-        // Use optionValueProvider if available, otherwise use the static optionValue
-        if (item->optionValueProvider) {
-          itemText += item->optionValueProvider();
-        } else {
-          itemText += item->optionValue;
+        {
+          if (pos < 21) {
+            itemText[pos++] = ':';
+            itemText[pos++] = ' ';
+          }
+          // Use optionValueProvider if available, otherwise use the static optionValue
+          const char* optVal = item->optionValueProvider ? 
+            item->optionValueProvider().c_str() : item->optionValue.c_str();
+          while (*optVal && pos < 22) {
+            itemText[pos++] = *optVal++;
+          }
+          break;
+        }
+      case MenuItemType::SUBMENU:
+        {
+          const char* suffix = item->expanded ? " V" : " >";
+          while (*suffix && pos < 22) {
+            itemText[pos++] = *suffix++;
+          }
+          break;
+        }
+      case MenuItemType::SCENE:
+        if (pos < 21) {
+          itemText[pos++] = ' ';
+          itemText[pos++] = '>';
         }
         break;
-      case MenuItemType::SUBMENU:
-        // Show different indicator based on expanded state
-        itemText += item->expanded ? " V" : " >";
-        break;
-      case MenuItemType::SCENE:
-        itemText += " >";  // ASCII arrow indicator for scene items
-        break;
     }
 
-    // Pad itemText to fixed width to overwrite any leftover characters
-    const size_t PAD_WIDTH = 20;
-    if (itemText.length() < PAD_WIDTH) {
-      itemText += std::string(PAD_WIDTH - itemText.length(), ' ');
+    // Pad with spaces to clear old content (max 20 chars for padding)
+    while (pos < 20) {
+      itemText[pos++] = ' ';
     }
-    display.drawText(xPosition, yPosition, itemText.c_str(), textOptions);
+    itemText[pos] = '\0';  // Null terminate
+    
+    display.drawText(xPosition, yPosition, itemText, textOptions);
   }
 
+  #ifdef ARDUINO
+  Serial.println("displayMenu() - calling display.update()");
+  #endif
+  
   display.update();
+  
+  #ifdef ARDUINO
+  Serial.println("displayMenu() - COMPLETED");
+  #endif
 }
 
 void MenuSystem::nextOption() {
@@ -544,6 +632,10 @@ private:
 void MenuSystem::enterScene(Scene* scene) {
   if (!scene || !engine) return;
   
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::enterScene() - entering scene");
+  #endif
+  
   currentScene = scene;
   
   // Pause menu and disable input handler FIRST
@@ -558,12 +650,21 @@ void MenuSystem::enterScene(Scene* scene) {
   engine->display.update();
   
   // Set up scene exit callback to return to menu
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::enterScene() - setting exit callback");
+  #endif
   scene->setExitCallback([this]() {
     onSceneExit();
   });
   
   // Enter the scene
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::enterScene() - calling scene->enter()");
+  #endif
   scene->enter();
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::enterScene() - scene entered successfully");
+  #endif
 }
 
 void MenuSystem::exitScene() {
@@ -574,11 +675,33 @@ void MenuSystem::exitScene() {
 }
 
 void MenuSystem::onSceneExit() {
-  // Clear scene reference first
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::onSceneExit() - CALLBACK INVOKED!");
+  #endif
+  
+  // Save scene reference then clear it
   Scene* exitingScene = currentScene;
   currentScene = nullptr;
   
+  // No need to clear callback - Scene::triggerExit() already cleared it
+  // before calling this callback
+  
+  // Now it's safe to cleanup non-persistent scenes
+  // (we're outside the actor's handle() method now)
+  if (exitingScene && !exitingScene->isPersistent()) {
+    #ifdef ARDUINO
+    Serial.println("MenuSystem::onSceneExit() - cleaning up non-persistent scene");
+    #endif
+    exitingScene->cleanup();
+    #ifdef ARDUINO
+    Serial.println("MenuSystem::onSceneExit() - scene cleaned up");
+    #endif
+  }
+  
   // Clear display immediately
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::onSceneExit() - clearing display");
+  #endif
   if (engine) {
     engine->display.clear();
     engine->display.update();
@@ -587,12 +710,16 @@ void MenuSystem::onSceneExit() {
   // Small delay for display stability
   #ifdef ARDUINO
   delay(10);
+  Serial.println("MenuSystem::onSceneExit() - re-enabling menu input handler");
   #endif
   
   // Re-enable menu input handler
   if (inputHandler) {
     inputHandler->enable();
     inputHandler->subscribe(&engine->input);
+    #ifdef ARDUINO
+    Serial.println("MenuSystem::onSceneExit() - menu input handler re-enabled");
+    #endif
   }
   
   // Unpause and force menu redraw
@@ -601,8 +728,16 @@ void MenuSystem::onSceneExit() {
   buildFlattenedMenu();
   menuDirty = false;
   
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::onSceneExit() - displaying menu");
+  #endif
+  
   // Display the menu
   displayMenu();
+  
+  #ifdef ARDUINO
+  Serial.println("MenuSystem::onSceneExit() - COMPLETED - menu should be visible now");
+  #endif
 }
 
 void MenuSystem::start(Kywy::Engine& engine) {

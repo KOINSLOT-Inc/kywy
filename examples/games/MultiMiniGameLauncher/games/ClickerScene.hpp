@@ -285,9 +285,12 @@ private:
     ClickerScene* scene;  // Reference to parent scene
     
   public:
-    CookieClickHandler(ClickerScene* parentScene) : Actor::Actor(), scene(parentScene) {}
+    CookieClickHandler(ClickerScene* parentScene) : Actor::Actor(), scene(parentScene) {
+      // Auto-register with parent scene
+      scene->Scene::add(this, false);
+    }
     
-    void handle(::Actor::Message* message) override {
+    void handle(::Actor::Message* message) {
       // Ignore messages if scene is not active
       if (!scene->isActive()) return;
       
@@ -319,19 +322,10 @@ private:
     }
   };
 
-  CookieClickHandler* clickHandler = nullptr;
+  CookieClickHandler clickHandler;
 
 public:
-  ClickerScene() : Scene() {}
-
-  void onInitialize() {
-    // Create and initialize the click handler actor
-    clickHandler = new CookieClickHandler(this);
-    clickHandler->start();
-    clickHandler->enable();
-    clickHandler->subscribe(&Scene::getEngine()->input);
-    clickHandler->subscribe(&Scene::getEngine()->clock);
-  }
+  ClickerScene() : Scene(), clickHandler(this) {}
 
   void onEnter() {
     cookieCount = 0;

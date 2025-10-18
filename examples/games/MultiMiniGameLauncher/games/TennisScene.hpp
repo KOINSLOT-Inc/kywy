@@ -9,8 +9,8 @@
 
 using namespace Kywy;
 
-class TennisScene : public Scene, public Actor::Actor {
-public:
+class TennisScene : public Scene {
+private:
   bool startScreen = true;
   int highScore = 0;
 
@@ -290,10 +290,170 @@ public:
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 }; 
 
+  // Inner Actor class to handle game logic and input
+  class TennisGameHandler : public Actor::Actor {
+  private:
+    TennisScene* scene;
+    
+  public:
+    TennisGameHandler(TennisScene* parentScene) : Actor::Actor(), scene(parentScene) {
+      // Auto-register with parent scene
+      scene->Scene::add(this, false);
+    }
+    
+    void handle(::Actor::Message *message) override {
+      if (!scene->isActive()) return;
+      
+      int distanceFromMiddleOfOpponentPaddle;
+      Display::Display& display = Scene::getEngine()->display;
+
+      switch (message->signal) {
+        case Kywy::Events::D_PAD_UP_PRESSED:
+          scene->yDirection = -1;
+          break;
+        case Kywy::Events::D_PAD_UP_RELEASED:
+          scene->yDirection = 0;
+          break;
+        case Kywy::Events::D_PAD_DOWN_PRESSED:
+          scene->yDirection = 1;
+          break;
+        case Kywy::Events::D_PAD_DOWN_RELEASED:
+          scene->yDirection = 0;
+          break;
+        case Kywy::Events::BUTTON_LEFT_PRESSED:
+          // Always allow exit with left button, regardless of game state
+          scene->triggerExit();
+          return;
+        case Kywy::Events::TICK:
+          // Don't process ticks during splash screen or game over
+          if (scene->startScreen || scene->gameOver) {
+            break;
+          }
+          
+          // Handle countdown
+          if (scene->inCountdown) {
+            scene->countdownTicks++;
+            if (scene->countdownTicks >= scene->ticksPerCountdownStep) {
+              scene->countdownTicks = 0;
+              scene->countdownNumber--;
+              
+              display.clear();
+              scene->drawPaddlesAndBall();
+              scene->drawScore();
+              
+              if (scene->countdownNumber > 0) {
+                char countStr[2];
+                snprintf(countStr, sizeof(countStr), "%d", scene->countdownNumber);
+                display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
+                display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, countStr, Display::TextOptions().origin(Display::Origin::Text::CENTER));
+              } else {
+                // Countdown finished, start the point
+                scene->inCountdown = false;
+                scene->ballXVelocity = random(2) == 1 ? -5 : 5;
+                scene->ballYVelocity = (random(2) == 1 ? -1 : 1) * random(3);
+                scene->inPoint = true;
+              }
+              display.update();
+            }
+            break;
+          }
+          
+          // move paddle
+          scene->paddleY += scene->yDirection * scene->movesPerTick;
+
+          if (scene->paddleY < scene->screenBorder) {
+            scene->paddleY = scene->screenBorder;
+          }
+
+          if (scene->paddleY > KYWY_DISPLAY_HEIGHT - scene->screenBorder - scene->paddleLength) {
+            scene->paddleY = KYWY_DISPLAY_HEIGHT - scene->screenBorder - scene->paddleLength;
+          }
+
+          // move opponent paddle
+          distanceFromMiddleOfOpponentPaddle = scene->ballY - (scene->opponentPaddleY + scene->paddleLength / 2);
+          if (distanceFromMiddleOfOpponentPaddle > 5) {
+            scene->opponentPaddleY += scene->movesPerTick;
+          } else if (distanceFromMiddleOfOpponentPaddle < -5) {
+            scene->opponentPaddleY -= scene->movesPerTick;
+          }
+
+          // move ball
+          scene->ballX += scene->ballXVelocity;
+          scene->ballY += scene->ballYVelocity;
+
+          if ((scene->ballX - scene->ballRadius <= scene->screenBorder + scene->paddleWidth) && (scene->ballY >= scene->paddleY - scene->ballRadius) && (scene->ballY <= scene->paddleY + scene->paddleLength + scene->ballRadius)) {  // paddle collision
+            scene->ballX = scene->screenBorder + scene->paddleWidth + scene->ballRadius - 2;
+            scene->ballXVelocity = abs(scene->ballXVelocity);
+            scene->ballYVelocity = (int)(((float)(scene->ballY - (scene->paddleY + scene->paddleLength / 2)) / (float)(scene->paddleLength / 2)) * 5);
+          }
+
+          if ((scene->ballX + scene->ballRadius >= KYWY_DISPLAY_WIDTH - scene->screenBorder - scene->paddleWidth) && (scene->ballY >= scene->opponentPaddleY - scene->ballRadius) && (scene->ballY <= scene->opponentPaddleY + scene->paddleLength + scene->ballRadius)) {  // opponent paddle collision
+            scene->ballX = KYWY_DISPLAY_WIDTH - scene->screenBorder - scene->paddleWidth - scene->ballRadius + 2;
+            scene->ballXVelocity = -1 * abs(scene->ballXVelocity);
+            scene->ballYVelocity = (int)(((float)(scene->ballY - (scene->opponentPaddleY + scene->paddleLength / 2)) / (float)(scene->paddleLength / 2)) * 5);
+          }
+
+          if (scene->ballX - scene->ballRadius <= scene->screenBorder) {  // left wall collision
+            scene->ballX = scene->screenBorder + scene->ballRadius;
+            scene->ballXVelocity = abs(scene->ballXVelocity);
+            scene->opponentScore += 1;
+            if (scene->opponentScore >= 5) {
+              scene->endGame();
+              return;
+            }
+            scene->preparePoint();
+            scene->countdown();
+            return;
+          }
+
+          if (scene->ballX >= KYWY_DISPLAY_WIDTH - scene->screenBorder - scene->ballRadius) {  // right wall collision
+            scene->ballX = KYWY_DISPLAY_WIDTH - scene->screenBorder - scene->ballRadius;
+            scene->ballXVelocity = -1 * abs(scene->ballXVelocity);
+            scene->score += 1;
+            if (scene->score >= 5) {
+              scene->endGame();
+              return;
+            }
+            scene->preparePoint();
+            scene->countdown();
+            return;
+          }
+
+          if (scene->ballY - scene->ballRadius <= scene->screenBorder) {  // top wall collision
+            scene->ballY = scene->screenBorder + scene->ballRadius;
+            scene->ballYVelocity = abs(scene->ballYVelocity);
+          }
+
+          if (scene->ballY >= KYWY_DISPLAY_HEIGHT - scene->screenBorder - scene->ballRadius) {  // bottom wall collision
+            scene->ballY = KYWY_DISPLAY_HEIGHT - scene->screenBorder - scene->ballRadius;
+            scene->ballYVelocity = -1 * abs(scene->ballYVelocity);
+          }
+
+          display.clear();
+          scene->drawScore();
+          scene->drawPaddlesAndBall();
+          display.update();
+          break;
+
+        case Kywy::Events::BUTTON_RIGHT_PRESSED:
+          if (scene->startScreen) {
+            // Start game from splash screen
+            scene->startScreen = false;
+            scene->startGame();
+          } else if (scene->gameOver) {
+            // Restart game when game over
+            scene->startGame();
+          }
+          break;
+      }
+    }
+  };
+
+  TennisGameHandler gameHandler;
+
   void preparePoint() {
     Display::Display& display = Scene::getEngine()->display;
     display.clear();
-    this->unsubscribe(&Scene::getEngine()->clock);
     inPoint = false;
     paddleY = KYWY_DISPLAY_HEIGHT / 2 - paddleLength / 2;
     opponentPaddleY = paddleY;
@@ -316,7 +476,6 @@ public:
 
   void endGame() {
     Display::Display& display = Scene::getEngine()->display;
-    this->unsubscribe(&Scene::getEngine()->clock);
     gameOver = true;
     display.clear();
     if (score >= 5) {
@@ -361,24 +520,15 @@ public:
     display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
     display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "3", Display::TextOptions().origin(Display::Origin::Text::CENTER));
     display.update();
-    
-    // Subscribe to clock if not already subscribed (startGame doesn't subscribe anymore)
-    this->subscribe(&Scene::getEngine()->clock);
   }
 
 public:
-  TennisScene() : Scene(false, false) { 
+  TennisScene() : Scene(), gameHandler(this) { 
     inCountdown = false;
     countdownNumber = 0;
     countdownTicks = 0;
-  }
-
-  void onInitialize() {
-    // Start and enable this actor FIRST
-    this->start();
-    this->enable();
-    // Then subscribe to input
-    this->subscribe(&Scene::getEngine()->input);
+    
+    // Actor auto-registers itself in its constructor!
   }
 
   void onEnter() {
@@ -388,171 +538,6 @@ public:
     Display::Display& display = Scene::getEngine()->display;
     display.clear();
     display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
-    display.update();
-  }
-
-  void handle(::Actor::Message *message) {
-    if (!isActive()) return;
-    int distanceFromMiddleOfOpponentPaddle;
-    Display::Display& display = Scene::getEngine()->display;
-
-    switch (message->signal) {
-      case Kywy::Events::D_PAD_UP_PRESSED:
-        yDirection = -1;
-        break;
-      case Kywy::Events::D_PAD_UP_RELEASED:
-        yDirection = 0;
-        break;
-      case Kywy::Events::D_PAD_DOWN_PRESSED:
-        yDirection = 1;
-        break;
-      case Kywy::Events::D_PAD_DOWN_RELEASED:
-        yDirection = 0;
-        break;
-      case Kywy::Events::TICK:
-        // Don't process ticks during splash screen or game over
-        if (startScreen || gameOver) {
-          break;
-        }
-        
-        // Handle countdown
-        if (inCountdown) {
-          countdownTicks++;
-          if (countdownTicks >= ticksPerCountdownStep) {
-            countdownTicks = 0;
-            countdownNumber--;
-            
-            Display::Display& display = Scene::getEngine()->display;
-            display.clear();
-            drawPaddlesAndBall();
-            drawScore();
-            
-            if (countdownNumber > 0) {
-              char countStr[2];
-              snprintf(countStr, sizeof(countStr), "%d", countdownNumber);
-              display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
-              display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, countStr, Display::TextOptions().origin(Display::Origin::Text::CENTER));
-            } else {
-              // Countdown finished, start the point
-              inCountdown = false;
-              ballXVelocity = random(2) == 1 ? -5 : 5;
-              ballYVelocity = (random(2) == 1 ? -1 : 1) * random(3);
-              inPoint = true;
-            }
-            display.update();
-          }
-          break;
-        }
-        
-        // move paddle
-        paddleY += yDirection * movesPerTick;
-
-        if (paddleY < screenBorder) {
-          paddleY = screenBorder;
-        }
-
-        if (paddleY > KYWY_DISPLAY_HEIGHT - screenBorder - paddleLength) {
-          paddleY = KYWY_DISPLAY_HEIGHT - screenBorder - paddleLength;
-        }
-
-        // move opponent paddle
-        distanceFromMiddleOfOpponentPaddle = ballY - (opponentPaddleY + paddleLength / 2);
-        if (distanceFromMiddleOfOpponentPaddle > 5) {
-          opponentPaddleY += movesPerTick;
-        } else if (distanceFromMiddleOfOpponentPaddle < -5) {
-          opponentPaddleY -= movesPerTick;
-        }
-
-        // move ball
-        ballX += ballXVelocity;
-        ballY += ballYVelocity;
-
-        if ((ballX - ballRadius <= screenBorder + paddleWidth) && (ballY >= paddleY - ballRadius) && (ballY <= paddleY + paddleLength + ballRadius)) {  // paddle collision
-          ballX = screenBorder + paddleWidth + ballRadius - 2;                                                                                          // look like it hit the paddle
-
-          ballXVelocity = abs(ballXVelocity);                                                                      // bounce back
-          ballYVelocity = (int)(((float)(ballY - (paddleY + paddleLength / 2)) / (float)(paddleLength / 2)) * 5);  // change angle based on y velocity
-        }
-
-        if ((ballX + ballRadius >= KYWY_DISPLAY_WIDTH - screenBorder - paddleWidth) && (ballY >= opponentPaddleY - ballRadius) && (ballY <= opponentPaddleY + paddleLength + ballRadius)) {  // opponent paddle collision
-          ballX = KYWY_DISPLAY_WIDTH - screenBorder - paddleWidth - ballRadius + 2;                                                                                                          // look like it hit the paddle
-
-          ballXVelocity = -1 * abs(ballXVelocity);                                                                         // bounce back
-          ballYVelocity = (int)(((float)(ballY - (opponentPaddleY + paddleLength / 2)) / (float)(paddleLength / 2)) * 5);  // change angle based on y velocity
-        }
-
-        if (ballX - ballRadius <= screenBorder) {  // left wall collision
-          ballX = screenBorder + ballRadius;
-          ballXVelocity = abs(ballXVelocity);
-          opponentScore += 1;
-          if (opponentScore >= 5) {
-            endGame();
-            return;
-          }
-          preparePoint();
-          countdown();
-          return;
-        }
-
-        if (ballX >= KYWY_DISPLAY_WIDTH - screenBorder - ballRadius) {  // right wall collision
-          ballX = KYWY_DISPLAY_WIDTH - screenBorder - ballRadius;
-          ballXVelocity = -1 * abs(ballXVelocity);
-          score += 1;
-          if (score >= 5) {
-            endGame();
-            return;
-          }
-          preparePoint();
-          countdown();
-          return;
-        }
-
-        if (ballY - ballRadius <= screenBorder) {  // top wall collision
-          ballY = screenBorder + ballRadius;
-          ballYVelocity = abs(ballYVelocity);
-        }
-
-        if (ballY >= KYWY_DISPLAY_HEIGHT - screenBorder - ballRadius) {  // bottom wall collision
-          ballY = KYWY_DISPLAY_HEIGHT - screenBorder - ballRadius;
-          ballYVelocity = -1 * abs(ballYVelocity);
-        }
-
-        display.clear();
-        drawScore();
-        drawPaddlesAndBall();
-        display.update();
-        break;
-      case Kywy::Events::BUTTON_LEFT_PRESSED:
-        // Always allow exit with left button, regardless of game state
-        Scene::triggerExit();
-        return;
-      case Kywy::Events::BUTTON_RIGHT_PRESSED:
-        if (startScreen) {
-          // Start game from splash screen
-          startScreen = false;
-          startGame();
-        } else if (gameOver) {
-          // Restart game when game over
-          startGame();
-        }
-        break;
-    }
-  }
-
-  void onExit() {
-    Display::Display& display = Scene::getEngine()->display;
-    display.clear();
-    display.update();
-  }
-
-  void onCleanup() {
-    // Unsubscribe, disable, then stop
-    this->unsubscribe(&Scene::getEngine()->input);
-    this->unsubscribe(&Scene::getEngine()->clock);
-    this->disable();
-    this->stop();
-    Display::Display& display = Scene::getEngine()->display;
-    display.clear();
     display.update();
   }
 };

@@ -9,8 +9,8 @@
 
 using namespace Kywy;
 
-class SnakeScene : public Scene, public Actor::Actor {
-public:
+class SnakeScene : public Scene {
+private:
   bool startScreen = true;
   bool gameOver = false;
   int highScore = 0;
@@ -348,7 +348,7 @@ public:
       if (sectionX[length] == sectionX[i] && sectionY[length] == sectionY[i]) {
         gameOver = true;
         highScore = fmax(length, highScore);
-        this->unsubscribe(&Scene::getEngine()->clock);
+        // Clock subscription is handled automatically by Scene
         display.clear();
         display.drawText(5, 5, "GAME OVER");
         char msg[32];
@@ -429,101 +429,96 @@ public:
     drawTail();
     dropFood();
     display.update();
-    this->subscribe(&Scene::getEngine()->clock);
+    // Clock subscription is handled automatically by Scene
   };
 
+  // Inner Actor class to handle input and game logic
+  class SnakeGameHandler : public Actor::Actor {
+  private:
+    SnakeScene* scene;
+    
+  public:
+    SnakeGameHandler(SnakeScene* parentScene) : Actor::Actor(), scene(parentScene) {
+      // Auto-register with parent scene
+      scene->Scene::add(this, false);
+    }
+    
+    void handle(::Actor::Message *message) {
+      if (!scene->isActive()) return;
+      
+      switch (message->signal) {
+        case Kywy::Events::D_PAD_LEFT_PRESSED:
+          if (scene->xDirection != 1) {
+            scene->newXDirection = -1;
+            scene->newYDirection = 0;
+          }
+          break;
+        case Kywy::Events::D_PAD_RIGHT_PRESSED:
+          if (scene->xDirection != -1) {
+            scene->newXDirection = 1;
+            scene->newYDirection = 0;
+          }
+          break;
+        case Kywy::Events::D_PAD_UP_PRESSED:
+          if (scene->yDirection != 1) {
+            scene->newXDirection = 0;
+            scene->newYDirection = -1;
+          }
+          break;
+        case Kywy::Events::D_PAD_DOWN_PRESSED:
+          if (scene->yDirection != -1) {
+            scene->newXDirection = 0;
+            scene->newYDirection = 1;
+          }
+          break;
+        case Kywy::Events::TICK:
+          // Don't process ticks during splash screen
+          if (scene->startScreen || scene->gameOver) {
+            break;
+          }
+          
+          scene->ticksSinceLastMove++;
+
+          if (scene->ticksSinceLastMove >= scene->ticksPerMove) {
+            scene->xDirection = scene->newXDirection;
+            scene->yDirection = scene->newYDirection;
+            scene->moveSnake();
+            scene->ticksSinceLastMove = 0;
+            Scene::getEngine()->display.update();
+          }
+          break;
+        case Kywy::Events::BUTTON_LEFT_PRESSED:
+          // Exit with left button regardless of game state
+          scene->triggerExit();
+          return;
+        case Kywy::Events::BUTTON_RIGHT_PRESSED:
+          if (scene->startScreen) {
+            // Start game from splash screen
+            scene->startScreen = false;
+            Scene::getEngine()->display.clear();
+            scene->startGame();
+          } else if (scene->gameOver) {
+            // Restart game when game over
+            Scene::getEngine()->display.clear();
+            scene->startGame();
+          }
+          break;
+      }
+    }
+  };
+
+  friend class SnakeGameHandler;
+  SnakeGameHandler gameHandler;
+
 public:
-  SnakeScene() : Scene(true, true) {}  // persistent=true to avoid cleanup on exit
-
-  virtual void onInitialize() override {
-    // Start and enable this actor FIRST
-    this->start();
-    this->enable();
-    // Then subscribe to input - persists across enter/exit
-    this->subscribe(&Scene::getEngine()->input);
-  }
-
-  virtual void onCleanup() override {
-    // Unsubscribe, disable, then stop
-    this->unsubscribe(&Scene::getEngine()->input);
-    this->unsubscribe(&Scene::getEngine()->clock);
-    this->disable();
-    this->stop();
-  }
-
-  virtual void onEnter() override {
+  SnakeScene() : Scene(), gameHandler(this) {}
+  void onEnter() {
     startScreen = true;
     gameOver = true;
     
     Display::Display& display = Scene::getEngine()->display;
     display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreen);
     display.update();
-  }
-
-  void handle(::Actor::Message *message) override {
-    switch (message->signal) {
-      case Kywy::Events::D_PAD_LEFT_PRESSED:
-        if (xDirection != 1) {
-          newXDirection = -1;
-          newYDirection = 0;
-        }
-        break;
-      case Kywy::Events::D_PAD_RIGHT_PRESSED:
-        if (xDirection != -1) {
-          newXDirection = 1;
-          newYDirection = 0;
-        }
-        break;
-      case Kywy::Events::D_PAD_UP_PRESSED:
-        if (yDirection != 1) {
-          newXDirection = 0;
-          newYDirection = -1;
-        }
-        break;
-      case Kywy::Events::D_PAD_DOWN_PRESSED:
-        if (yDirection != -1) {
-          newXDirection = 0;
-          newYDirection = 1;
-        }
-        break;
-      case Kywy::Events::TICK:
-        // Don't process ticks during splash screen
-        if (startScreen || gameOver) {
-          break;
-        }
-        
-        ticksSinceLastMove++;
-
-        if (ticksSinceLastMove >= ticksPerMove) {
-          xDirection = newXDirection;
-          yDirection = newYDirection;
-          moveSnake();
-          ticksSinceLastMove = 0;
-          Scene::getEngine()->display.update();
-        }
-        break;
-      case Kywy::Events::BUTTON_LEFT_PRESSED:
-        // Exit with left button regardless of game state
-        Scene::triggerExit();
-        return;
-      case Kywy::Events::BUTTON_RIGHT_PRESSED:
-        if (startScreen) {
-          // Start game from splash screen
-          startScreen = false;
-          Scene::getEngine()->display.clear();
-          startGame();
-        } else if (gameOver) {
-          // Restart game when game over
-          Scene::getEngine()->display.clear();
-          startGame();
-        }
-        break;
-    }
-  }
-
-  virtual void onExit() override {
-    // Unsubscribe from clock if playing
-    this->unsubscribe(&Scene::getEngine()->clock);
   }
 };
 

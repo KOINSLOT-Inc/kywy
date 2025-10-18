@@ -280,7 +280,7 @@ const uint8_t spelunkerBMP[] = {
   0b00000000,  //
 };
 
-class SpelunkerScene : public Scene, public Actor::Actor {
+class SpelunkerScene : public Scene {
 public:
   bool startScreen = true;
   bool gameOver = false;
@@ -466,7 +466,7 @@ private:
     spelunker.unsubscribe(&Scene::getEngine()->input);
     spelunker.unsubscribe(&Scene::getEngine()->clock);
     columns.unsubscribe(&Scene::getEngine()->clock);
-    this->unsubscribe(&Scene::getEngine()->clock);
+    // Clock subscription for inputHandler is handled automatically by Scene
     
     // Stop actors
     spelunker.stop();
@@ -511,7 +511,7 @@ private:
     columns.subscribe(&Scene::getEngine()->clock);
     spelunker.subscribe(&Scene::getEngine()->input);
     spelunker.subscribe(&Scene::getEngine()->clock);
-    this->subscribe(&Scene::getEngine()->clock);
+    // Clock subscription for inputHandler is handled automatically by Scene
 
     // Start the actors
     spelunker.start();
@@ -519,6 +519,83 @@ private:
     
     Scene::getEngine()->display.update();
   }
+
+  // Input handler actor to manage scene-level input and game flow
+  class SpelunkerInputHandler : public Actor::Actor {
+  private:
+    SpelunkerScene* scene;
+    
+  public:
+    SpelunkerInputHandler(SpelunkerScene* parentScene) : Actor::Actor(), scene(parentScene) {
+      // Auto-register with parent scene
+      scene->Scene::add(this, false);
+    }
+    
+    void handle(::Actor::Message *message) override {
+      if (!scene->isActive()) return;
+      
+      switch (message->signal) {
+        case SpelunkerSignal::GAME_OVER:
+          scene->gameOver = true;
+          scene->highScore = fmax(scene->score, scene->highScore);
+          scene->stopGame();
+          
+          Scene::getEngine()->display.clear();
+          Scene::getEngine()->display.drawText(5, 5, "GAME OVER");
+          char msg[32];
+          snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)scene->score);
+          Scene::getEngine()->display.drawText(5, 15, msg);
+          snprintf(msg, sizeof(msg), "High Score: %d", scene->highScore);
+          Scene::getEngine()->display.drawText(5, 25, msg);
+          Scene::getEngine()->display.drawText(5, 45, "Press right button");
+          Scene::getEngine()->display.drawText(5, 55, "to try again.");
+          Scene::getEngine()->display.drawText(5, 65, "Press left to exit.");
+          Scene::getEngine()->display.update();
+          break;
+          
+        case Kywy::Events::TICK:
+          // Don't process ticks during splash screen or game over
+          if (scene->startScreen || scene->gameOver) {
+            break;
+          }
+          scene->score += 1;
+          scene->drawScore();
+          Scene::getEngine()->display.update();
+          break;
+          
+        case Kywy::Events::BUTTON_LEFT_PRESSED:
+          // Exit with left button regardless of game state
+          scene->triggerExit();
+          return;
+          
+        case Kywy::Events::BUTTON_RIGHT_PRESSED:
+          // Only handle if on start screen or game over - ignore during gameplay
+          if (scene->startScreen) {
+            // Start game from splash screen
+            scene->startScreen = false;
+            Scene::getEngine()->display.clear();
+            scene->startGame();
+          } else if (scene->gameOver) {
+            // Restart game when game over
+            Scene::getEngine()->display.clear();
+            scene->startGame();
+          }
+          // else: ignore during active gameplay
+          break;
+          
+        case Kywy::Events::D_PAD_UP_PRESSED:
+        case Kywy::Events::D_PAD_DOWN_PRESSED:
+        case Kywy::Events::D_PAD_LEFT_PRESSED:
+        case Kywy::Events::D_PAD_RIGHT_PRESSED:
+          // During gameplay, ignore d-pad (spelunker only jumps with right button)
+          // These events are here to prevent them from propagating
+          break;
+      }
+    }
+  };
+
+  friend class SpelunkerInputHandler;
+  SpelunkerInputHandler inputHandler;
 
   void drawScore() {
     char msg[16];
@@ -528,24 +605,11 @@ private:
   }
 
 public:
-  SpelunkerScene() : Scene(true, true), columns(&spelunker) {}  // persistent=true to avoid cleanup on exit
-
-  virtual void onInitialize() override {
-    // Start and enable this actor FIRST
-    this->start();
-    this->enable();
-    // Then subscribe to input - persists across enter/exit
-    this->subscribe(&Scene::getEngine()->input);
+  SpelunkerScene() : Scene(), columns(&spelunker), inputHandler(this) {
+    // Actor auto-registers itself in its constructor!
   }
 
-  virtual void onCleanup() override {
-    // Unsubscribe, disable, then stop
-    this->unsubscribe(&Scene::getEngine()->input);
-    this->disable();
-    this->stop();
-  }
-
-  virtual void onEnter() override {
+  void onEnter() {
     // Reset all game state
     startScreen = true;
     gameOver = true;
@@ -566,8 +630,8 @@ public:
     add(&spelunker);
     add(&columns);
     
-    // Subscribe to column manager for GAME_OVER messages
-    this->subscribe(&columns);
+    // Subscribe to column manager for GAME_OVER messages (inputHandler also needs this)
+    inputHandler.subscribe(&columns);
     
     // Draw splash screen
     Scene::getEngine()->display.clear();
@@ -576,84 +640,14 @@ public:
     Scene::getEngine()->display.update();
   }
 
-  void handle(::Actor::Message *message) override {
-    switch (message->signal) {
-      case SpelunkerSignal::GAME_OVER:
-        gameOver = true;
-        highScore = fmax(score, highScore);
-        stopGame();
-        
-        Scene::getEngine()->display.clear();
-        Scene::getEngine()->display.drawText(5, 5, "GAME OVER");
-        char msg[32];
-        snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
-        Scene::getEngine()->display.drawText(5, 15, msg);
-        snprintf(msg, sizeof(msg), "High Score: %d", highScore);
-        Scene::getEngine()->display.drawText(5, 25, msg);
-        Scene::getEngine()->display.drawText(5, 45, "Press right button");
-        Scene::getEngine()->display.drawText(5, 55, "to try again.");
-        Scene::getEngine()->display.drawText(5, 65, "Press left to exit.");
-        Scene::getEngine()->display.update();
-        break;
-        
-      case Kywy::Events::TICK:
-        // Don't process ticks during splash screen or game over
-        if (startScreen || gameOver) {
-          break;
-        }
-        score += 1;
-        drawScore();
-        Scene::getEngine()->display.update();
-        break;
-        
-      case Kywy::Events::BUTTON_LEFT_PRESSED:
-        // Exit with left button regardless of game state
-        Scene::triggerExit();
-        return;
-        
-      case Kywy::Events::BUTTON_RIGHT_PRESSED:
-        // Only handle if on start screen or game over - ignore during gameplay
-        if (startScreen) {
-          // Start game from splash screen
-          startScreen = false;
-          Scene::getEngine()->display.clear();
-          startGame();
-        } else if (gameOver) {
-          // Restart game when game over
-          Scene::getEngine()->display.clear();
-          startGame();
-        }
-        // else: ignore during active gameplay
-        break;
-        
-      case Kywy::Events::D_PAD_UP_PRESSED:
-      case Kywy::Events::D_PAD_DOWN_PRESSED:
-      case Kywy::Events::D_PAD_LEFT_PRESSED:
-      case Kywy::Events::D_PAD_RIGHT_PRESSED:
-      case Kywy::Events::D_PAD_CENTER_PRESSED:
-        if (startScreen) {
-          // Start game from splash screen
-          startScreen = false;
-          Scene::getEngine()->display.clear();
-          startGame();
-        } else if (gameOver) {
-          // Restart game when game over
-          Scene::getEngine()->display.clear();
-          startGame();
-        }
-        // else: ignore during active gameplay (spelunkerManager handles these)
-        break;
-    }
-  }
-
-  virtual void onExit() override {
+  void onExit() {
     // Stop the game if it's running
     if (!gameOver && !startScreen) {
       stopGame();
     }
     
-    // Unsubscribe from column manager
-    this->unsubscribe(&columns);
+    // Unsubscribe inputHandler from column manager
+    inputHandler.unsubscribe(&columns);
     
     // Stop child actors
     spelunker.stop();

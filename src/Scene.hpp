@@ -14,13 +14,15 @@ namespace Kywy {
   class Engine;
 }
 
-const uint8_t MAX_ACTORS = 5;
+const uint8_t MAX_ACTORS = 20;
 
 class Scene {
   void subscribeAllActors();
   void unsubscribeAllActors();
 private:
   Actor::Actor *actors[MAX_ACTORS] = {};
+  bool actorOwned[MAX_ACTORS] = {};  // Track which actors are heap-allocated and should be deleted
+  bool actorNeedsInput[MAX_ACTORS] = {};  // Track which actors need input subscription
   bool active = false;
   bool initialized = false;
   
@@ -55,7 +57,7 @@ public:
   void exit();        // Exit scene (calls onExit)
 
   // Actor management
-  void add(Actor::Actor *actor);
+  void add(Actor::Actor *actor, bool owned = true, bool subscribeToInput = true);  // Add actor with automatic setup
   void remove(Actor::Actor *actor);
 
   // State queries
