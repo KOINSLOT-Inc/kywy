@@ -11,7 +11,7 @@
 
 // Forward declaration
 namespace Kywy {
-  class Engine;
+class Engine;
 }
 
 const uint8_t MAX_ACTORS = 20;
@@ -21,28 +21,28 @@ class Scene {
   void unsubscribeAllActors();
 private:
   Actor::Actor *actors[MAX_ACTORS] = {};
-  bool actorOwned[MAX_ACTORS] = {};  // Track which actors are heap-allocated and should be deleted
+  bool actorOwned[MAX_ACTORS] = {};       // Track which actors are heap-allocated and should be deleted
   bool actorNeedsInput[MAX_ACTORS] = {};  // Track which actors need input subscription
   bool active = false;
   bool initialized = false;
-  
-  static Kywy::Engine* engine;  // Static engine reference for display operations
+
+  static Kywy::Engine *engine;                   // Static engine reference for display operations
   std::function<void()> exitCallback = nullptr;  // Callback for scene exit
 
   ::Actor::Message sceneEnterMessage = ::Actor::Message(Kywy::Events::KywyEvents::SCENE_ENTER);
   ::Actor::Message sceneExitMessage = ::Actor::Message(Kywy::Events::KywyEvents::SCENE_EXIT);
 
 protected:
-  bool persistent = false;        // Control whether scene persists across exits
-  bool autoClearDisplay = true;   // Automatically clear display on exit
+  bool persistent = false;       // Control whether scene persists across exits
+  bool autoClearDisplay = true;  // Automatically clear display on exit
 
 public:
   Scene(bool persistent = false, bool autoClearDisplay = true);
   virtual ~Scene();
 
   // Static engine management
-  static void setEngine(Kywy::Engine* eng);
-  static Kywy::Engine* getEngine();
+  static void setEngine(Kywy::Engine *eng);
+  static Kywy::Engine *getEngine();
 
   // Virtual lifecycle hooks for derived classes
   virtual void onInitialize() {};  // Called once when scene is first initialized
@@ -61,9 +61,15 @@ public:
   void remove(Actor::Actor *actor);
 
   // State queries
-  bool isActive() const { return active; }
-  bool isInitialized() const { return initialized; }
-  bool isPersistent() const { return persistent; }
+  bool isActive() const {
+    return active;
+  }
+  bool isInitialized() const {
+    return initialized;
+  }
+  bool isPersistent() const {
+    return persistent;
+  }
 
   // Exit callback system
   void setExitCallback(std::function<void()> callback);

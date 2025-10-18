@@ -40,7 +40,7 @@ void MenuSystem::displayMenu() {
 
   // Draw the visible portion of the flattened menu
   for (int i = 0; i < displayCount; ++i) {
-    
+
     int itemIndex = scrollOptions.startIndex + i;
     if (itemIndex >= flattenedMenu.size()) {
       break;
@@ -48,7 +48,7 @@ void MenuSystem::displayMenu() {
 
     const FlatMenuItem& flatItem = flattenedMenu[itemIndex];
     const MenuItem* item = flatItem.item;
-    
+
     int indentLevel = flatItem.indentLevel;
     bool isSubmenuItem = flatItem.isSubmenuItem;
 
@@ -65,10 +65,10 @@ void MenuSystem::displayMenu() {
     // Use a fixed-size buffer to avoid stack overflow from string operations
     char itemText[24];  // Fixed buffer for menu text
     int pos = 0;
-    
+
     // Add selection indicator or indentation space
     itemText[pos++] = isSelected ? options.pointer : ' ';
-    
+
     // Add the actual label (safely copy to avoid overflow)
     const char* label = item->label.c_str();
     while (*label && pos < 22) {  // Leave room for padding and null terminator
@@ -105,8 +105,7 @@ void MenuSystem::displayMenu() {
             itemText[pos++] = ' ';
           }
           // Use optionValueProvider if available, otherwise use the static optionValue
-          const char* optVal = item->optionValueProvider ? 
-            item->optionValueProvider().c_str() : item->optionValue.c_str();
+          const char* optVal = item->optionValueProvider ? item->optionValueProvider().c_str() : item->optionValue.c_str();
           while (*optVal && pos < 22) {
             itemText[pos++] = *optVal++;
           }
@@ -133,7 +132,7 @@ void MenuSystem::displayMenu() {
       itemText[pos++] = ' ';
     }
     itemText[pos] = '\0';  // Null terminate
-    
+
     display.drawText(xPosition, yPosition, itemText, textOptions);
   }
 
@@ -279,30 +278,26 @@ void MenuSystem::buildFlattenedMenu() {
   } else if (flattenedSelectedIndex >= flattenedMenu.size()) {
     flattenedSelectedIndex = flattenedMenu.size() - 1;
   }
-  
+
   // Skip label items - move to first non-label item if currently on a label
   if (!flattenedMenu.empty() && flattenedSelectedIndex < flattenedMenu.size()) {
-    while (flattenedSelectedIndex < flattenedMenu.size() && 
-           flattenedMenu[flattenedSelectedIndex].item && 
-           flattenedMenu[flattenedSelectedIndex].item->type == MenuItemType::LABEL) {
+    while (flattenedSelectedIndex < flattenedMenu.size() && flattenedMenu[flattenedSelectedIndex].item && flattenedMenu[flattenedSelectedIndex].item->type == MenuItemType::LABEL) {
       flattenedSelectedIndex++;
     }
-    
+
     // If we went past the end, wrap back and search from beginning
     if (flattenedSelectedIndex >= flattenedMenu.size()) {
       flattenedSelectedIndex = 0;
-      while (flattenedSelectedIndex < flattenedMenu.size() && 
-             flattenedMenu[flattenedSelectedIndex].item && 
-             flattenedMenu[flattenedSelectedIndex].item->type == MenuItemType::LABEL) {
+      while (flattenedSelectedIndex < flattenedMenu.size() && flattenedMenu[flattenedSelectedIndex].item && flattenedMenu[flattenedSelectedIndex].item->type == MenuItemType::LABEL) {
         flattenedSelectedIndex++;
       }
-      
+
       // If still no non-label item found, default to 0 (all items are labels)
       if (flattenedSelectedIndex >= flattenedMenu.size()) {
         flattenedSelectedIndex = 0;
       }
     }
-    
+
     // Sync the main menu selectedIndex with the updated flattenedSelectedIndex
     syncSelectedIndices();
   }
@@ -330,7 +325,7 @@ void MenuSystem::syncSelectedIndices() {
 // Handle menu item types on selection
 void MenuSystem::selectOption() {
   if (isInScene()) return;  // Don't handle selection if in scene
-  
+
   // Make sure the flattened menu is built
   if (menuDirty) {
     buildFlattenedMenu();
@@ -448,7 +443,7 @@ bool MenuSystem::isMenuPaused() const {
 
 void MenuSystem::handleBackAction() {
   if (isInScene()) return;  // Don't handle back if in scene
-  
+
   // Make sure flattened menu is built
   if (menuDirty) {
     buildFlattenedMenu();
@@ -491,7 +486,7 @@ void MenuSystem::handleBackAction() {
         anyCollapsed = true;
       }
     }
-    
+
     if (anyCollapsed) {
       menuDirty = true;  // Mark for rebuild
     }
@@ -521,7 +516,7 @@ public:
     if (!enabled) {
       return;
     }
-    
+
     // Performance optimization: Check scene state first
     if (menu.isInScene() || menu.isMenuPaused()) {
       return;
@@ -569,25 +564,25 @@ private:
 // Scene lifecycle management (defined after MenuInputHandler class)
 void MenuSystem::enterScene(Scene* scene) {
   if (!scene || !engine) return;
-  
+
   currentScene = scene;
-  
+
   // Pause menu and disable input handler FIRST
   pause();
   if (inputHandler) {
     inputHandler->unsubscribe(&engine->input);
     inputHandler->disable();
   }
-  
+
   // Clear display before entering scene
   engine->display.clear();
   engine->display.update();
-  
+
   // Set up scene exit callback to return to menu
   scene->setExitCallback([this]() {
     onSceneExit();
   });
-  
+
   // Enter the scene
   scene->enter();
 }
@@ -603,46 +598,46 @@ void MenuSystem::onSceneExit() {
   // Save scene reference then clear it
   Scene* exitingScene = currentScene;
   currentScene = nullptr;
-  
+
   // No need to clear callback - Scene::triggerExit() already cleared it
   // before calling this callback
-  
+
   // Now it's safe to cleanup non-persistent scenes
   // (we're outside the actor's handle() method now)
   if (exitingScene && !exitingScene->isPersistent()) {
     exitingScene->cleanup();
   }
-  
+
   // Clear display immediately
   if (engine) {
     engine->display.clear();
     engine->display.update();
   }
-  
-  // Small delay for display stability
-  #ifdef ARDUINO
+
+// Small delay for display stability
+#ifdef ARDUINO
   delay(10);
-  #endif
-  
+#endif
+
   // Re-enable menu input handler
   if (inputHandler) {
     inputHandler->enable();
     inputHandler->subscribe(&engine->input);
   }
-  
+
   // Unpause and force menu redraw
   unpause();
   menuDirty = true;
   buildFlattenedMenu();
   menuDirty = false;
-  
+
   // Display the menu
   displayMenu();
 }
 
 void MenuSystem::start(Kywy::Engine& engine) {
   this->engine = &engine;  // Store engine reference for scene management
-  
+
   // Create single optimized input handler (33% performance improvement)
   if (!inputHandler) {
     inputHandler = new MenuInputHandler(*this, engine);

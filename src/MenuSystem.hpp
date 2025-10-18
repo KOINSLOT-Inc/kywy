@@ -88,7 +88,7 @@ public:
   // Template helper - creates scene instance and adds to menu in one call
   template<typename SceneType>
   void createAndAddScene(const std::string &label) {
-    SceneType* scene = new SceneType();
+    SceneType *scene = new SceneType();
     items.push_back(createSceneItem(label, scene));
     menuDirty = true;  // Mark menu for rebuild
   }
@@ -154,11 +154,15 @@ public:
   void selectOption();
 
   // Scene state management
-  void enterScene(Scene* scene);
+  void enterScene(Scene *scene);
   void exitScene();
   void onSceneExit();
-  Scene* getCurrentScene() const { return currentScene; }
-  bool isInScene() const { return currentScene != nullptr; }
+  Scene *getCurrentScene() const {
+    return currentScene;
+  }
+  bool isInScene() const {
+    return currentScene != nullptr;
+  }
 
   bool paused = false;
 
@@ -209,19 +213,19 @@ private:
   size_t selectedIndex;                     // Index in main menu
   size_t flattenedSelectedIndex = 0;        // Index in flattened menu
   std::vector<FlatMenuItem> flattenedMenu;  // The flattened menu for display
-  
+
   // Scene management
-  Scene* currentScene = nullptr;            // Currently active scene
-  Kywy::Engine* engine = nullptr;           // Engine reference for scene management
-  
+  Scene *currentScene = nullptr;   // Currently active scene
+  Kywy::Engine *engine = nullptr;  // Engine reference for scene management
+
   // Performance optimization
-  MenuInputHandler* inputHandler = nullptr; // Single input handler for performance
-  bool menuDirty = true;                    // Flag to track if menu needs rebuilding
+  MenuInputHandler *inputHandler = nullptr;  // Single input handler for performance
+  bool menuDirty = true;                     // Flag to track if menu needs rebuilding
 
   // Helper methods for submenu handling
   void buildFlattenedMenu();   // Build the flattened menu structure
   void syncSelectedIndices();  // Sync main menu index with flattened index
-  
+
   std::vector<MenuItem> items;  // The menu items
 };
 

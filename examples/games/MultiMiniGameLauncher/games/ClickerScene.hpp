@@ -11,9 +11,9 @@ using namespace Kywy;
 
 class ClickerScene : public Scene {
 private:
-  // Cookie bitmap data from existing cookie.hpp
-  #define COOKIE_WIDTH 144
-  #define COOKIE_HEIGHT 168
+// Cookie bitmap data from existing cookie.hpp
+#define COOKIE_WIDTH 144
+#define COOKIE_HEIGHT 168
 
   uint8_t cookie_data[3024] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -269,11 +269,11 @@ private:
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
   };
-  
+
   // Game variables - these store our game information
-  int cookieCount = 0;            // How many cookies we've clicked
-  bool showAnimation = false;     // Should we show the click animation?
-  int animationTime = 0;          // How long has the animation been running?
+  int cookieCount = 0;         // How many cookies we've clicked
+  bool showAnimation = false;  // Should we show the click animation?
+  int animationTime = 0;       // How long has the animation been running?
 
   // Where to draw the cookie on screen
   int cookieX = KYWY_DISPLAY_WIDTH / 2;   // Middle of screen horizontally
@@ -283,31 +283,31 @@ private:
   class CookieClickHandler : public Actor::Actor {
   private:
     ClickerScene* scene;  // Reference to parent scene
-    
+
   public:
     CookieClickHandler(ClickerScene* parentScene) : Actor::Actor(), scene(parentScene) {
       // Auto-register with parent scene
       scene->Scene::add(this, false);
     }
-    
+
     void handle(::Actor::Message* message) {
       // Ignore messages if scene is not active
       if (!scene->isActive()) return;
-      
+
       switch (message->signal) {
         case Kywy::Events::BUTTON_LEFT_PRESSED:
           // Exit with left button
           scene->triggerExit();
           return;
-          
+
         case Kywy::Events::BUTTON_RIGHT_PRESSED:
           // Increment cookie count
           scene->cookieCount++;
           scene->showAnimation = true;
           scene->animationTime = 0;
-          scene->updateDisplay(); 
+          scene->updateDisplay();
           break;
-          
+
         case Kywy::Events::TICK:
           // Update the animation only when needed
           if (scene->showAnimation) {
@@ -336,7 +336,7 @@ public:
 
   void updateDisplay() {
     Display::Display& display = Scene::getEngine()->display;
-    
+
     // Clear the screen
     display.clear();
 
@@ -364,7 +364,7 @@ public:
     textOptions._color = 0x00;
     textOptions._origin = Display::Origin::Text::BASELINE_LEFT;
     textOptions._font = Display::Font::intel_one_mono_8_pt;
-    
+
 
     // Show everything on screen
     display.update();
@@ -374,4 +374,4 @@ public:
 // Global instance for the launcher
 ClickerScene clickerScene;
 
-#endif // CLICKER_SCENE_HPP
+#endif  // CLICKER_SCENE_HPP

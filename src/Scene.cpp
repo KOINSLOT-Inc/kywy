@@ -8,7 +8,7 @@
 // Static engine reference initialization
 Kywy::Engine* Scene::engine = nullptr;
 
-Scene::Scene(bool persistent, bool autoClearDisplay) 
+Scene::Scene(bool persistent, bool autoClearDisplay)
   : persistent(persistent), autoClearDisplay(autoClearDisplay) {
 }
 
@@ -40,7 +40,7 @@ void Scene::cleanup() {
     if (active) {
       exit();  // Ensure scene is properly exited
     }
-    
+
     // Clean up all actors
     for (uint8_t i = 0; i < MAX_ACTORS; ++i) {
       if (actors[i]) {
@@ -52,7 +52,7 @@ void Scene::cleanup() {
         // Stop and disable the actor
         actors[i]->disable();
         actors[i]->stop();
-        
+
         // Only delete heap-allocated actors
         if (actorOwned[i]) {
           delete actors[i];
@@ -64,7 +64,7 @@ void Scene::cleanup() {
         // They will be re-used when the scene is entered again
       }
     }
-    
+
     onCleanup();  // Call virtual hook - for additional cleanup
     initialized = false;
   }
@@ -74,7 +74,7 @@ void Scene::enter() {
   if (!initialized) {
     initialize();
   }
-  
+
   active = true;
   onEnter();  // Call virtual hook
 
@@ -83,12 +83,12 @@ void Scene::enter() {
   uint8_t i = 0;
   while (i < MAX_ACTORS) {
     if (actors[i] == nullptr) break;
-    
+
     // Subscribe to input if needed and not already subscribed
     if (actorNeedsInput[i] && engine) {
       actors[i]->subscribe(&engine->input);
     }
-    
+
     // Restart the actor if it was stopped during cleanup
     actors[i]->start();
     actors[i]->enable();
@@ -99,7 +99,7 @@ void Scene::enter() {
 
 void Scene::exit() {
   if (!active) return;
-  
+
   active = false;
 
   // Unsubscribe all actors from clock and input, then disable
@@ -107,12 +107,12 @@ void Scene::exit() {
   uint8_t i = 0;
   while (i < MAX_ACTORS) {
     if (actors[i] == nullptr) break;
-    
+
     // Unsubscribe from input if needed
     if (actorNeedsInput[i] && engine) {
       actors[i]->unsubscribe(&engine->input);
     }
-    
+
     actors[i]->disable();
     actors[i]->dispatch(&sceneExitMessage);
     i++;
@@ -158,17 +158,17 @@ void Scene::triggerExit() {
   // This prevents issues with the callback trying to modify exitCallback
   auto callback = exitCallback;
   exitCallback = nullptr;
-  
+
   // Exit the scene
   exit();
-  
+
   // Now invoke the callback if it existed
   if (callback) {
     callback();
   }
 }
 
-void Scene::add(Actor::Actor *actor, bool owned, bool subscribeToInput) {
+void Scene::add(Actor::Actor* actor, bool owned, bool subscribeToInput) {
   uint8_t i = 0;
   while (i < MAX_ACTORS && actors[i] != nullptr) {
     if (actors[i] == actor) {
@@ -184,18 +184,18 @@ void Scene::add(Actor::Actor *actor, bool owned, bool subscribeToInput) {
   }
 
   actors[i] = actor;
-  actorOwned[i] = owned;  // Track ownership
+  actorOwned[i] = owned;                  // Track ownership
   actorNeedsInput[i] = subscribeToInput;  // Track if actor needs input
-  
+
   // Start the actor so it can receive messages
   actor->start();
-  
+
   // Try to subscribe to input now if engine is available
   // Otherwise it will be done in enter()
   if (subscribeToInput && engine) {
     actor->subscribe(&engine->input);
   }
-  
+
   // Enable/disable based on scene state
   if (active) {
     actor->enable();
@@ -203,7 +203,7 @@ void Scene::add(Actor::Actor *actor, bool owned, bool subscribeToInput) {
     actor->disable();
   }
 }
-void Scene::remove(Actor::Actor *actor) {
+void Scene::remove(Actor::Actor* actor) {
   uint8_t i = 0;
   bool removed = false;
   while (i < MAX_ACTORS && actors[i] != nullptr) {
