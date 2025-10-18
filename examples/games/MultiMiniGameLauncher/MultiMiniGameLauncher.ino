@@ -9,6 +9,7 @@
 #include "games/TennisScene.hpp"
 #include "games/ClickerScene.hpp"
 #include "games/SpelunkerScene.hpp"
+#include "games/SlimeJumperScene.hpp"
 
 using namespace Kywy;
 
@@ -32,9 +33,9 @@ void setup() {
   mainMenu->addLabelItem("");
   mainMenu->addSceneItem("2D Tennis", &tennisScene);
   mainMenu->addSceneItem("Clicker", &clickerScene);
-
   mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("Spelunker", &spelunkerScene);
+  mainMenu->addSceneItem("Slime Jumper", &slimeJumperScene);
   
   // Start the menu system directly
   mainMenu->start(engine);
