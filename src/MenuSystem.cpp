@@ -23,85 +23,31 @@ MenuSystem::MenuSystem(Display::Display& display, const std::vector<MenuItem>& i
   : display(display), items(items), options(options), selectedIndex(0), flattenedSelectedIndex(0) {}
 
 void MenuSystem::displayMenu() {
-  #ifdef ARDUINO
-  Serial.println("displayMenu() - START");
-  Serial.print("displayMenu() - paused: ");
-  Serial.print(paused);
-  Serial.print(", isInScene(): ");
-  Serial.println(isInScene());
-  #endif
-  
   if (paused || isInScene()) return;
 
-  #ifdef ARDUINO
-  Serial.println("displayMenu() - calling display.clear()");
-  #endif
-  
   display.clear();
   int startY = options.y + 5;
   int indentWidth = 8;  // Width in pixels for each indent level (increased for better visibility)
 
   // Build the flattened menu structure for display and navigation only if dirty
   if (menuDirty) {
-    #ifdef ARDUINO
-    Serial.println("displayMenu() - building flattened menu");
-    #endif
     buildFlattenedMenu();
     menuDirty = false;
   }
 
-  #ifdef ARDUINO
-  Serial.print("displayMenu() - flattenedMenu.size(): ");
-  Serial.println(flattenedMenu.size());
-  #endif
-
   // Calculate how many items we can display from the flattened menu
   int displayCount = std::min(scrollOptions.visibleItems, (int)flattenedMenu.size() - scrollOptions.startIndex);
 
-  #ifdef ARDUINO
-  Serial.print("displayMenu() - displayCount: ");
-  Serial.println(displayCount);
-  Serial.print("displayMenu() - flattenedMenu is valid: ");
-  Serial.println(flattenedMenu.size() > 0 ? "yes" : "no");
-  Serial.print("displayMenu() - about to start drawing loop");
-  Serial.flush(); // Force output before potential crash
-  #endif
-
   // Draw the visible portion of the flattened menu
   for (int i = 0; i < displayCount; ++i) {
-    #ifdef ARDUINO
-    Serial.print("displayMenu() - drawing item ");
-    Serial.print(i);
-    Serial.flush();
-    Serial.println("");
-    #endif
     
     int itemIndex = scrollOptions.startIndex + i;
     if (itemIndex >= flattenedMenu.size()) {
-      #ifdef ARDUINO
-      Serial.println("displayMenu() - itemIndex out of bounds, breaking");
-      #endif
       break;
     }
 
-    #ifdef ARDUINO
-    Serial.println("displayMenu() - getting flatItem");
-    Serial.flush();
-    #endif
-    
     const FlatMenuItem& flatItem = flattenedMenu[itemIndex];
     const MenuItem* item = flatItem.item;
-    
-    #ifdef ARDUINO
-    if (!item) {
-      Serial.println("displayMenu() - WARNING: item is NULL, skipping");
-      continue;
-    }
-    Serial.print("displayMenu() - item label: '");
-    Serial.print(item->label.c_str());
-    Serial.println("'");
-    Serial.flush();
-    #endif
     
     int indentLevel = flatItem.indentLevel;
     bool isSubmenuItem = flatItem.isSubmenuItem;
@@ -191,15 +137,7 @@ void MenuSystem::displayMenu() {
     display.drawText(xPosition, yPosition, itemText, textOptions);
   }
 
-  #ifdef ARDUINO
-  Serial.println("displayMenu() - calling display.update()");
-  #endif
-  
   display.update();
-  
-  #ifdef ARDUINO
-  Serial.println("displayMenu() - COMPLETED");
-  #endif
 }
 
 void MenuSystem::nextOption() {
@@ -632,10 +570,6 @@ private:
 void MenuSystem::enterScene(Scene* scene) {
   if (!scene || !engine) return;
   
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::enterScene() - entering scene");
-  #endif
-  
   currentScene = scene;
   
   // Pause menu and disable input handler FIRST
@@ -650,21 +584,12 @@ void MenuSystem::enterScene(Scene* scene) {
   engine->display.update();
   
   // Set up scene exit callback to return to menu
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::enterScene() - setting exit callback");
-  #endif
   scene->setExitCallback([this]() {
     onSceneExit();
   });
   
   // Enter the scene
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::enterScene() - calling scene->enter()");
-  #endif
   scene->enter();
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::enterScene() - scene entered successfully");
-  #endif
 }
 
 void MenuSystem::exitScene() {
@@ -675,10 +600,6 @@ void MenuSystem::exitScene() {
 }
 
 void MenuSystem::onSceneExit() {
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::onSceneExit() - CALLBACK INVOKED!");
-  #endif
-  
   // Save scene reference then clear it
   Scene* exitingScene = currentScene;
   currentScene = nullptr;
@@ -689,19 +610,10 @@ void MenuSystem::onSceneExit() {
   // Now it's safe to cleanup non-persistent scenes
   // (we're outside the actor's handle() method now)
   if (exitingScene && !exitingScene->isPersistent()) {
-    #ifdef ARDUINO
-    Serial.println("MenuSystem::onSceneExit() - cleaning up non-persistent scene");
-    #endif
     exitingScene->cleanup();
-    #ifdef ARDUINO
-    Serial.println("MenuSystem::onSceneExit() - scene cleaned up");
-    #endif
   }
   
   // Clear display immediately
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::onSceneExit() - clearing display");
-  #endif
   if (engine) {
     engine->display.clear();
     engine->display.update();
@@ -710,16 +622,12 @@ void MenuSystem::onSceneExit() {
   // Small delay for display stability
   #ifdef ARDUINO
   delay(10);
-  Serial.println("MenuSystem::onSceneExit() - re-enabling menu input handler");
   #endif
   
   // Re-enable menu input handler
   if (inputHandler) {
     inputHandler->enable();
     inputHandler->subscribe(&engine->input);
-    #ifdef ARDUINO
-    Serial.println("MenuSystem::onSceneExit() - menu input handler re-enabled");
-    #endif
   }
   
   // Unpause and force menu redraw
@@ -728,16 +636,8 @@ void MenuSystem::onSceneExit() {
   buildFlattenedMenu();
   menuDirty = false;
   
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::onSceneExit() - displaying menu");
-  #endif
-  
   // Display the menu
   displayMenu();
-  
-  #ifdef ARDUINO
-  Serial.println("MenuSystem::onSceneExit() - COMPLETED - menu should be visible now");
-  #endif
 }
 
 void MenuSystem::start(Kywy::Engine& engine) {
