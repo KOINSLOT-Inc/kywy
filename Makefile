@@ -39,22 +39,12 @@ $(ARDUINO_LINT): $(CACHE)
 CLANG_FORMAT := $(CACHE)/.clang-format
 $(CLANG_FORMAT): $(CACHE) .clang-format
 	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
-	@if clang-format --version | grep -q '14.0'; then \
-		echo "clang-format v14.0 found (preferred version)"; \
-	elif clang-format --version | grep -E -q '1[4-9]\.|[2-9][0-9]\.'; then \
-		ver=$$(clang-format --version | grep -o '[0-9]\+\.[0-9]\+'); \
-		echo "clang-format v$$ver found (using as fallback - results may vary from v14.0)"; \
-		printf '%s' "clang-format version >14 detected. Continue anyway? [y/N]: "; \
-		read yn; \
-		if [ "$$yn" = "y" ] || [ "$$yn" = "Y" ]; then \
-			echo "Continuing with version $$ver"; \
+		@if clang-format --version | grep -q '14.0'; then \
+			echo "clang-format v14.0 found (required version)"; \
 		else \
-			echo "Aborting as requested."; \
+			echo "clang-format v14.0 required."; \
 			exit 1; \
-		fi; \
-	else \
-		echo "clang-format version too old, v14.0+ required" && exit 1; \
-	fi
+		fi
 	@touch $(CLANG_FORMAT)
 
 DOXYGEN := $(CACHE)/.doxygen
