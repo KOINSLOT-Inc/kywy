@@ -433,12 +433,13 @@ private:
   };
 
   // Inner Actor class to handle input and game logic
-  class SnakeGameHandler: public Actor::Actor {
+  class SnakeGameHandler : public Actor::Actor {
   private:
     SnakeScene* scene;
 
   public:
-    SnakeGameHandler(SnakeScene* parentScene) : Actor::Actor(), scene(parentScene) {
+    SnakeGameHandler(SnakeScene* parentScene)
+      : Actor::Actor(), scene(parentScene) {
       // Auto-register with parent scene
       scene->Scene::add(this, false);
     }

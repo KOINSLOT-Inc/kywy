@@ -45,10 +45,10 @@ public:
   static Kywy::Engine *getEngine();
 
   // Virtual lifecycle hooks for derived classes
-  virtual void onInitialize() {};  // Called once when scene is first initialized
-  virtual void onCleanup() {};     // Called when scene is being destroyed
-  virtual void onEnter() {};       // Called each time scene becomes active
-  virtual void onExit() {};        // Called each time scene becomes inactive
+  virtual void onInitialize(){};  // Called once when scene is first initialized
+  virtual void onCleanup(){};     // Called when scene is being destroyed
+  virtual void onEnter(){};       // Called each time scene becomes active
+  virtual void onExit(){};        // Called each time scene becomes inactive
 
   // Core lifecycle methods
   void initialize();  // Initialize scene (calls onInitialize)

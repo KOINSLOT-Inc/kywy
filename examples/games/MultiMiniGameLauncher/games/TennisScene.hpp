@@ -291,12 +291,13 @@ private:
   };
 
   // Inner Actor class to handle game logic and input
-  class TennisGameHandler: public Actor::Actor {
+  class TennisGameHandler : public Actor::Actor {
   private:
     TennisScene* scene;
 
   public:
-    TennisGameHandler(TennisScene* parentScene) : Actor::Actor(), scene(parentScene) {
+    TennisGameHandler(TennisScene* parentScene)
+      : Actor::Actor(), scene(parentScene) {
       // Auto-register with parent scene
       scene->Scene::add(this, false);
     }

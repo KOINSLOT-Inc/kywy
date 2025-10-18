@@ -60,7 +60,6 @@ private:
       scene->slime.setPosition(xPosition, yPosition);
       scene->slime.setVisible(true);
       scene->slime.setNegative(true);
-      
     }
 
     void initialize() {

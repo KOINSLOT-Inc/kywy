@@ -285,7 +285,8 @@ private:
     ClickerScene* scene;  // Reference to parent scene
 
   public:
-    CookieClickHandler(ClickerScene* parentScene): Actor::Actor(), scene(parentScene) {
+    CookieClickHandler(ClickerScene* parentScene)
+      : Actor::Actor(), scene(parentScene) {
       // Auto-register with parent scene
       scene->Scene::add(this, false);
     }

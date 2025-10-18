@@ -314,7 +314,8 @@ private:
     bool lastFrameButtonPressed = true;
     bool inSplashScreen = true;
 
-    GameManager(SpelunkerScene *parentScene) : Actor::Actor(), scene(parentScene) {
+    GameManager(SpelunkerScene *parentScene)
+      : Actor::Actor(), scene(parentScene) {
       // Auto-register with parent scene
       scene->Scene::add(this, false, true);
     }
