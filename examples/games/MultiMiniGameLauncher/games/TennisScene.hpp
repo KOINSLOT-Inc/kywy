@@ -523,7 +523,8 @@ private:
   }
 
 public:
-  TennisScene() : Scene(), gameHandler(this) {
+  TennisScene()
+    : Scene(), gameHandler(this) {
     inCountdown = false;
     countdownNumber = 0;
     countdownTicks = 0;

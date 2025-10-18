@@ -325,7 +325,8 @@ private:
   CookieClickHandler clickHandler;
 
 public:
-  ClickerScene() : Scene(), clickHandler(this) {}
+  ClickerScene()
+    : Scene(), clickHandler(this) {}
 
   void onEnter() {
     cookieCount = 0;

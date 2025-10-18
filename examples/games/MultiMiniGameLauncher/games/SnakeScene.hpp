@@ -511,7 +511,9 @@ private:
   SnakeGameHandler gameHandler;
 
 public:
-  SnakeScene() : Scene(), gameHandler(this) {}
+  SnakeScene()
+    : Scene(),
+      gameHandler(this) {}
   void onEnter() {
     startScreen = true;
     gameOver = true;
