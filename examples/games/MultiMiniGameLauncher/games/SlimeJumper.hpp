@@ -4,9 +4,371 @@
 
 #include "Kywy.hpp"
 
-Kywy::Engine engine;
+class SlimeJumperScene : public Scene {
+private:
+  static const uint8_t slimeJumperSplashScreenBMP[];
+  static const uint8_t spriteSheetData[];
 
-const uint8_t slimeJumperSplashScreenBMP[] = {
+  ::SpriteSheet spriteSheet;
+  Sprite slime;
+
+  typedef enum : uint16_t {
+    START_SCREEN = Kywy::Events::USER_EVENTS,
+    PLATFORM_COLLISION,
+    JUMP,
+    GAME_OVER,
+  } SlimeJumperSignal;
+
+  typedef enum {
+    STATE_SPLASH,
+    STATE_GAME_OVER,
+    STATE_GAME_ACTIVE
+  } GameState;
+
+  ::Actor::Message platformCollisionMessage;
+  ::Actor::Message jumpMessage;
+  ::Actor::Message gameOverMessage;
+
+  typedef struct Platform {
+    int x, y, width;
+  } Platform;
+
+  class SlimeManager : public Actor::Actor {
+  private:
+    SlimeJumperScene *scene;
+
+  public:
+    int xMaxVelocity = 5;
+    int xVelocity = 0;
+    int xPosition = 48;
+
+    int yMaxVelocity = -10;
+    int yVelocity = yMaxVelocity;
+    int yPosition = 90;
+
+    int padding = 5;
+
+    bool buttonLeftPressed = false;
+    bool buttonRightPressed = false;
+
+    SlimeManager(SlimeJumperScene *parentScene)
+      : Actor::Actor(), scene(parentScene) {
+      scene->Scene::add(this, false, true);
+    }
+
+    void onEnter() {
+      scene->slime.setPosition(xPosition, yPosition);
+      scene->slime.setVisible(true);
+      scene->slime.setNegative(true);
+      
+    }
+
+    void initialize() {
+      xMaxVelocity = 5;
+      xVelocity = 0;
+      xPosition = 48;
+      yMaxVelocity = -10;
+      yVelocity = yMaxVelocity;
+      yPosition = 90;
+      padding = 5;
+      buttonLeftPressed = false;
+      buttonRightPressed = false;
+      scene->slime.setPosition(xPosition, yPosition);
+      scene->slime.setVisible(true);
+      scene->slime.setNegative(true);
+    }
+
+    void handle(::Actor::Message *message) {
+      switch (message->signal) {
+        case Kywy::Events::D_PAD_LEFT_PRESSED:
+          buttonLeftPressed = true;
+          xVelocity = -1 * xMaxVelocity;
+          break;
+        case Kywy::Events::D_PAD_RIGHT_PRESSED:
+          buttonRightPressed = true;
+          xVelocity = xMaxVelocity;
+          break;
+        case Kywy::Events::D_PAD_LEFT_RELEASED:
+          buttonLeftPressed = false;
+          if (buttonRightPressed) {
+            xVelocity = xMaxVelocity;
+          } else {
+            xVelocity = 0;
+          }
+          break;
+        case Kywy::Events::D_PAD_RIGHT_RELEASED:
+          buttonRightPressed = false;
+          if (buttonLeftPressed) {
+            xVelocity = -1 * xMaxVelocity;
+          } else {
+            xVelocity = 0;
+          }
+          break;
+        case SlimeJumperScene::PLATFORM_COLLISION:
+          if (yVelocity > 0) {
+            yVelocity = yMaxVelocity;
+            publish(&scene->jumpMessage);
+          }
+          break;
+        case Kywy::Events::BUTTON_LEFT_PRESSED:
+          scene->triggerExit();
+          break;
+        case Kywy::Events::TICK:
+          // side to side motion
+          xPosition += xVelocity;
+
+          if (xPosition < padding)
+            xPosition = padding;
+
+          if (xPosition > KYWY_DISPLAY_WIDTH - 32 - padding)
+            xPosition = KYWY_DISPLAY_WIDTH - 32 - padding;
+
+          // falling
+          yPosition += yVelocity;
+          if (yVelocity < 7)
+            yVelocity += 1;
+
+          // jumping
+          if (yPosition > KYWY_DISPLAY_HEIGHT - 18) {
+            publish(&scene->gameOverMessage);
+          }
+
+          // animation
+          if (yVelocity < -5) {
+            scene->slime.setFrame(2);
+          } else if (yVelocity < -2) {
+            scene->slime.setFrame(1);
+          } else {
+            scene->slime.setFrame(0);
+          }
+
+          scene->slime.setPosition(xPosition, yPosition);
+          scene->slime.render();
+          break;
+      }
+    }
+  };
+
+  class PlatformManager : public Actor::Actor {
+  private:
+    SlimeJumperScene *scene;
+
+  public:
+    static const int numPlatforms = 4;
+
+    int yVelocity = 2;
+    int platformWidth = 40;
+
+    Platform platforms[numPlatforms];
+
+    PlatformManager(SlimeJumperScene *parentScene)
+      : Actor::Actor(), scene(parentScene) {
+      scene->Scene::add(this, false, true);
+    }
+
+    void initialize() {
+      for (int i = 0; i < numPlatforms; i++) {
+        platforms[i] = Platform{ .x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth)),
+                                 .y = KYWY_DISPLAY_HEIGHT - 18 - (50 * i),
+                                 .width = platformWidth };
+      }
+    }
+
+    void drawPlatforms(uint16_t color) {
+      for (int i = 0; i < numPlatforms; i++) {
+        if (platforms[i].y >= 0 && platforms[i].y <= KYWY_DISPLAY_HEIGHT) {
+          scene->Scene::getEngine()->display.drawLine(platforms[i].x, platforms[i].y, int16_t(platforms[i].x + platforms[i].width), int16_t(platforms[i].y), Display::Object1DOptions().color(color));
+        }
+      }
+    }
+
+    void handle(::Actor::Message *message) {
+      switch (message->signal) {
+        case Kywy::Events::TICK:
+          drawPlatforms(WHITE);  // erase platforms
+
+          // check for collisions
+          for (int i = 0; i < numPlatforms; i++) {
+            // stupid hack because the uint y value rolls over to 65535 instead of
+            // going negative
+            int slimeY;
+            if (scene->slime.y < 200) {
+              slimeY = scene->slime.y;
+            } else {
+              slimeY = (int)scene->slime.y - 65535;
+            }
+
+            int slimeBottom = slimeY + scene->slime.height;
+            int slimeSide = scene->slime.x;
+
+            if (slimeBottom > platforms[i].y + 3)
+              continue;
+
+            if (slimeBottom < platforms[i].y - 3)
+              continue;
+
+            if (slimeSide > platforms[i].x + platformWidth - 10)
+              continue;
+
+            if (slimeSide < platforms[i].x - platformWidth + 10)
+              continue;
+
+            publish(&scene->platformCollisionMessage);
+          }
+
+          // move platforms
+          for (int i = 0; i < numPlatforms; i++) {
+            platforms[i].y += yVelocity;
+
+            if (platforms[i].y > KYWY_DISPLAY_HEIGHT + 25) {
+              platforms[i].y = -5;
+              platforms[i].x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth));
+            }
+          }
+
+          drawPlatforms(BLACK);  // draw platforms
+      }
+    }
+  };
+
+  class GameManager : public Actor::Actor {
+  private:
+    SlimeJumperScene *scene;
+    GameState currentState = STATE_SPLASH;
+
+  public:
+    int score = 0;
+    int highScore = 0;
+
+    GameManager(SlimeJumperScene *parentScene)
+      : Actor::Actor(), scene(parentScene) {
+      scene->Scene::add(this, false, true);
+    }
+
+    void drawScore(uint16_t color) {
+      char msg[16];
+      snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
+      scene->Scene::getEngine()->display.drawText(5, 5, msg, Display::TextOptions().color(color));
+    }
+
+    void initialize() {}
+
+    void handle(::Actor::Message *message) {
+      switch (message->signal) {
+        case SlimeJumperScene::START_SCREEN:
+          {
+            currentState = STATE_SPLASH;
+            scene->slimeManager.unsubscribe(&scene->Scene::getEngine()->clock);
+            scene->platformManager.unsubscribe(&scene->Scene::getEngine()->clock);
+            unsubscribe(&scene->Scene::getEngine()->clock);
+            scene->Scene::getEngine()->display.drawBitmap(0, 0, 144, 168, (uint8_t *)slimeJumperSplashScreenBMP);
+            scene->Scene::getEngine()->display.update();
+            subscribe(&scene->Scene::getEngine()->input);
+            break;
+          }
+        case Kywy::Events::TICK:
+          if (currentState == STATE_GAME_ACTIVE) {
+            drawScore(BLACK);
+            scene->Scene::getEngine()->display.update();
+          }
+          break;
+        case SlimeJumperScene::JUMP:
+          if (currentState == STATE_GAME_ACTIVE) {
+            drawScore(WHITE);
+            score += 1;
+          }
+          break;
+        case SlimeJumperScene::GAME_OVER:
+          {
+            currentState = STATE_GAME_OVER;
+            scene->slimeManager.unsubscribe(&scene->Scene::getEngine()->clock);
+            scene->platformManager.unsubscribe(&scene->Scene::getEngine()->clock);
+            unsubscribe(&scene->Scene::getEngine()->clock);
+            subscribe(&scene->Scene::getEngine()->input);
+
+            if (score > highScore)
+              highScore = score;
+
+            scene->Scene::getEngine()->display.clear();
+            scene->Scene::getEngine()->display.drawText(5, 5, "GAME OVER");
+            char msg[32];
+            snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
+            scene->Scene::getEngine()->display.drawText(5, 15, msg);
+            snprintf(msg, sizeof(msg), "High Score: %d", highScore);
+            scene->Scene::getEngine()->display.drawText(5, 25, msg);
+            scene->Scene::getEngine()->display.drawText(5, 45, "Press any button");
+            scene->Scene::getEngine()->display.drawText(5, 55, "to try again.");
+            scene->Scene::getEngine()->display.update();
+            break;
+          }
+        case Kywy::Events::INPUT_PRESSED:
+          {
+            // Handle input based on current state
+            if (currentState == STATE_SPLASH || currentState == STATE_GAME_OVER) {
+              // Start/restart game
+              currentState = STATE_GAME_ACTIVE;
+              unsubscribe(&scene->Scene::getEngine()->input);
+
+              scene->platformManager.initialize();
+              scene->slimeManager.initialize();
+              scene->slime.setPosition(48, 90);
+              scene->slimeManager.yVelocity = -12;
+
+              score = 0;
+
+              scene->Scene::getEngine()->display.clear();
+
+              scene->slimeManager.subscribe(&scene->Scene::getEngine()->clock);
+              scene->platformManager.subscribe(&scene->Scene::getEngine()->clock);
+              subscribe(&scene->Scene::getEngine()->clock);
+            }
+            break;
+          }
+      }
+    }
+  };
+
+  SlimeManager slimeManager;
+  PlatformManager platformManager;
+  GameManager gameManager;
+
+public:
+  SlimeJumperScene()
+    : Scene(),
+      spriteSheet(spriteSheetData, 96, 32, 3),
+      slime(nullptr, 3, 32, 32),
+      platformCollisionMessage(PLATFORM_COLLISION),
+      jumpMessage(JUMP),
+      gameOverMessage(GAME_OVER),
+      slimeManager(this),
+      platformManager(this),
+      gameManager(this) {}
+
+  void onEnter() {
+    spriteSheet.addFrames(0, 0, 32, 32, 3);
+    slime.frames = spriteSheet.frames;
+    slime.setDisplay(&Scene::getEngine()->display);
+
+    // set up game managers
+    slimeManager.subscribe(&Scene::getEngine()->input);
+    slimeManager.subscribe(&Scene::getEngine()->clock);
+    slimeManager.subscribe(&platformManager);
+    slimeManager.start();
+
+    platformManager.subscribe(&Scene::getEngine()->clock);
+    platformManager.start();
+
+    gameManager.subscribe(&slimeManager);
+    gameManager.subscribe(&Scene::getEngine()->clock);
+    gameManager.start();
+
+    ::Actor::Message message(START_SCREEN);
+    gameManager.handle(&message);
+    initialize();
+  }
+};
+
+const uint8_t SlimeJumperScene::slimeJumperSplashScreenBMP[] = {
   0x55, 0x69, 0x3f, 0xfe, 0x35, 0x60, 0xa9, 0x7a, 0xf5, 0x7a, 0xe3, 0x53,
   0xff, 0xff, 0x95, 0x49, 0x26, 0xa5, 0xa4, 0xa6, 0x7f, 0xff, 0x34, 0x8d,
   0x56, 0x8d, 0xab, 0x8d, 0x54, 0xa7, 0xff, 0xff, 0xca, 0xb2, 0x92, 0x52,
@@ -237,6 +599,39 @@ const uint8_t slimeJumperSplashScreenBMP[] = {
   0x5f, 0x55, 0x57, 0xbf, 0xd1, 0x55, 0x55, 0x55, 0x57, 0xd5, 0x55, 0xef,
   0xe0, 0x55, 0x56, 0x0e, 0x6b, 0x35, 0x40, 0x55, 0x56, 0x0f, 0xd5, 0x55,
   0x55, 0x55, 0x50, 0x15, 0x55, 0x9f, 0xdf, 0xc5, 0x57, 0xf5, 0xeb, 0xd5,
+  0x5f, 0x55, 0x57, 0xf7, 0xd1, 0xc5, 0x47, 0x15, 0x57, 0xd5, 0x55, 0x7f, 0xd0, 0x3d, 0x50, 0x15, 0x08, 0x55,
+  0x5f, 0x55, 0x50, 0x17, 0xde, 0x3d, 0x78, 0xf5, 0x57, 0xd5, 0x55, 0x7f,
+  0xd7, 0xb3, 0x5f, 0xd5, 0x7f, 0x55, 0x5f, 0x55, 0x5f, 0xd7, 0xe6, 0xb3,
+  0x9a, 0xcd, 0x57, 0xd5, 0x55, 0x7f, 0xd0, 0x2f, 0x40, 0x15, 0x00, 0x54,
+  0x5f, 0x45, 0x40, 0x17, 0xfa, 0x2f, 0xe8, 0xbd, 0x17, 0xd1, 0x51, 0x7f,
+  0xdf, 0xef, 0x7f, 0xf5, 0xff, 0xd7, 0xdf, 0x7d, 0x7f, 0xf7, 0xfb, 0xef,
+  0xef, 0xbd, 0xf7, 0xdf, 0x5f, 0x7f, 0xe0, 0x1f, 0x80, 0x0e, 0x00, 0x38,
+  0x3f, 0x83, 0x80, 0x0f, 0xfc, 0x1f, 0xf0, 0x7e, 0x0f, 0xe0, 0xe0, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xfc, 0x03, 0x83, 0xfe, 0x00, 0x38, 0x3f, 0x83, 0x80, 0x0f, 0xfc, 0x03,
+  0x82, 0x0e, 0x0f, 0xe0, 0xe0, 0x1f, 0xfb, 0xfd, 0x7d, 0xfd, 0xff, 0xd7,
+  0xdf, 0x7d, 0x7f, 0xf7, 0xfb, 0xfd, 0x7d, 0xf5, 0xf7, 0xdf, 0x5f, 0xef,
+  0xfa, 0x05, 0x45, 0xfd, 0x00, 0x54, 0x5f, 0x45, 0x40, 0x17, 0xfa, 0x05,
+  0x45, 0x15, 0x17, 0xd1, 0x50, 0x2f, 0xe6, 0xf5, 0x55, 0xfd, 0x7f, 0x55,
+  0x64, 0xd5, 0x5f, 0xd7, 0xfa, 0xf5, 0x55, 0x55, 0x59, 0x35, 0x57, 0xb3,
+  0xde, 0x05, 0x55, 0xfd, 0x08, 0x55, 0x7b, 0xd5, 0x50, 0x17, 0xfa, 0x15,
+  0x55, 0x55, 0x5e, 0xf5, 0x54, 0x3d, 0xd1, 0xfd, 0x55, 0xfd, 0xeb, 0xd5,
+  0x0a, 0x15, 0x57, 0xf7, 0xfb, 0xd5, 0x55, 0x55, 0x42, 0x85, 0x55, 0xc5,
+  0xd5, 0x03, 0x55, 0xfe, 0x6b, 0x35, 0xea, 0xf5, 0x54, 0x0f, 0xfc, 0xd5,
+  0x55, 0x55, 0x7a, 0xbd, 0x55, 0x55, 0xd1, 0xef, 0x55, 0xff, 0xaa, 0xf5,
+  0x0e, 0x15, 0x57, 0xbf, 0xff, 0x55, 0x55, 0x55, 0x43, 0x85, 0x55, 0xc5,
+  0xde, 0x2f, 0x55, 0xff, 0xaa, 0xf5, 0x71, 0xd5, 0x50, 0xbf, 0xff, 0x55,
+  0x55, 0x55, 0x5c, 0x75, 0x54, 0x3d, 0xe6, 0xb3, 0x55, 0xff, 0xaa, 0xf5,
+  0x55, 0x55, 0x5e, 0xbf, 0xe0, 0x55, 0x55, 0x55, 0x55, 0x55, 0x57, 0xb3,
+  0xfa, 0x3d, 0x55, 0xff, 0xaa, 0xf5, 0x51, 0x55, 0x50, 0xbf, 0xdf, 0x55,
+  0x55, 0x55, 0x54, 0x55, 0x54, 0x2f, 0xfb, 0xc5, 0x55, 0xff, 0xaa, 0xf5,
+  0x5f, 0x55, 0x57, 0xbf, 0xd1, 0x55, 0x55, 0x55, 0x57, 0xd5, 0x55, 0xef,
+  0xe0, 0x55, 0x56, 0x0e, 0x6b, 0x35, 0x40, 0x55, 0x56, 0x0f, 0xd5, 0x55,
+  0x55, 0x55, 0x50, 0x15, 0x55, 0x9f, 0xdf, 0xc5, 0x57, 0xf5, 0xeb, 0xd5,
   0x5f, 0x55, 0x57, 0xf7, 0xd1, 0xc5, 0x47, 0x15, 0x57, 0xd5, 0x55, 0x7f,
   0xd0, 0x3d, 0x50, 0x15, 0x08, 0x55, 0x5f, 0x55, 0x50, 0x17, 0xde, 0x3d,
   0x78, 0xf5, 0x57, 0xd5, 0x55, 0x7f, 0xd7, 0xb3, 0x5f, 0xd5, 0x7f, 0x55,
@@ -248,20 +643,11 @@ const uint8_t slimeJumperSplashScreenBMP[] = {
   0xf0, 0x7e, 0x0f, 0xe0, 0xe0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc2, 0x10, 0x84,
-  0x38, 0x45, 0x6d, 0xa1, 0x6c, 0x10, 0xc2, 0x08, 0x42, 0x0f, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xda, 0xd7, 0xbd, 0xfb, 0x55, 0x6d, 0xaf, 0x6f, 0x76,
-  0xdf, 0xbb, 0x5b, 0xbf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc2, 0x30, 0x84,
-  0x38, 0x55, 0x0c, 0x61, 0x0f, 0x76, 0xc3, 0xb8, 0x47, 0xbf, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xde, 0xd7, 0xf7, 0xbb, 0x55, 0xed, 0xaf, 0xef, 0x76,
-  0xfb, 0xbb, 0x5b, 0xbf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xde, 0xd0, 0x84,
-  0x3b, 0x51, 0x0d, 0xa1, 0x0f, 0x70, 0xc3, 0xbb, 0x5b, 0xbf, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-const uint8_t spriteSheetData[] = {
+const uint8_t SlimeJumperScene::spriteSheetData[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -285,295 +671,4 @@ const uint8_t spriteSheetData[] = {
   0x00, 0x7f, 0xfe, 0x00
 };
 
-::SpriteSheet spriteSheet = ::SpriteSheet(spriteSheetData, 96, 32, 3);
-
-const uint8_t *frames[] = {};
-Sprite slime(frames, 3, 32, 32);
-
-typedef enum : uint16_t {
-  START_SCREEN = Kywy::Events::USER_EVENTS,
-  PLATFORM_COLLISION,
-  JUMP,
-  GAME_OVER,
-} SlimeJumperSignal;
-
-::Actor::Message platformCollisionMessage = ::Actor::Message(PLATFORM_COLLISION);
-::Actor::Message jumpMessage = ::Actor::Message(JUMP);
-::Actor::Message gameOverMessage = ::Actor::Message(GAME_OVER);
-
-class SlimeManager : public Actor::Actor {
-public:
-  int xMaxVelocity = 5;
-  int xVelocity = 0;
-  int xPosition = 48;
-
-  int yMaxVelocity = -10;  // note that origin is top left so negative velocity
-                           // is up on the screen
-  int yVelocity = yMaxVelocity;
-  int yPosition = 90;
-
-  int padding = 5;
-
-  bool buttonLeftPressed = false;
-  bool buttonRightPressed = false;
-
-  void initialize() {
-    slime.setPosition(xPosition, yPosition);
-    slime.setVisible(true);
-    slime.setNegative(true);
-  }
-
-  void handle(::Actor::Message *message) {
-    switch (message->signal) {
-      case Kywy::Events::D_PAD_LEFT_PRESSED:
-        buttonLeftPressed = true;
-        xVelocity = -1 * xMaxVelocity;
-        break;
-      case Kywy::Events::D_PAD_RIGHT_PRESSED:
-        buttonRightPressed = true;
-        xVelocity = xMaxVelocity;
-        break;
-      case Kywy::Events::D_PAD_LEFT_RELEASED:
-        buttonLeftPressed = false;
-        if (buttonRightPressed) {
-          xVelocity = xMaxVelocity;
-        } else {
-          xVelocity = 0;
-        }
-        break;
-      case Kywy::Events::D_PAD_RIGHT_RELEASED:
-        buttonRightPressed = false;
-        if (buttonLeftPressed) {
-          xVelocity = -1 * xMaxVelocity;
-        } else {
-          xVelocity = 0;
-        }
-        break;
-      case PLATFORM_COLLISION:
-        if (yVelocity > 0) {
-          yVelocity = yMaxVelocity;
-
-          publish(&jumpMessage);
-        }
-        break;
-      case Kywy::Events::TICK:
-        // side to side motion
-        xPosition += xVelocity;
-
-        if (xPosition < padding)
-          xPosition = padding;
-
-        if (xPosition > KYWY_DISPLAY_WIDTH - 32 - padding)
-          xPosition = KYWY_DISPLAY_WIDTH - 32 - padding;
-
-        // falling
-        yPosition += yVelocity;
-        if (yVelocity < 7)
-          yVelocity += 1;
-
-        // jumping
-        if (yPosition > KYWY_DISPLAY_HEIGHT - 18) {
-          publish(&gameOverMessage);
-        }
-
-        // animation
-        if (yVelocity < -5) {
-          slime.setFrame(2);
-        } else if (yVelocity < -2) {
-          slime.setFrame(1);
-        } else {
-          slime.setFrame(0);
-        }
-
-        slime.setPosition(xPosition, yPosition);
-
-        slime.render();
-        break;
-    }
-  }
-
-} slimeManager;
-
-typedef struct Platform {
-  int x, y, width;
-} Platform;
-
-class PlatformManager : public Actor::Actor {
-public:
-  const static int numPlatforms = 4;
-
-  int yVelocity = 2;
-  int platformWidth = 40;
-
-  Platform platforms[numPlatforms];
-
-  void initialize() {
-    for (int i = 0; i < numPlatforms; i++) {
-      platforms[i] = Platform{ .x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth)),
-                               .y = KYWY_DISPLAY_HEIGHT - 18 - (50 * i),
-                               .width = platformWidth };
-    }
-  }
-
-  void drawPlatforms(uint16_t color) {
-    for (int i = 0; i < numPlatforms; i++) {
-      if (platforms[i].y >= 0 && platforms[i].y <= KYWY_DISPLAY_HEIGHT) {
-        engine.display.drawLine(platforms[i].x, platforms[i].y, int16_t(platforms[i].x + platforms[i].width), int16_t(platforms[i].y), Display::Object1DOptions().color(color));
-      }
-    }
-  }
-
-  void handle(::Actor::Message *message) {
-    switch (message->signal) {
-      case Kywy::Events::TICK:
-        drawPlatforms(WHITE);  // erase platforms
-
-        // check for collisions
-        for (int i = 0; i < numPlatforms; i++) {
-
-          // stupid hack because the uint y value rolls over to 65535 instead of
-          // going negative
-          int slimeY;
-          if (slime.y < 200) {
-            slimeY = slime.y;
-          } else {
-            slimeY = (int)slime.y - 65535;
-          }
-
-          int slimeBottom = slimeY + slime.height;
-          int slimeSide = slime.x;
-
-          if (slimeBottom > platforms[i].y + 3)
-            continue;
-
-          if (slimeBottom < platforms[i].y - 3)
-            continue;
-
-          if (slimeSide > platforms[i].x + platformWidth - 10)
-            continue;
-
-          if (slimeSide < platforms[i].x - platformWidth + 10)
-            continue;
-
-          publish(&platformCollisionMessage);
-        }
-
-        // move platforms
-        for (int i = 0; i < numPlatforms; i++) {
-          platforms[i].y += yVelocity;
-
-          if (platforms[i].y > KYWY_DISPLAY_HEIGHT + 25) {
-            platforms[i].y = -5;
-            platforms[i].x = (int)fmax(5, fmin(random(KYWY_DISPLAY_WIDTH), KYWY_DISPLAY_WIDTH - 5 - platformWidth));
-          }
-        }
-
-        drawPlatforms(BLACK);  // draw platforms
-    }
-  }
-
-} platformManager;
-
-class GameManager : public Actor::Actor {
-public:
-  int score = 0;
-  int highScore = 0;
-
-  void drawScore(uint16_t color) {
-    char msg[16];
-    snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
-    engine.display.drawText(5, 5, msg, Display::TextOptions().color(color));
-  }
-
-  void initialize() {}
-
-  void handle(::Actor::Message *message) {
-    switch (message->signal) {
-      case START_SCREEN:
-        {
-          slimeManager.unsubscribe(&engine.clock);
-          platformManager.unsubscribe(&engine.clock);
-          unsubscribe(&engine.clock);
-          engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)slimeJumperSplashScreenBMP);
-          engine.display.update();
-          subscribe(&engine.input);
-          break;
-        }
-      case Kywy::Events::TICK:
-        drawScore(BLACK);
-        engine.display.update();
-        break;
-      case JUMP:
-        drawScore(WHITE);
-        score += 1;
-        break;
-      case GAME_OVER:
-        {
-          slimeManager.unsubscribe(&engine.clock);
-          platformManager.unsubscribe(&engine.clock);
-          unsubscribe(&engine.clock);
-          subscribe(&engine.input);
-
-          if (score > highScore)
-            highScore = score;
-
-          engine.display.clear();
-          engine.display.drawText(5, 5, "GAME OVER");
-          char msg[32];
-          snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
-          engine.display.drawText(5, 15, msg);
-          snprintf(msg, sizeof(msg), "High Score: %d", highScore);
-          engine.display.drawText(5, 25, msg);
-          engine.display.drawText(5, 45, "Press any button");
-          engine.display.drawText(5, 55, "to try again.");
-          engine.display.update();
-          break;
-        }
-      case Kywy::Events::INPUT_PRESSED:
-        {
-          unsubscribe(&engine.input);
-
-          platformManager.initialize();
-          slime.setPosition(48, 90);
-          slimeManager.yVelocity = -12;
-
-          score = 0;
-
-          engine.display.clear();
-
-          slimeManager.subscribe(&engine.clock);
-          platformManager.subscribe(&engine.clock);
-          subscribe(&engine.clock);
-          break;
-        }
-    }
-  }
-} gameManager;
-
-void setup() {
-  engine.start();
-
-  spriteSheet.addFrames(0, 0, 32, 32, 3);
-  slime.frames = spriteSheet.frames;
-  slime.setDisplay(&engine.display);
-
-  // set up game managers
-  slimeManager.subscribe(&engine.input);
-  slimeManager.subscribe(&engine.clock);
-  slimeManager.subscribe(&platformManager);
-  slimeManager.start();
-
-  platformManager.subscribe(&engine.clock);
-  platformManager.start();
-
-  gameManager.subscribe(&slimeManager);
-  gameManager.subscribe(&engine.clock);
-  gameManager.start();
-
-  ::Actor::Message message(START_SCREEN);
-  gameManager.handle(&message);
-}
-
-void loop() {
-  delay(1000);
-}
+SlimeJumperScene slimeJumperScene;
