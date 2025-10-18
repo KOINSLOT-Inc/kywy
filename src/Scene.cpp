@@ -40,7 +40,22 @@ void Scene::cleanup() {
     if (active) {
       exit();  // Ensure scene is properly exited
     }
-    onCleanup();  // Call virtual hook - scenes that are actors should unsubscribe here
+    
+    // Clean up all actors
+    for (uint8_t i = 0; i < MAX_ACTORS; ++i) {
+      if (actors[i]) {
+        // Unsubscribe from clock if still subscribed
+        actors[i]->unsubscribe(&engine->clock);
+        // Stop and disable the actor
+        actors[i]->disable();
+        actors[i]->stop();
+        // Delete the actor to free memory
+        delete actors[i];
+        actors[i] = nullptr;
+      }
+    }
+    
+    onCleanup();  // Call virtual hook - for additional cleanup
     initialized = false;
   }
 }

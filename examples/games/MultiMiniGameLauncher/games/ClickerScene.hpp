@@ -9,8 +9,8 @@
 
 using namespace Kywy;
 
-class ClickerScene : public Scene, public Actor::Actor {
-public:
+class ClickerScene : public Scene {
+private:
   // Cookie bitmap data from existing cookie.hpp
   #define COOKIE_WIDTH 144
   #define COOKIE_HEIGHT 168
@@ -269,40 +269,74 @@ public:
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
   };
+  
   // Game variables - these store our game information
   int cookieCount = 0;            // How many cookies we've clicked
   bool showAnimation = false;     // Should we show the click animation?
   int animationTime = 0;          // How long has the animation been running?
-  bool wasButtonPressed = false;  // Was the button pressed last time we checked?
 
   // Where to draw the cookie on screen
   int cookieX = KYWY_DISPLAY_WIDTH / 2;   // Middle of screen horizontally
   int cookieY = KYWY_DISPLAY_HEIGHT / 2;  // Middle of screen vertically
 
-  ClickerScene() : Scene() {}  // persistent=true to avoid cleanup on exit
+  // Inner Actor class to handle input and animation
+  class CookieClickHandler : public Actor::Actor {
+  private:
+    ClickerScene* scene;  // Reference to parent scene
+    
+  public:
+    CookieClickHandler(ClickerScene* parentScene) : Actor::Actor(), scene(parentScene) {}
+    
+    void handle(::Actor::Message* message) override {
+      // Ignore messages if scene is not active
+      if (!scene->isActive()) return;
+      
+      switch (message->signal) {
+        case Kywy::Events::BUTTON_LEFT_PRESSED:
+          // Exit with left button
+          scene->triggerExit();
+          return;
+          
+        case Kywy::Events::BUTTON_RIGHT_PRESSED:
+          // Increment cookie count
+          scene->cookieCount++;
+          scene->showAnimation = true;
+          scene->animationTime = 0;
+          scene->updateDisplay(); 
+          break;
+          
+        case Kywy::Events::TICK:
+          // Update the animation only when needed
+          if (scene->showAnimation) {
+            scene->animationTime++;
+            if (scene->animationTime > 30) {  // Stop animation after 30 ticks
+              scene->showAnimation = false;
+            }
+            scene->updateDisplay();
+          }
+          break;
+      }
+    }
+  };
+
+  CookieClickHandler* clickHandler = nullptr;
+
+public:
+  ClickerScene() : Scene() {}
 
   void onInitialize() {
-    // Start and enable this actor FIRST
-    this->start();
-    this->enable();
-    // Then subscribe to input and clock - persists across enter/exit
-    this->subscribe(&Scene::getEngine()->input);
-    this->subscribe(&Scene::getEngine()->clock);
-  }
-
-  void onCleanup() {
-    // Unsubscribe, disable, then stop
-    this->unsubscribe(&Scene::getEngine()->input);
-    this->unsubscribe(&Scene::getEngine()->clock);
-    this->disable();
-    this->stop();
+    // Create and initialize the click handler actor
+    clickHandler = new CookieClickHandler(this);
+    clickHandler->start();
+    clickHandler->enable();
+    clickHandler->subscribe(&Scene::getEngine()->input);
+    clickHandler->subscribe(&Scene::getEngine()->clock);
   }
 
   void onEnter() {
     cookieCount = 0;
     showAnimation = false;
     animationTime = 0;
-    wasButtonPressed = false;
     updateDisplay();
   }
 
@@ -339,51 +373,6 @@ public:
     
 
     // Show everything on screen
-    display.update();
-  }
-
-  void handle(::Actor::Message* message) override {
-    // Ignore messages if scene is not active
-    if (!isActive()) return;
-    
-    switch (message->signal) {
-      case Kywy::Events::BUTTON_LEFT_PRESSED:
-        // Exit with left button
-        this->triggerExit();
-        return;
-        
-      case Kywy::Events::BUTTON_RIGHT_PRESSED:
-        // Check if RIGHT button was just pressed (not held down)
-        // Only count if button is pressed now AND was not pressed before
-        if (!wasButtonPressed) {  // Button was just pressed and was not pressed during the last loop
-          cookieCount++;                                             // Add one more cookie
-          showAnimation = true;                                      // Start the click animation
-          animationTime = 0;                                         // Reset animation timer
-          updateDisplay();
-        }
-        wasButtonPressed = true;
-        break;
-        
-      case Kywy::Events::BUTTON_RIGHT_RELEASED:
-        wasButtonPressed = false;
-        break;
-        
-      case Kywy::Events::TICK:
-        // Update the animation
-        if (showAnimation) {
-          animationTime++;
-          if (animationTime > 30) {  // Stop animation after 30 loops
-            showAnimation = false;
-          }
-          updateDisplay();
-        }
-        break;
-    }
-  }
-
-  void onExit() {
-    Display::Display& display = Scene::getEngine()->display;
-    display.clear();
     display.update();
   }
 };
