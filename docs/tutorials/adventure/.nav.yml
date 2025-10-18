@@ -2,9 +2,4 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-nav:
-  - part_1.md
-  - part_2.md
-  - part_3.md
-  - part_4.md
-  - part_5.md
+title: Choose Your Own Adventure Game

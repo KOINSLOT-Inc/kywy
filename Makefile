@@ -39,7 +39,12 @@ $(ARDUINO_LINT): $(CACHE)
 CLANG_FORMAT := $(CACHE)/.clang-format
 $(CLANG_FORMAT): $(CACHE) .clang-format
 	@which clang-format 2>&1 > /dev/null || (echo "no clang-format found, try `brew install clang-format`" && exit 1)
-	@if clang-format --version | grep -v -q '14.0'; then (echo "wrong clang-format version found, v14.0 required" && exit 1); fi
+		@if clang-format --version | grep -q '14.0'; then \
+			echo "clang-format v14.0 found (required version)"; \
+		else \
+			echo "clang-format v14.0 required."; \
+			exit 1; \
+		fi
 	@touch $(CLANG_FORMAT)
 
 DOXYGEN := $(CACHE)/.doxygen
@@ -72,11 +77,13 @@ lint-arduino-code: $(ARDUINO_LINT) $(CLANG_FORMAT)
 		exit_code=$$?; \
 		touch .development; \
 		exit $$exit_code;
-	@clang-format --dry-run  **/*.cpp **/*.hpp **/*.ino
+	@clang-format --dry-run $$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" | grep -v ".cache" | grep -v "./output/" | grep -v ".history/")
 
 .PHONY: format-arduino-code
 format-arduino-code: $(CLANG_FORMAT)
-	@clang-format -i **/*.cpp **/*.hpp **/*.ino
+	@find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.ino" \) \
+		! -path "./.cache/*" ! -path "./output/*" ! -path "./.history/*" \
+		-print0 | xargs -0 -r clang-format -i
 
 .PHONY: compile-arduino-sketches
 compile-arduino-sketches: $(ARDUINO_CLI)
