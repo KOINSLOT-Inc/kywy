@@ -36,7 +36,8 @@ private:
   InputHandler inputHandler;
 
 public:
-  DemoScene() : Scene(), inputHandler(this) {}
+  DemoScene()
+    : Scene(), inputHandler(this) {}
 
   void onEnter() override {
     Scene::getEngine()->display.clear();

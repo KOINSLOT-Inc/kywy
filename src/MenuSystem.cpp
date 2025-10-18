@@ -366,13 +366,13 @@ void MenuSystem::selectOption() {
       case MenuItemType::SUBMENU:
         // Nested submenus not supported in this version
         break;
-       case MenuItemType::SCENE:
-         // Launch scene from submenu
-         if (itemPtr->scene && engine) {
-           enterScene(itemPtr->scene);
-           return;
-         }
-         break;
+      case MenuItemType::SCENE:
+        // Launch scene from submenu
+        if (itemPtr->scene && engine) {
+          enterScene(itemPtr->scene);
+          return;
+        }
+        break;
       case MenuItemType::ACTION:
       default:
         if (itemPtr->action) {

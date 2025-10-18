@@ -15,19 +15,19 @@ using namespace Kywy;
 
 
 
-Kywy::Engine engine;  // This starts the kywy firmware and engine
+Kywy::Engine engine;   // This starts the kywy firmware and engine
 MenuSystem* mainMenu;  // Global menu system pointer
 
 void setup() {
   // Initialize engine
   engine.start();
-  
+
   // Set static engine reference for scenes
   Scene::setEngine(&engine);
-  
+
   // Create menu system with default options
   mainMenu = new MenuSystem(engine.display);
-  
+
   // Build menu using the helper functions
   mainMenu->addLabelItem("Mini Game Launcher");
   mainMenu->addLabelItem("");
@@ -36,7 +36,7 @@ void setup() {
   mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("Spelunker", &spelunkerScene);
   mainMenu->addSceneItem("Slime Jumper", &slimeJumperScene);
-  
+
   // Start the menu system directly
   mainMenu->start(engine);
 }
