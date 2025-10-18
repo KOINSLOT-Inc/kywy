@@ -12,8 +12,6 @@
 
 using namespace Kywy;
 
-
-
 Kywy::Engine engine;  // This starts the kywy firmware and engine
 MenuSystem* mainMenu;  // Global menu system pointer
 
@@ -32,7 +30,6 @@ void setup() {
   mainMenu->addLabelItem("");
   mainMenu->addSceneItem("2D Tennis", &tennisScene);
   mainMenu->addSceneItem("Clicker", &clickerScene);
-
   mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("Spelunker", &spelunkerScene);
   

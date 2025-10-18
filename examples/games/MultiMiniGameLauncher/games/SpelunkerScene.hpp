@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 - 2025 KOINSLOT, Inc.
+// SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -9,12 +9,31 @@
 
 using namespace Kywy;
 
-typedef enum : uint16_t {
-  START_SCREEN = Kywy::Events::USER_EVENTS,
-  GAME_OVER,
-} SpelunkerSignal;
+class SpelunkerScene : public Scene {
+private:
+  int xPosition = 10;
+  int yVelocity = -5;
+  int yPosition = 64;
+  int padding = 5;
 
-const uint8_t splashScreenBMP[] = {
+  bool buttonPressed = false;
+
+  static inline constexpr uint8_t spelunkerBMP[] = {
+    0b00000000,  //
+    0b00111110,  //
+    0b10001000,  //
+    0b11111110,  //
+    0b00111111,  //
+    0b00100010,  //
+    0b00000000,  //
+    0b00000000,  //
+  };
+
+  const uint8_t *spelunkerFrames[1] = { spelunkerBMP };
+  Sprite spelunkerSprite;
+
+  // Spelunker splash screen bitmap
+  static inline constexpr uint8_t splashScreen[3024] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
   0x08, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -269,393 +288,270 @@ const uint8_t splashScreenBMP[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-const uint8_t spelunkerBMP[] = {
-  0b00000000,  //
-  0b00111110,  //
-  0b10001000,  //
-  0b11111110,  //
-  0b00111111,  //
-  0b00100010,  //
-  0b00000000,  //
-  0b00000000,  //
-};
+  // Column and game state variables
+  static const uint8_t numColumns = 16;
+  static const uint8_t columnWidth = KYWY_DISPLAY_WIDTH / numColumns;
+  static const uint8_t transitionProbability = 128;
+  
+  uint8_t topColumns[(numColumns + 1)];
+  uint8_t bottomColumns[(numColumns + 1)];
+  
+  uint8_t numEntraceColumns = 6;
+  uint8_t startIndex = 0;
+  uint8_t pixelsPerTick = 4;
+  uint8_t ticksPerColumnWidth = columnWidth / pixelsPerTick;
+  uint8_t tickCounter = 0;
 
-class SpelunkerScene : public Scene {
-public:
-  bool startScreen = true;
-  bool gameOver = false;
-  int score = 0;
-  int highScore = 0;
-
-private:
-  // Game managers as internal classes
-  class spelunkerManager : public Actor::Actor {
+  // Inner Actor class to handle input and game logic
+  class GameManager : public Actor::Actor {
+  private:
+    SpelunkerScene* scene;
+    
   public:
-    int xPosition = 10;
-    int yVelocity = -5;
-    int yPosition = 64;
-    int padding = 5;
-    bool buttonPressed = false;
+    int score = 0;
+    int highScore = 0;
+    bool inMenu = false;
+    bool lastFrameButtonPressed = true;
+    bool inSplashScreen = true;
     
-    const uint8_t *spelunkerFrames[1] = { spelunkerBMP };
-    Sprite spelunkerSprite;
-    
-    spelunkerManager() : spelunkerSprite(spelunkerFrames, 1, 8, 8) {}
-
-    void initialize() {
-      spelunkerSprite.setDisplay(&Scene::getEngine()->display);
-      spelunkerSprite.setPosition(xPosition, yPosition);
-      spelunkerSprite.setVisible(true);
-      spelunkerSprite.setNegative(true);
-      spelunkerSprite.setColor(WHITE);
-      spelunkerSprite.render();
+    GameManager(SpelunkerScene* parentScene) : Actor::Actor(), scene(parentScene) {
+      // Auto-register with parent scene
+      scene->Scene::add(this, false, true);
     }
+
+    void drawScore() {
+      char msg[16];
+      snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
+      Scene::getEngine()->display.fillRectangle(KYWY_DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
+      Scene::getEngine()->display.drawText(KYWY_DISPLAY_WIDTH - 33, 3, msg);
+    }
+
+    void initialize() {}
 
     void handle(::Actor::Message *message) {
       switch (message->signal) {
-        // NOTE: BUTTON_RIGHT is intentionally NOT here - it's used by the parent scene
-        // to start/restart the game, not for gameplay
+        case Kywy::Events::BUTTON_RIGHT_PRESSED:
         case Kywy::Events::D_PAD_UP_PRESSED:
         case Kywy::Events::D_PAD_DOWN_PRESSED:
         case Kywy::Events::D_PAD_LEFT_PRESSED:
         case Kywy::Events::D_PAD_RIGHT_PRESSED:
         case Kywy::Events::D_PAD_CENTER_PRESSED:
-        case Kywy::Events::BUTTON_RIGHT_PRESSED:
-          buttonPressed = true;
-          break;
-        // NOTE: BUTTON_RIGHT_RELEASED also excluded - RIGHT button not used for gameplay
+          {
+            Serial.println("Button Pressed");
+            // Only start game on button down transition (not while held)
+            if ((inSplashScreen || inMenu) && lastFrameButtonPressed == false) {
+              // Start or restart game from menu/splash
+              inSplashScreen = false;
+              inMenu = false;
+              score = 0;
+              lastFrameButtonPressed = true;
+              
+              // Reset game state
+              scene->xPosition = 10;
+              scene->yPosition = 64;
+              scene->yVelocity = -5;
+              scene->buttonPressed = false;
+              scene->startIndex = 0;
+              scene->tickCounter = 0;
+              
+              // Reinitialize columns for new game
+              memset(scene->topColumns, 0, sizeof(scene->topColumns));
+              memset(scene->bottomColumns, 0, sizeof(scene->bottomColumns));
+              for (int i = 0; i < scene->numEntraceColumns; i++) {
+                scene->topColumns[(scene->numColumns + 1) - scene->numEntraceColumns + i] = 6 * i;
+                scene->bottomColumns[(scene->numColumns + 1) - scene->numEntraceColumns + i] = 6 * i;
+              }
+              
+              Scene::getEngine()->display.clear();
+            } else if (!inSplashScreen && !inMenu) {
+              // During gameplay - jump/flap
+              scene->buttonPressed = true;
+              lastFrameButtonPressed = true;
+            }
+            break;
+          }
+        case Kywy::Events::BUTTON_RIGHT_RELEASED:
         case Kywy::Events::D_PAD_UP_RELEASED:
         case Kywy::Events::D_PAD_DOWN_RELEASED:
         case Kywy::Events::D_PAD_LEFT_RELEASED:
         case Kywy::Events::D_PAD_RIGHT_RELEASED:
         case Kywy::Events::D_PAD_CENTER_RELEASED:
-        case Kywy::Events::BUTTON_RIGHT_RELEASED:
-          buttonPressed = false;
-          break;
-        case Kywy::Events::TICK:
-          // up/down movement
-          yPosition += yVelocity;
-
-          if (yPosition < padding) {
-            yPosition = padding;
-            yVelocity = 0;
-          }
-
-          if (yPosition > KYWY_DISPLAY_HEIGHT - 8)
-            yPosition = KYWY_DISPLAY_HEIGHT - 8;
-
-          // gravity
-          if (yVelocity < 7 && !buttonPressed)
-            yVelocity += 1;
-
-          if (buttonPressed)
-            yVelocity = -5;
-
-          // apply changes
-          spelunkerSprite.setPosition(xPosition, yPosition);
-          spelunkerSprite.render();
-          break;
-      }
-    }
-  };
-
-  class columnManager : public Actor::Actor {
-  public:
-    static const uint8_t numColumns = 16;
-    static const uint8_t columnWidth = KYWY_DISPLAY_WIDTH / numColumns;
-
-    uint8_t topColumns[(numColumns + 1)];
-    uint8_t bottomColumns[(numColumns + 1)];
-
-    uint8_t numEntraceColumns = 6;
-    uint8_t numEntraceColumnsLeft = numEntraceColumns;
-
-    uint8_t startIndex = 0;
-    uint8_t pixelsPerTick = 4;
-    uint8_t ticksPerColumnWidth = columnWidth / pixelsPerTick;
-    uint8_t tickCounter = 0;
-
-    ::Actor::Message gameOverMessage = ::Actor::Message(SpelunkerSignal::GAME_OVER);
-    spelunkerManager* spelunker;
-
-    columnManager(spelunkerManager* spelunkerRef) : spelunker(spelunkerRef) {}
-
-    void initialize() {
-      memset(topColumns, 0, sizeof(topColumns));
-      memset(bottomColumns, 0, sizeof(bottomColumns));
-
-      for (int i = 0; i < numEntraceColumns; i++) {
-        topColumns[(numColumns + 1) - numEntraceColumns + i] = 6 * i;
-        bottomColumns[(numColumns + 1) - numEntraceColumns + i] = 6 * i;
-      }
-      startIndex = 0;
-    }
-
-    void handle(::Actor::Message *message) {
-      switch (message->signal) {
-        case Kywy::Events::TICK:
-          int offset = tickCounter * pixelsPerTick;
-
-          for (int i = 0; i < (numColumns + 1); i++) {
-            int columnIndex = (startIndex + i) % (numColumns + 1);
-
-            Scene::getEngine()->display.fillRectangle(i * columnWidth - offset, 0, columnWidth, topColumns[columnIndex], Display::Object2DOptions().color(WHITE));
-
-            Scene::getEngine()->display.fillRectangle(i * columnWidth - offset, topColumns[columnIndex], columnWidth, KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex] - topColumns[columnIndex]);
-
-            Scene::getEngine()->display.fillRectangle(i * columnWidth - offset, KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex], columnWidth, bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
-          }
-
-          int lastColumnIndex = (startIndex - 1) % (numColumns + 1);
-          if (lastColumnIndex == -1)
-            lastColumnIndex = (numColumns + 1) - 1;
-
-          uint8_t lastColumnHeight = topColumns[lastColumnIndex];
-
-          if (tickCounter < (ticksPerColumnWidth - 1)) {
-            tickCounter++;
-          } else {
-            startIndex = (startIndex + 1) % (numColumns + 1);
-            tickCounter = 0;
-
-            int newColumnIndex = (startIndex - 1) % (numColumns + 1);
-            if (newColumnIndex == -1)
-              newColumnIndex = (numColumns + 1) - 1;
-
-            int8_t newColumnHeight;
-            if (random(2) == 1) {
-              newColumnHeight = lastColumnHeight + 6;
-            } else {
-              newColumnHeight = lastColumnHeight - 6;
-            }
-            newColumnHeight = fmin(KYWY_DISPLAY_HEIGHT - 72, fmax(0, newColumnHeight));
-
-            topColumns[newColumnIndex] = newColumnHeight;
-            bottomColumns[newColumnIndex] = KYWY_DISPLAY_HEIGHT - 72 - newColumnHeight;
-          }
-
-          // check for collisions
-          uint8_t overlapColumnsStart = 1;
-          uint8_t overlapColumnsEnd = (8 / columnWidth) + (offset ? 1 : 0);
-          bool collided = false;
-          for (int i = overlapColumnsStart; i <= overlapColumnsEnd; i++) {
-            int columnIndex = (startIndex + i) % (numColumns + 1);
-
-            if (spelunker->yPosition < (topColumns[columnIndex] - 1))
-              collided = true;
-
-            if ((spelunker->yPosition + 5) > (KYWY_DISPLAY_HEIGHT - bottomColumns[columnIndex]))
-              collided = true;
-          }
-
-          if (collided) {
-            publish(&gameOverMessage);
-          }
-
-          break;
-      }
-    }
-  };
-
-  // Game objects
-  spelunkerManager spelunker;
-  columnManager columns;
-
-  void stopGame() {
-    // Unsubscribe from game events
-    spelunker.unsubscribe(&Scene::getEngine()->input);
-    spelunker.unsubscribe(&Scene::getEngine()->clock);
-    columns.unsubscribe(&Scene::getEngine()->clock);
-    // Clock subscription for inputHandler is handled automatically by Scene
-    
-    // Stop actors
-    spelunker.stop();
-    columns.stop();
-  }
-
-  void resetGameState() {
-    startScreen = false;
-    gameOver = false;
-    score = 0;
-    
-    // Reset spelunker state
-    spelunker.xPosition = 10;
-    spelunker.yPosition = 64;
-    spelunker.yVelocity = -5;
-    spelunker.buttonPressed = false;
-    
-    // Reset column state
-    columns.startIndex = 0;
-    columns.tickCounter = 0;
-    columns.numEntraceColumnsLeft = columns.numEntraceColumns;
-    for (int i = 0; i < columns.numColumns; i++) {
-      columns.topColumns[i] = 20;
-      columns.bottomColumns[i] = KYWY_DISPLAY_HEIGHT - 72 - 20;
-    }
-  }
-
-  void startGame() {
-    // If restarting from game over, stop the game first
-    if (!startScreen && gameOver) {
-      stopGame();
-    }
-    
-    // Reset all game state
-    resetGameState();
-    
-    // Initialize the objects
-    spelunker.initialize();
-    columns.initialize();
-    
-    // Subscribe to game events - order matters for rendering layers!
-    columns.subscribe(&Scene::getEngine()->clock);
-    spelunker.subscribe(&Scene::getEngine()->input);
-    spelunker.subscribe(&Scene::getEngine()->clock);
-    // Clock subscription for inputHandler is handled automatically by Scene
-
-    // Start the actors
-    spelunker.start();
-    columns.start();
-    
-    Scene::getEngine()->display.update();
-  }
-
-  // Input handler actor to manage scene-level input and game flow
-  class SpelunkerInputHandler : public Actor::Actor {
-  private:
-    SpelunkerScene* scene;
-    
-  public:
-    SpelunkerInputHandler(SpelunkerScene* parentScene) : Actor::Actor(), scene(parentScene) {
-      // Auto-register with parent scene
-      scene->Scene::add(this, false);
-    }
-    
-    void handle(::Actor::Message *message) override {
-      if (!scene->isActive()) return;
-      
-      switch (message->signal) {
-        case SpelunkerSignal::GAME_OVER:
-          scene->gameOver = true;
-          scene->highScore = fmax(scene->score, scene->highScore);
-          scene->stopGame();
-          
-          Scene::getEngine()->display.clear();
-          Scene::getEngine()->display.drawText(5, 5, "GAME OVER");
-          char msg[32];
-          snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)scene->score);
-          Scene::getEngine()->display.drawText(5, 15, msg);
-          snprintf(msg, sizeof(msg), "High Score: %d", scene->highScore);
-          Scene::getEngine()->display.drawText(5, 25, msg);
-          Scene::getEngine()->display.drawText(5, 45, "Press right button");
-          Scene::getEngine()->display.drawText(5, 55, "to try again.");
-          Scene::getEngine()->display.drawText(5, 65, "Press left to exit.");
-          Scene::getEngine()->display.update();
-          break;
-          
-        case Kywy::Events::TICK:
-          // Don't process ticks during splash screen or game over
-          if (scene->startScreen || scene->gameOver) {
+          {
+            scene->buttonPressed = false;
+            lastFrameButtonPressed = false;
             break;
           }
-          scene->score += 1;
-          scene->drawScore();
-          Scene::getEngine()->display.update();
-          break;
-          
         case Kywy::Events::BUTTON_LEFT_PRESSED:
-          // Exit with left button regardless of game state
-          scene->triggerExit();
-          return;
-          
-        case Kywy::Events::BUTTON_RIGHT_PRESSED:
-          // Only handle if on start screen or game over - ignore during gameplay
-          if (scene->startScreen) {
-            // Start game from splash screen
-            scene->startScreen = false;
-            Scene::getEngine()->display.clear();
-            scene->startGame();
-          } else if (scene->gameOver) {
-            // Restart game when game over
-            Scene::getEngine()->display.clear();
-            scene->startGame();
+          {
+            // Exit to menu
+            scene->triggerExit();
+            return;
           }
-          // else: ignore during active gameplay
-          break;
-          
-        case Kywy::Events::D_PAD_UP_PRESSED:
-        case Kywy::Events::D_PAD_DOWN_PRESSED:
-        case Kywy::Events::D_PAD_LEFT_PRESSED:
-        case Kywy::Events::D_PAD_RIGHT_PRESSED:
-          // During gameplay, ignore d-pad (spelunker only jumps with right button)
-          // These events are here to prevent them from propagating
-          break;
+        case Kywy::Events::TICK:
+          {
+            if (inSplashScreen) {
+              // Keep showing splash screen bitmap until button pressed
+              Scene::getEngine()->display.clear();
+              Scene::getEngine()->display.drawBitmap(0, 0, 144, 168, (uint8_t *)scene->splashScreen);
+              Scene::getEngine()->display.update();
+              break;
+            }
+            if (inMenu) {
+              // Display game over screen when in menu after collision
+              if (score > highScore)
+                highScore = score;
+
+              Scene::getEngine()->display.clear();
+
+              Scene::getEngine()->display.drawText(5, 5, "GAME OVER");
+              char msg[32];
+              snprintf(msg, sizeof(msg), "Score: %d", (uint16_t)score);
+              Scene::getEngine()->display.drawText(5, 15, msg);
+              snprintf(msg, sizeof(msg), "High Score: %d", highScore);
+              Scene::getEngine()->display.drawText(5, 25, msg);
+              Scene::getEngine()->display.drawText(5, 45, "Press any button");
+              Scene::getEngine()->display.drawText(5, 55, "to try again.");
+              Scene::getEngine()->display.update();
+              break;
+            }
+            
+            // Clear display for new frame
+            Scene::getEngine()->display.clear();
+
+            // Player physics - apply jump or gravity BEFORE updating position
+            if (scene->buttonPressed) {
+              scene->yVelocity = -5;  // flap up
+            } else if (scene->yVelocity < 7) {
+              scene->yVelocity += 1;  // gravity (limit terminal velocity)
+            }
+
+            // Update position based on velocity
+            scene->yPosition += scene->yVelocity;
+
+            // Clamp position within screen bounds
+            if (scene->yPosition < scene->padding) {
+              scene->yPosition = scene->padding;
+              scene->yVelocity = 0;
+            }
+
+            if (scene->yPosition > KYWY_DISPLAY_HEIGHT - 8)
+              scene->yPosition = KYWY_DISPLAY_HEIGHT - 8;
+
+            // Update sprite position
+            scene->spelunkerSprite.setPosition(scene->xPosition, scene->yPosition);
+
+            score += 1;
+            drawScore();
+
+            int offset = scene->tickCounter * scene->pixelsPerTick;
+
+            for (int i = 0; i < (scene->numColumns + 1); i++) {
+              int columnIndex = (scene->startIndex + i) % (scene->numColumns + 1);
+
+              Scene::getEngine()->display.fillRectangle(i * scene->columnWidth - offset, 0, scene->columnWidth, scene->topColumns[columnIndex], Display::Object2DOptions().color(WHITE));
+
+              Scene::getEngine()->display.fillRectangle(i * scene->columnWidth - offset, scene->topColumns[columnIndex], scene->columnWidth, KYWY_DISPLAY_HEIGHT - scene->bottomColumns[columnIndex] - scene->topColumns[columnIndex]);
+
+              Scene::getEngine()->display.fillRectangle(i * scene->columnWidth - offset, KYWY_DISPLAY_HEIGHT - scene->bottomColumns[columnIndex], scene->columnWidth, scene->bottomColumns[columnIndex], Display::Object2DOptions().color(WHITE));
+            }
+
+            // record height of the most recently created column
+            int lastColumnIndex = (scene->startIndex - 1) % (scene->numColumns + 1);
+            if (lastColumnIndex == -1)
+              lastColumnIndex = (scene->numColumns + 1) - 1;
+
+            uint8_t lastColumnHeight = scene->topColumns[lastColumnIndex];
+
+            if (scene->tickCounter < (scene->ticksPerColumnWidth - 1)) {
+              scene->tickCounter++;
+            } else {
+              // move head of list to effectively rotate the column lists
+              scene->startIndex = (scene->startIndex + 1) % (scene->numColumns + 1);
+
+              // reset tick counter
+              scene->tickCounter = 0;
+
+              // choose a new column height around the height of the most recently created column
+              int newColumnIndex = (scene->startIndex - 1) % (scene->numColumns + 1);
+              if (newColumnIndex == -1)
+                newColumnIndex = (scene->numColumns + 1) - 1;
+
+              int8_t newColumnHeight;
+              if (random(255) > transitionProbability) {  // randomly choose up or down
+                newColumnHeight = lastColumnHeight + 6;
+              } else {
+                newColumnHeight = lastColumnHeight - 6;
+              }
+              newColumnHeight = fmin(KYWY_DISPLAY_HEIGHT - 72, fmax(0, newColumnHeight));
+
+              scene->topColumns[newColumnIndex] = newColumnHeight;
+              scene->bottomColumns[newColumnIndex] = KYWY_DISPLAY_HEIGHT - 72 - newColumnHeight;  // pin tunnel width at 72
+            }
+
+            // check for collisions
+            uint8_t overlapColumnsStart = 1;
+            uint8_t overlapColumnsEnd = (8 / scene->columnWidth) + (offset ? 1 : 0);
+            bool collided = false;
+            for (int i = overlapColumnsStart; i <= overlapColumnsEnd; i++) {
+              int columnIndex = (scene->startIndex + i) % (scene->numColumns + 1);
+
+              // collisions with top columns
+              //
+              // `- 1` because top pixels of 8x8 spelunker sprite are all off
+              if (scene->yPosition < (scene->topColumns[columnIndex] - 1))
+                collided = true;
+
+              // collisions with bottom columns
+              //
+              // `+ 5` because bottom pixels of 8x8 spelunker sprite are on the sixth row
+              if ((scene->yPosition + 5) > (KYWY_DISPLAY_HEIGHT - scene->bottomColumns[columnIndex]))
+                collided = true;
+            }
+
+            if (collided) {
+              inMenu = true;
+              scene->buttonPressed = false;
+            }
+
+            // Update display
+            scene->spelunkerSprite.render();
+            Scene::getEngine()->display.update();
+
+            break;
+            lastFrameButtonPressed = scene->buttonPressed;
+          }
       }
     }
   };
 
-  friend class SpelunkerInputHandler;
-  SpelunkerInputHandler inputHandler;
-
-  void drawScore() {
-    char msg[16];
-    snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
-    Scene::getEngine()->display.fillRectangle(KYWY_DISPLAY_WIDTH - 40, 0, 40, 14, Display::Object2DOptions().color(WHITE));
-    Scene::getEngine()->display.drawText(KYWY_DISPLAY_WIDTH - 33, 3, msg);
-  }
+  GameManager gameHandler;
 
 public:
-  SpelunkerScene() : Scene(), columns(&spelunker), inputHandler(this) {
-    // Actor auto-registers itself in its constructor!
+  SpelunkerScene() 
+    : Scene(), 
+      spelunkerSprite(spelunkerFrames, 1, 8, 8),
+      gameHandler(this) {
   }
-
+  
   void onEnter() {
-    // Reset all game state
-    startScreen = true;
-    gameOver = true;
-    score = 0;
-    
-    // Reset spelunker state
-    spelunker.xPosition = 10;
-    spelunker.yPosition = 64;
-    spelunker.yVelocity = -5;
-    spelunker.buttonPressed = false;
-    
-    // Reset column state
-    columns.startIndex = 0;
-    columns.tickCounter = 0;
-    columns.numEntraceColumnsLeft = columns.numEntraceColumns;
-    
-    // Add child actors to scene
-    add(&spelunker);
-    add(&columns);
-    
-    // Subscribe to column manager for GAME_OVER messages (inputHandler also needs this)
-    inputHandler.subscribe(&columns);
-    
-    // Draw splash screen
-    Scene::getEngine()->display.clear();
-    Scene::getEngine()->display.drawBitmap(0, 0, KYWY_DISPLAY_WIDTH, KYWY_DISPLAY_HEIGHT, (uint8_t *)splashScreenBMP);
+    spelunkerSprite.setDisplay(&Scene::getEngine()->display);
+    spelunkerSprite.setPosition(xPosition, yPosition);
+    spelunkerSprite.setVisible(true);
+    spelunkerSprite.setNegative(true);
+    spelunkerSprite.setColor(WHITE);
+    spelunkerSprite.render();
 
-    Scene::getEngine()->display.update();
-  }
+    // initialize column lists to zero
+    memset(topColumns, 0, sizeof(topColumns));
+    memset(bottomColumns, 0, sizeof(bottomColumns));
 
-  void onExit() {
-    // Stop the game if it's running
-    if (!gameOver && !startScreen) {
-      stopGame();
+    // set up cave entrance columns
+    for (int i = 0; i < numEntraceColumns; i++) {
+      topColumns[(numColumns + 1) - numEntraceColumns + i] = 6 * i;
+      bottomColumns[(numColumns + 1) - numEntraceColumns + i] = 6 * i;
     }
-    
-    // Unsubscribe inputHandler from column manager
-    inputHandler.unsubscribe(&columns);
-    
-    // Stop child actors
-    spelunker.stop();
-    columns.stop();
-    
-    // Remove child actors from scene
-    remove(&spelunker);
-    remove(&columns);
+    startIndex = 0;
+    tickCounter = 0;
   }
 };
 
