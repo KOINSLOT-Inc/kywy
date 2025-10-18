@@ -114,7 +114,7 @@ private:
           return;
         case Kywy::Events::TICK:
           if (scene->gameManager.getCurrentState() != STATE_GAME_ACTIVE) break;
-          
+
           // side to side motion
           xPosition += xVelocity;
 
@@ -187,7 +187,7 @@ private:
       switch (message->signal) {
         case Kywy::Events::TICK:
           if (scene->gameManager.getCurrentState() != STATE_GAME_ACTIVE) break;
-          
+
           drawPlatforms(WHITE);  // erase platforms
 
           // check for collisions
@@ -243,7 +243,9 @@ private:
     int score = 0;
     int highScore = 0;
 
-    GameState getCurrentState() { return currentState; }
+    GameState getCurrentState() {
+      return currentState;
+    }
 
     GameManager(SlimeJumperScene *parentScene)
       : Actor::Actor(), scene(parentScene) {
