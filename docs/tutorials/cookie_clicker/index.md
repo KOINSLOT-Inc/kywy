@@ -1,7 +1,9 @@
 ---
-title: "First Game: Cookie Clicker"
+title: "Cookie Clicker"
 hide:
   - footer
+tags:
+  - beginner
 ---
 
 <!--
@@ -10,7 +12,7 @@ SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# First Game: Cookie Clicker
+# Cookie Clicker
 
 _audience: beginner_
 
@@ -172,7 +174,7 @@ The `drawBitmap()` function takes several parameters:
 - **Width, Height**: Size of the image (defined in `cookie.hpp`)
 - **Image data**: The actual pixel information (`cookie_data` array)
 
-The image data comes from the `cookie.hpp` file, which was created using the [Kywy Drawing Editor](https://github.com/KOINSLOT-Inc/kywy-web-tools). Each number in the array represents the color of one pixel!
+The image data comes from the `cookie.hpp` file, which was created using the [Kywy Drawing Editor](https://tools.kywy.io/drawing-editor). Each number in the array represents the color of one pixel!
 
 ## Try It Yourself!
 
@@ -437,15 +439,6 @@ Now that you understand the basics, you could try:
 - **High Score System**: Saving and displaying the best scores
 - **More Animations**: Adding particle effects, color changes, or moving elements
 - **Multiple Levels**: Different backgrounds or challenges as you progress
-
-### Learn More About Graphics
-
-Want to understand how computer graphics work? Check out our **[Image Format Tutorial](../graphics_basics/index.md)** _(coming soon!)_ to learn:
-
-- How pixels and colors work in computers
-- Why we use hexadecimal numbers for colors
-- How to optimize images for small devices
-- Advanced drawing techniques and animations
 
 ## Common Questions
 

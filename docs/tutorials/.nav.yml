@@ -4,5 +4,6 @@
 
 nav:
   - index.md
-  - 'First Game: Cookie Clicker': cookie_clicker/index.md
-  - bouncing_ball/
+  - 'Bouncing Ball': bouncing_ball/
+  - 'Cookie Clicker': cookie_clicker
+  - 'Maze Game': maze
