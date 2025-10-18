@@ -442,7 +442,6 @@ private:
             scene->spelunkerSprite.setPosition(scene->xPosition, scene->yPosition);
 
             score += 1;
-            drawScore();
 
             int offset = scene->tickCounter * scene->pixelsPerTick;
 
@@ -515,6 +514,7 @@ private:
             }
 
             // Update display
+            drawScore();
             scene->spelunkerSprite.render();
             Scene::getEngine()->display.update();
 
