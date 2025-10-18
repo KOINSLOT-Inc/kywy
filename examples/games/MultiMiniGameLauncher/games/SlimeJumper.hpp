@@ -111,7 +111,7 @@ private:
           break;
         case Kywy::Events::BUTTON_LEFT_PRESSED:
           scene->triggerExit();
-          break;
+          return;
         case Kywy::Events::TICK:
           // side to side motion
           xPosition += xVelocity;
