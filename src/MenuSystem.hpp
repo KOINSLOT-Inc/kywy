@@ -79,6 +79,23 @@ public:
     return item;
   }
 
+  // Helper for creating OPTION items with dynamic value providers
+  static MenuItem createOption(const std::string &label, const std::function<void()> &action,
+                               const std::function<std::string()> &valueProvider) {
+    return MenuItem(label, MenuItemType::OPTION, nullptr, action, "", valueProvider);
+  }
+
+  // Helper for creating OPTION items with static values
+  static MenuItem createOption(const std::string &label, const std::function<void()> &action,
+                               const std::string &staticValue = "") {
+    return MenuItem(label, MenuItemType::OPTION, nullptr, action, staticValue);
+  }
+
+  // Helper for creating SUBMENU items
+  static MenuItem createSubmenu(const std::string &label, MenuSystem *submenu) {
+    return MenuItem(label, MenuItemType::SUBMENU, nullptr, nullptr, "", nullptr, submenu);
+  }
+
   // Enhanced scene helper - creates and adds scene item to menu automatically
   void addSceneItem(const std::string &label, Scene *scene) {
     items.push_back(createSceneItem(label, scene));
@@ -111,6 +128,26 @@ public:
 
   void addLabelItem(const std::string &label) {
     items.push_back(createLabel(label));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  // Add OPTION item with dynamic value provider
+  void addOptionItem(const std::string &label, const std::function<void()> &action,
+                     const std::function<std::string()> &valueProvider) {
+    items.push_back(createOption(label, action, valueProvider));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  // Add OPTION item with static value
+  void addOptionItem(const std::string &label, const std::function<void()> &action,
+                     const std::string &staticValue = "") {
+    items.push_back(createOption(label, action, staticValue));
+    menuDirty = true;  // Mark menu for rebuild
+  }
+
+  // Add SUBMENU item
+  void addSubmenuItem(const std::string &label, MenuSystem *submenu) {
+    items.push_back(createSubmenu(label, submenu));
     menuDirty = true;  // Mark menu for rebuild
   }
 
