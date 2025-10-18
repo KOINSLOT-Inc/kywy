@@ -433,7 +433,7 @@ private:
   };
 
   // Inner Actor class to handle input and game logic
-  class SnakeGameHandler : public Actor::Actor {
+  class SnakeGameHandler: public Actor::Actor {
   private:
     SnakeScene* scene;
 

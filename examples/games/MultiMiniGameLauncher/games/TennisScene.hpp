@@ -291,7 +291,7 @@ private:
   };
 
   // Inner Actor class to handle game logic and input
-  class TennisGameHandler : public Actor::Actor {
+  class TennisGameHandler: public Actor::Actor {
   private:
     TennisScene* scene;
 

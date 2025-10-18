@@ -585,7 +585,6 @@ void changeLanguage() {
 }
 
 Kywy::MenuSystem *menuSystem;
-Kywy::MenuSystem *subMenuSystem;
 
 void setup() {
   Serial.begin(9600);
@@ -599,53 +598,48 @@ void setup() {
   menuOptions.pointer = '>';
   menuOptions.font = Display::Font::intel_one_mono_8_pt;
 
-  // Create a submenu that we will put into the menu
-  std::vector<Kywy::MenuSystem::MenuItem> submenuItems = {
-    // Action items
-    Kywy::MenuSystem::createAction("Item in submenu", showSettings),
-    Kywy::MenuSystem::createAction("Settings", showSettings),
-  };
+  // Create menu system with configured options
+  menuSystem = new Kywy::MenuSystem(engine.display, menuOptions);
 
-  subMenuSystem = new Kywy::MenuSystem(engine.display, submenuItems, menuOptions);
+  // Build menu using the helper methods
+  // Action items
+  menuSystem->addActionItem("Start Game", startGame);
+  menuSystem->addActionItem("Settings", showSettings);
 
-  // Create menu items with different types using helper functions
-  std::vector<Kywy::MenuSystem::MenuItem> menuItems = {
-    // Action items
-    Kywy::MenuSystem::createAction("Start Game", startGame),
-    Kywy::MenuSystem::createAction("Settings", showSettings),
+  // Divider (label)
+  menuSystem->addLabelItem("-- Options --");
 
-    // Divider (label)
-    Kywy::MenuSystem::createLabel("-- Options --"),
+  // Toggle items
+  menuSystem->addToggleItem("Sound", &soundEnabled);
+  menuSystem->addToggleItem("Vibration", &vibrationEnabled);
+  menuSystem->addToggleItem("Night Mode", &nightMode);
+  menuSystem->addToggleItem("Autosave", &autoSave);
 
-    // Toggle items
-    Kywy::MenuSystem::createToggle("Sound", &soundEnabled),
-    Kywy::MenuSystem::createToggle("Vibration", &vibrationEnabled),
-    Kywy::MenuSystem::createToggle("Night Mode", &nightMode),
-    Kywy::MenuSystem::createToggle("Autosave", &autoSave),
+  // Note: Option items with changeable values (like difficulty/language)
+  // can be implemented as action items that change the value when selected
+  menuSystem->addActionItem("Change Difficulty", []() {
+    changeDifficulty();
+    // Show current difficulty
+    engine.display.clear();
+    engine.display.drawText(10, 60, ("Difficulty: " + difficulty).c_str());
+    engine.display.update();
+    delay(500);
+  });
 
-    // Submenu drop down
-    Kywy::MenuSystem::createSubmenu("Submenu", subMenuSystem),
+  menuSystem->addActionItem("Change Language", []() {
+    changeLanguage();
+    // Show current language
+    engine.display.clear();
+    engine.display.drawText(10, 60, ("Language: " + language).c_str());
+    engine.display.update();
+    delay(500);
+  });
 
-    // Option items
-    Kywy::MenuSystem::createOption("Difficulty", difficulty, changeDifficulty, []() {
-      return difficulty;
-    }),
-    Kywy::MenuSystem::createOption("Language", language, changeLanguage, []() {
-      return language;
-    }),
-
-    // More action items
-    Kywy::MenuSystem::createAction("About", showAbout),
-  };
-
-  // Configure menu appearance
-
-
-  // Create menu system
-  menuSystem = new Kywy::MenuSystem(engine.display, menuItems, menuOptions);
+  // More action items
+  menuSystem->addActionItem("About", showAbout);
 
   // Set a smaller number of visible items to test scrolling
-  menuSystem->scrollOptions.setVisibleItems(10);  // Only show 4 items at a time
+  menuSystem->scrollOptions.setVisibleItems(10);
 
   // Start the menu
   menuSystem->start(engine);
