@@ -102,32 +102,35 @@ void Scene::exit() {
 
   active = false;
 
-  // Unsubscribe all actors from clock and input, then disable
-  unsubscribeAllActors();
+  // Disable all actors FIRST to prevent new messages during exit
   uint8_t i = 0;
   while (i < MAX_ACTORS) {
     if (actors[i] == nullptr) break;
-
-    // Unsubscribe from input if needed
-    if (actorNeedsInput[i] && engine) {
-      actors[i]->unsubscribe(&engine->input);
-    }
-
     actors[i]->disable();
-    actors[i]->dispatch(&sceneExitMessage);
     i++;
   }
 
-  // Call virtual hook
+  // Unsubscribe from clock and input to prevent new messages
+  unsubscribeAllActors();
+  i = 0;
+  while (i < MAX_ACTORS) {
+    if (actors[i] == nullptr) break;
+    if (actorNeedsInput[i] && engine) {
+      actors[i]->unsubscribe(&engine->input);
+    }
+    i++;
+  }
+
+  // Dispatch exit message and stop actors
+  i = 0;
+  while (i < MAX_ACTORS) {
+    if (actors[i] == nullptr) break;
+    actors[i]->dispatch(&sceneExitMessage);
+    actors[i]->stop();
+    i++;
+  }
+
   onExit();
-
-  // NOTE: Display clearing is now handled by MenuSystem for better control
-  // Scenes should NOT clear the display themselves
-
-  // NOTE: We do NOT call cleanup() here even if not persistent
-  // This is because exit() might be called from within an actor's handle() method,
-  // and cleanup() would delete that actor while it's still executing
-  // Instead, cleanup is called from the destructor or explicitly when safe
 }
 
 void Scene::subscribeAllActors() {

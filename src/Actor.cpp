@@ -12,7 +12,9 @@ void queueEventCallback(Actor *actor, Message *message) {
   handlerMutex.lock();
   switch (message->directive) {
     case DIRECTIVE_HANDLE:
-      actor->handle(message);
+      if (actor->isEnabled()) {
+        actor->handle(message);
+      }
       break;
     case DIRECTIVE_EXIT:
       actor->teardown();

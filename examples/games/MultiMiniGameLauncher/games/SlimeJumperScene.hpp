@@ -185,7 +185,7 @@ private:
     }
 
     void handle(::Actor::Message *message) {
-      if(!scene->isActive()) return;
+      if (!scene->isActive() && message->signal != Kywy::Events::SCENE_EXIT) return;
       switch (message->signal) {
         case Kywy::Events::TICK:
           if (scene->gameManager.getCurrentState() != STATE_GAME_ACTIVE) break;
@@ -255,7 +255,7 @@ private:
     }
 
     void drawScore(uint16_t color) {
-      if(!scene->isActive()) return;
+      //if(!scene->isActive()) return;
       char msg[16];
       snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
       scene->Scene::getEngine()->display.drawText(5, 5, msg, Display::TextOptions().color(color));
