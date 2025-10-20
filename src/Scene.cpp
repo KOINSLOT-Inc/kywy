@@ -169,6 +169,11 @@ void Scene::triggerExit() {
   if (callback) {
     callback();
   }
+
+  // Delete non-persistent scenes after exit
+  if (!this->isPersistent()) {
+    delete this;
+  }
 }
 
 void Scene::add(Actor::Actor* actor, bool owned, bool subscribeToInput) {

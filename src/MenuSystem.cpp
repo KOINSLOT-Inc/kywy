@@ -615,16 +615,15 @@ void MenuSystem::onSceneExit() {
     exitingScene->cleanup();
   }
 
+  if(!currentScene->isPersistent()) {
+    // If the scene is not persistent, delete it to free memory
+    delete currentScene;
+  }
   // Clear display immediately
   if (engine) {
     engine->display.clear();
     engine->display.update();
   }
-
-// Small delay for display stability
-#ifdef ARDUINO
-  delay(10);
-#endif
 
   // Re-enable menu input handler
   if (inputHandler) {

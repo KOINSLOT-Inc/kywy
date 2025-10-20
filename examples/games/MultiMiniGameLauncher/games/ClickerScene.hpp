@@ -15,7 +15,7 @@ private:
 #define COOKIE_WIDTH 144
 #define COOKIE_HEIGHT 168
 
-  uint8_t cookie_data[3024] = {
+  static inline constexpr uint8_t cookie_data[3024] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -327,7 +327,7 @@ private:
 
 public:
   ClickerScene()
-    : Scene(), clickHandler(this) {}
+    : Scene(true), clickHandler(this) {}
 
   void onEnter() {
     cookieCount = 0;
@@ -344,7 +344,7 @@ public:
 
     // Draw the score at the top
     String scoreText = "Cookies: " + String(cookieCount);
-    display.drawText(cookieX, 20, scoreText.c_str(),
+    display.drawText(cookieX, 20, scoreText,
                      Display::TextOptions().origin(Display::Origin::Text::CENTER));
 
     // Draw the cookie picture in the center
