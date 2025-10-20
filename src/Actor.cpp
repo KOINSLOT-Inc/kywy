@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Actor.hpp"
+#include "Kywy.hpp"
 
 namespace Actor {
 
@@ -12,7 +13,7 @@ void queueEventCallback(Actor *actor, Message *message) {
   handlerMutex.lock();
   switch (message->directive) {
     case DIRECTIVE_HANDLE:
-      if (actor->isEnabled()) {
+      if (actor->enabled || message->signal == Kywy::Events::SCENE_EXIT) {
         actor->handle(message);
       }
       break;

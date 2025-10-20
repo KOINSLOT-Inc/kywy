@@ -5,12 +5,12 @@
 // A basic example of "scenes"
 //
 // Notes:
-//   - scenes are just groupings of actors
+//   - scenes are classes that manage groupings of actors
 //   - more than one scene can be active at a time
 //   - scenes manage enabling and disabling groupings of actors
 //
 // This example:
-//   - has two scenes
+//   - has two scenes that can be active simultaneously
 //   - one that has two actors that each draw a circle on the top half of the screen
 //   - the other has one actor that draws two circles on the bottom half of the screen
 //   - the manager enables or disables the scenes based on button input
@@ -32,8 +32,7 @@ public:
         break;
     }
   }
-
-} topLeftCircle;
+};
 
 class TopRightCircle : public Actor::Actor {
 public:
@@ -47,8 +46,7 @@ public:
         break;
     }
   }
-
-} topRightCircle;
+};
 
 class BottomCircles : public Actor::Actor {
 public:
@@ -64,13 +62,40 @@ public:
         break;
     }
   }
+};
 
-} bottomCircles;
+class TopCirclesScene : public Scene {
+private:
+  TopLeftCircle topLeftCircle;
+  TopRightCircle topRightCircle;
 
-Scene topCirclesScene;
-Scene bottomCirclesScene;
+public:
+  TopCirclesScene() : Scene(false, false) {}  // not persistent, don't auto-clear display
 
-class manager : public Actor::Actor {
+  void onEnter() {
+    // Add actors to the scene
+    add(&topLeftCircle, false, false);  // don't own (stack allocated), don't need input
+    add(&topRightCircle, false, false);
+  }
+};
+
+class BottomCirclesScene : public Scene {
+private:
+  BottomCircles bottomCircles;
+
+public:
+  BottomCirclesScene() : Scene(false, false) {}  // not persistent, don't auto-clear display
+
+  void onEnter() {
+    // Add actors to the scene
+    add(&bottomCircles, false, false);  // don't own (stack allocated), don't need input
+  }
+};
+
+TopCirclesScene topCirclesScene;
+BottomCirclesScene bottomCirclesScene;
+
+class Manager : public Actor::Actor {
 public:
   void handle(::Actor::Message *message) {
     switch (message->signal) {
@@ -78,41 +103,41 @@ public:
         engine.display.update();
         break;
       case Kywy::Events::BUTTON_LEFT_PRESSED:
-        topCirclesScene.enter();
+        if (!topCirclesScene.isActive()) {
+          topCirclesScene.enter();
+        }
         break;
       case Kywy::Events::BUTTON_LEFT_RELEASED:
-        topCirclesScene.exit();
+        if (topCirclesScene.isActive()) {
+          topCirclesScene.exit();
+        }
         break;
       case Kywy::Events::BUTTON_RIGHT_PRESSED:
-        bottomCirclesScene.enter();
+        if (!bottomCirclesScene.isActive()) {
+          bottomCirclesScene.enter();
+        }
         break;
       case Kywy::Events::BUTTON_RIGHT_RELEASED:
-        bottomCirclesScene.exit();
+        if (bottomCirclesScene.isActive()) {
+          bottomCirclesScene.exit();
+        }
         break;
     }
   }
-
 } manager;
 
 void setup() {
   engine.start();
   engine.display.clear();
 
-  topLeftCircle.subscribe(&engine.clock);
-  topRightCircle.subscribe(&engine.clock);
-  bottomCircles.subscribe(&engine.clock);
+  // Set the engine reference for scenes
+  Scene::setEngine(&engine);
 
+  // Subscribe manager to input and clock
   manager.subscribe(&engine.input);
   manager.subscribe(&engine.clock);
 
-  topCirclesScene.add(&topLeftCircle);
-  topCirclesScene.add(&topRightCircle);
-
-  bottomCirclesScene.add(&bottomCircles);
-
-  topLeftCircle.start();
-  topRightCircle.start();
-  bottomCircles.start();
+  // Start the manager
   manager.start();
 }
 
