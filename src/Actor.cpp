@@ -13,7 +13,7 @@ void queueEventCallback(Actor *actor, Message *message) {
   handlerMutex.lock();
   switch (message->directive) {
     case DIRECTIVE_HANDLE:
-      if (actor->isEnabled || message->signal == Kywy::Events::SCENE_EXIT) {
+      if (actor->isEnabled() || message->signal == Kywy::Events::SCENE_EXIT) {
         actor->handle(message);
       }
       break;
