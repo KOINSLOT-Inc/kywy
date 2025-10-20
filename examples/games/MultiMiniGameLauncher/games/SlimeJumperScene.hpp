@@ -78,7 +78,6 @@ private:
     }
 
     void handle(::Actor::Message *message) {
-      if(!scene->isActive()) return;
       switch (message->signal) {
         case Kywy::Events::D_PAD_LEFT_PRESSED:
           buttonLeftPressed = true;
@@ -255,7 +254,6 @@ private:
     }
 
     void drawScore(uint16_t color) {
-      //if(!scene->isActive()) return;
       char msg[16];
       snprintf(msg, sizeof(msg), "%d", (uint16_t)score);
       scene->Scene::getEngine()->display.drawText(5, 5, msg, Display::TextOptions().color(color));
