@@ -535,6 +535,21 @@ public:
   }
 
   void onEnter() {
+    // Reset all game state variables
+    xPosition = 10;
+    yPosition = 64;
+    yVelocity = -5;
+    buttonPressed = false;
+    startIndex = 0;
+    tickCounter = 0;
+
+    // Reset GameManager state
+    gameHandler.score = 0;
+    gameHandler.inMenu = false;
+    gameHandler.lastFrameButtonPressed = true;
+    gameHandler.inSplashScreen = true;
+
+    // Reset spelunker sprite
     spelunkerSprite.setDisplay(&Scene::getEngine()->display);
     spelunkerSprite.setPosition(xPosition, yPosition);
     spelunkerSprite.setVisible(true);
@@ -542,17 +557,15 @@ public:
     spelunkerSprite.setColor(WHITE);
     spelunkerSprite.render();
 
-    // initialize column lists to zero
+    // Initialize column lists to zero
     memset(topColumns, 0, sizeof(topColumns));
     memset(bottomColumns, 0, sizeof(bottomColumns));
 
-    // set up cave entrance columns
+    // Set up cave entrance columns
     for (int i = 0; i < numEntraceColumns; i++) {
       topColumns[(numColumns + 1) - numEntraceColumns + i] = 6 * i;
       bottomColumns[(numColumns + 1) - numEntraceColumns + i] = 6 * i;
     }
-    startIndex = 0;
-    tickCounter = 0;
   }
 };
 
