@@ -73,10 +73,21 @@ void MBED_SPI_DRIVER::clearBuffer() {
 }
 
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
+  // This function uses DMA to transfer the display buffer to the display
+  // over SPI without blocking the CPU. 
+  // Since default mbed SPI does not support DMA, we directly access the RP2040
+  // hardware registers and DMA controller directly.
+  // At highlevel, the transfer process is:
+  // 1. Build a contiguous TX buffer with header, line data, and tail
+  // 2. Configure and start a DMA channel to transfer the TX buffer to SPI
+  // 3. Enable SPI TX DMA requests
+  // 4. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
+
   // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
-  const size_t LINES = 168;
-  const size_t LINE_BYTES = 20;
-  const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1;
+  const size_t LINES = KYWY_DISPLAY_HEIGHT;
+  const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2; // 18 data + 2 (line addr + trailing 0)
+  const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1; // Total size
+
   // Ensure the TX buffer is 32-bit aligned for DMA peripheral efficiency and to
   // avoid misaligned reads which can corrupt the final bytes on some DMA
   // controllers.
@@ -127,6 +138,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   dma_channel_set_irq0_enabled(dma_chan, true);
   irq_set_exclusive_handler(DMA_IRQ_0, display_dma_irq);
   irq_set_enabled(DMA_IRQ_0, true);
+
   // Mutex the transfer until it returns: wait for the DMA IRQ handler to finish
   // cleanup. This prevents subsequent display updates from racing with an in-
   // flight DMA and avoids leaving `mbedSPI` locked.
@@ -134,19 +146,13 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // fallback to avoid hanging indefinitely.
   // Compute a safe timeout for the frame transfer. At 2 MHz SPI a full-frame
   // transfer of ~3362 bytes takes ~14 ms. Use a generous 100 ms timeout to
-  // allow for slower clocks or transient delays, but short enough to avoid
-  // long freezes. Make this adjustable by defining
-  // KYWY_DISPLAY_DMA_TIMEOUT_MS at compile time.
-#ifndef KYWY_DISPLAY_DMA_TIMEOUT_MS
-  const uint32_t dma_timeout_ms = 100;
-#else
-  const uint32_t dma_timeout_ms = KYWY_DISPLAY_DMA_TIMEOUT_MS;
-#endif
+  // allow for slower clocks or transient delays, but short enough to avoid noticable freezes
+  
   uint32_t start_ms = millis();
   while (display_dma_chan != -1) {
     // Allow IRQs and background tasks to run
     yield();
-    if ((millis() - start_ms) > dma_timeout_ms) {
+    if ((millis() - start_ms) > DMA_TIMEOUT_MS) {
       // Timeout: abort the channel and perform a best-effort cleanup then
       // return. Aborting prevents a long-running DMA from continuously
       // starving the CPU or locking SPI for too long.
