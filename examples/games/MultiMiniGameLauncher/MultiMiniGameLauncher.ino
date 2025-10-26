@@ -10,6 +10,8 @@
 #include "games/ClickerScene.hpp"
 #include "games/SpelunkerScene.hpp"
 #include "games/SlimeJumperScene.hpp"
+#include "games/HardwareTestScene.hpp"
+#include "games/InfoScene.hpp"
 
 using namespace Kywy;
 
@@ -36,6 +38,8 @@ void setup() {
   mainMenu->addSceneItem("Snake", &snakeScene);
   mainMenu->addSceneItem("Spelunker", &spelunkerScene);
   mainMenu->addSceneItem("Slime Jumper", &slimeJumperScene);
+  mainMenu->addSceneItem("Hardware Test", &hardwareTestScene);
+  mainMenu->addSceneItem("Info", &infoScene);
 
   // Start the menu system directly
   mainMenu->start(engine);
