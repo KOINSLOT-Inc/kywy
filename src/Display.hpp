@@ -278,6 +278,10 @@ private:
   uint8_t MBED_SPI_DRIVER_LINE_BUFFER[20] = { 0 };
   uint8_t MBED_SPI_DRIVER_RX_BUFFER[20] = { 0 };
 
+  // sendBufferToDisplay writes the display buffer to the device. This is a
+  // blocking operation on the current SPI API; it writes a vcom/write header
+  // and then 168 lines of 20 bytes each.
+
   const unsigned char nibbleFlipper[16] = { 0x0, 0x8, 0x4, 0xc, 0x2, 0xa,
                                             0x6, 0xe, 0x1, 0x9, 0x5, 0xd,
                                             0x3, 0xb, 0x7, 0xf };

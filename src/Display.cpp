@@ -13,7 +13,7 @@ void MBED_SPI_DRIVER::initializeDisplay() {
     new mbed::SPI((PinName)KYWY_DISPLAY_MOSI, (PinName)KYWY_DISPLAY_MISO,
                   (PinName)KYWY_DISPLAY_SCK);
   mbedSPI->format(8, 0);
-  mbedSPI->frequency(8000000);
+  mbedSPI->frequency(2000000);
 
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
