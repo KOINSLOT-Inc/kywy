@@ -2,7 +2,34 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+
 #include "Display.hpp"
+
+#if defined(ARDUINO_ARCH_RP2040)
+extern "C" {
+#include "hardware/dma.h"
+#include "hardware/spi.h"
+#include "hardware/regs/dreq.h"
+}
+
+// DMA channel used for display transfers. Accessed from IRQ handler.
+static volatile int display_dma_chan = -1;
+
+extern "C" void display_dma_irq(void) {
+  int chan = display_dma_chan;
+  if (chan < 0) return;
+  // clear interrupt for this channel
+  dma_hw->ints0 = 1u << chan;
+  dma_channel_set_irq0_enabled(chan, false);
+  // disable peripheral DMA request
+  spi0_hw->dmacr &= ~0x1u;
+  // deassert CS
+  digitalWrite(KYWY_DISPLAY_CS, LOW);
+  // unclaim channel
+  dma_channel_unclaim(chan);
+  display_dma_chan = -1;
+}
+#endif
 
 namespace Display {
 
@@ -13,7 +40,7 @@ void MBED_SPI_DRIVER::initializeDisplay() {
     new mbed::SPI((PinName)KYWY_DISPLAY_MOSI, (PinName)KYWY_DISPLAY_MISO,
                   (PinName)KYWY_DISPLAY_SCK);
   mbedSPI->format(8, 0);
-  mbedSPI->frequency(2000000);
+  mbedSPI->frequency(2000000); //max 2MHz for display,  max per datasheet
 
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
@@ -46,25 +73,100 @@ void MBED_SPI_DRIVER::clearBuffer() {
 }
 
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
+  // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
+  const size_t LINES = 168;
+  const size_t LINE_BYTES = 20;
+  const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1;
+  // Ensure the TX buffer is 32-bit aligned for DMA peripheral efficiency and to
+  // avoid misaligned reads which can corrupt the final bytes on some DMA
+  // controllers.
+  static uint8_t txbuf[TX_SIZE] __attribute__((aligned(4)));
+
+  // Header
+  txbuf[0] = vcom | writeCommand;
+  vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom
+
+  // Fill lines
+  for (size_t line = 0; line < LINES; ++line) {
+    size_t base = 1 + line * LINE_BYTES;
+    txbuf[base + 0] = reverse(line + 1);
+    memcpy((void *)(txbuf + base + 1), (const void *)(MBED_SPI_DRIVER_BUFFER + 18 * line), 18);
+    txbuf[base + 19] = 0x00;
+  }
+
+  // Tail
+  txbuf[TX_SIZE - 1] = 0x00;
+
+  // Assert CS and prepare SPI for DMA TX
   mbedSPI->lock();
   digitalWrite(KYWY_DISPLAY_CS, HIGH);
 
-  mbedSPI->write(vcom | writeCommand);
-  vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom at least 1 time per second to
-                                     // prevent DC bias
+  // Claim a DMA channel and configure it to transfer from txbuf -> SPI TX FIFO
+  int dma_chan = dma_claim_unused_channel(true);
+  dma_channel_config c = dma_channel_get_default_config(dma_chan);
+  channel_config_set_read_increment(&c, true);   // read from incrementing memory
+  channel_config_set_write_increment(&c, false); // write to fixed peripheral FIFO
+  channel_config_set_dreq(&c, DREQ_SPI0_TX);
+  channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
 
-  for (int line = 0; line < 168; line++) {
-    MBED_SPI_DRIVER_LINE_BUFFER[0] = reverse(line + 1);
-    memcpy((void *)(MBED_SPI_DRIVER_LINE_BUFFER + 1),
-           (const void *)(MBED_SPI_DRIVER_BUFFER + 18 * line), 18);
-    MBED_SPI_DRIVER_LINE_BUFFER[19] = 0x00;
-    mbedSPI->write((const char *)MBED_SPI_DRIVER_LINE_BUFFER, 20,
-                   (char *)MBED_SPI_DRIVER_RX_BUFFER, 20);
+  // Enable SPI TX DMA request in the peripheral (TXDMAE)
+  spi0_hw->dmacr |= 0x1; // TXDMAE = bit 0
+
+  // Configure and start the DMA: destination is SPI0->dr (data register)
+  dma_channel_configure(dma_chan, &c,
+                        &spi0_hw->dr, // destination (peripheral FIFO)
+                        txbuf,         // source (our buffer)
+                        (uint)TX_SIZE, // transfer count in bytes
+                        true);         // start immediately
+
+  // Install IRQ handler to finish the transfer so we don't block the CPU here.
+  // Use DMA IRQ0 and enable IRQ for this channel.
+  display_dma_chan = dma_chan;
+  // acknowledge/clear any existing interrupt and enable
+  dma_hw->ints0 = 1u << dma_chan;
+  dma_channel_set_irq0_enabled(dma_chan, true);
+  irq_set_exclusive_handler(DMA_IRQ_0, display_dma_irq);
+  irq_set_enabled(DMA_IRQ_0, true);
+  // Mutex the transfer until it returns: wait for the DMA IRQ handler to finish
+  // cleanup. This prevents subsequent display updates from racing with an in-
+  // flight DMA and avoids leaving `mbedSPI` locked.
+  // Wait loop yields to allow interrupts to run. A timeout is used as a
+  // fallback to avoid hanging indefinitely.
+  // Compute a safe timeout for the frame transfer. At 2 MHz SPI a full-frame
+  // transfer of ~3362 bytes takes ~14 ms. Use a generous 100 ms timeout to
+  // allow for slower clocks or transient delays, but short enough to avoid
+  // long freezes. Make this adjustable by defining
+  // KYWY_DISPLAY_DMA_TIMEOUT_MS at compile time.
+#ifndef KYWY_DISPLAY_DMA_TIMEOUT_MS
+  const uint32_t dma_timeout_ms = 100;
+#else
+  const uint32_t dma_timeout_ms = KYWY_DISPLAY_DMA_TIMEOUT_MS;
+#endif
+  uint32_t start_ms = millis();
+  while (display_dma_chan != -1) {
+    // Allow IRQs and background tasks to run
+    yield();
+    if ((millis() - start_ms) > dma_timeout_ms) {
+      // Timeout: abort the channel and perform a best-effort cleanup then
+      // return. Aborting prevents a long-running DMA from continuously
+      // starving the CPU or locking SPI for too long.
+      dma_channel_abort(dma_chan);
+      dma_channel_set_irq0_enabled(dma_chan, false);
+      dma_hw->ints0 = 1u << dma_chan;
+      spi0_hw->dmacr &= ~0x1u;
+      digitalWrite(KYWY_DISPLAY_CS, LOW);
+      if (dma_channel_is_claimed(dma_chan)) {
+        dma_channel_unclaim(dma_chan);
+      }
+      display_dma_chan = -1;
+      break;
+    }
   }
-  mbedSPI->write(0x00);
 
-  digitalWrite(KYWY_DISPLAY_CS, LOW);
+  // Unlock the SPI now that transfer and cleanup are complete.
   mbedSPI->unlock();
+
+  return;
 }
 
 void MBED_SPI_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
@@ -400,3 +502,5 @@ void Display::drawBitmap(int16_t x, int16_t y, uint16_t width, uint16_t height,
 };
 
 }  // namespace Display
+
+
