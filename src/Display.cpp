@@ -73,6 +73,12 @@ void MBED_SPI_DRIVER::clearBuffer() {
 }
 
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
+  if(!mbedSPI || display_dma_chan != -1) {
+    // Can not get SPI lock or a transfer is already in progress, drop frame
+    delay(20); // Upstream expects to wait so this is a dirty fix for now
+    return;
+  }
+
   // This function uses DMA to transfer the display buffer to the display
   // over SPI without blocking the CPU. 
   // Since default mbed SPI does not support DMA, we directly access the RP2040
@@ -84,7 +90,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // 4. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
 
   // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
-  const size_t LINES = KYWY_DISPLAY_HEIGHT;
+  const size_t LINES = KYWY_DISPLAY_HEIGHT+1;
   const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2; // 18 data + 2 (line addr + trailing 0)
   const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1; // Total size
 
@@ -147,29 +153,8 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Compute a safe timeout for the frame transfer. At 2 MHz SPI a full-frame
   // transfer of ~3362 bytes takes ~14 ms. Use a generous 100 ms timeout to
   // allow for slower clocks or transient delays, but short enough to avoid noticable freezes
-  
-  uint32_t start_ms = millis();
-  while (display_dma_chan != -1) {
-    // Allow IRQs and background tasks to run
-    yield();
-    if ((millis() - start_ms) > DMA_TIMEOUT_MS) {
-      // Timeout: abort the channel and perform a best-effort cleanup then
-      // return. Aborting prevents a long-running DMA from continuously
-      // starving the CPU or locking SPI for too long.
-      dma_channel_abort(dma_chan);
-      dma_channel_set_irq0_enabled(dma_chan, false);
-      dma_hw->ints0 = 1u << dma_chan;
-      spi0_hw->dmacr &= ~0x1u;
-      digitalWrite(KYWY_DISPLAY_CS, LOW);
-      if (dma_channel_is_claimed(dma_chan)) {
-        dma_channel_unclaim(dma_chan);
-      }
-      display_dma_chan = -1;
-      break;
-    }
-  }
 
-  // Unlock the SPI now that transfer and cleanup are complete.
+  delay(20); // Upstream expects to wait so this is a dirty fix for now
   mbedSPI->unlock();
 
   return;
