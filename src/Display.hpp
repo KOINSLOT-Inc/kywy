@@ -273,6 +273,7 @@ public:
   mbed::SPI *mbedSPI;  // Made public for IRQ handler access
 
 private:
+  bool updatePending = false;
   uint8_t clearCommand = 0x20;
   uint8_t writeCommand = 0x80;
 
@@ -303,6 +304,7 @@ public:
   void setup();
   void clear();
   void update();
+  void checkPendingUpdate();
 
   void setRotation(Rotation rotation);
 

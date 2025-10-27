@@ -541,6 +541,7 @@ public:
 
 void setup() {
   engine.start();
+  engine.clock.setTickDuration(1);
 
   // make sure column manager subscribes to the ticker before the spelunkerManager so that
   // the columns don't override the spelunker sprite

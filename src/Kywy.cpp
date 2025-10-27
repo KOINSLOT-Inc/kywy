@@ -18,6 +18,9 @@ void Engine::start(EngineOptions options) {
   clock.options.clickToTick(options.getClickToClick());
   clock.start();
 
+  // Subscribe engine to clock to receive TICK events
+  this->subscribe(&clock);
+  
   input.subscribe(&clock);  // get inputs for every tick
   input.start();
 
@@ -35,6 +38,16 @@ void Engine::handle(::Actor::Message *message) {
   }
 
   switch (message->signal) {
+    case Events::TICK:
+      {
+        // Check if display update is pending and send if bus is free
+        display.checkPendingUpdate();
+        
+        // Forward tick to subcomponent actors
+        clock.dispatch(message);
+        input.dispatch(message);
+        break;
+      }
     default:
       {  // forward to subcomponent actors
         clock.dispatch(message);

@@ -18,6 +18,9 @@ static volatile int display_dma_chan = -1;
 // mbed based mutexes are not safe to use from IRQ context.
 static volatile bool spi_bus_locked = false;
 
+// Flag to indicate display update is pending
+static volatile bool displayPending = false;
+
 extern "C" void display_dma_irq(void) {
   int chan = display_dma_chan;
   if (chan < 0) return;
@@ -124,7 +127,6 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Check if SPI bus is already locked by a DMA transfer
   if(!mbedSPI || spi_bus_locked) {
     // SPI bus busy, drop frame
-    delay(20); // Upstream expects to wait
     return;
   }
 
@@ -160,7 +162,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
     txbuf[base + 19] = 0x00;
   }
 
-  // Tail
+    // Tail
   txbuf[TX_SIZE - 1] = 0x00;
 
   // Lock our SPI bus (simple flag, safe for IRQ to unlock)
@@ -371,9 +373,18 @@ void Display::setup() {
 void Display::clear() {
   driver->clearBuffer();
 }
+
 void Display::update() {
-  driver->sendBufferToDisplay();
+  displayPending = true;
 }
+
+void Display::checkPendingUpdate() {
+  if (displayPending && !spi_bus_locked) {
+    displayPending = false;
+    driver->sendBufferToDisplay();
+  }
+}
+
 void Display::setRotation(Rotation rotation) {
   driver->setRotation(rotation);
 }
