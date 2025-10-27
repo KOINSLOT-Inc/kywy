@@ -10,7 +10,7 @@ extern "C" {
 #include "hardware/regs/dreq.h"
 }
 
-// DMA channel used for display transfers. Accessed from IRQ handler.
+// DMA channel used for display transfers. Accessed from IRQ handler. Default to no channel claimed (-1). 
 static volatile int display_dma_chan = -1;
 
 // Our own SPI mutex - simple flag that can be safely accessed from IRQ
@@ -25,20 +25,19 @@ static volatile bool displayPending = false;
 // This is an IRQ handler, so must be fast and safe.
 // Operates outside of mbed context with hardware calls.
 extern "C" void display_dma_irq(void) {
-  int chan = display_dma_chan;
-  if (chan < 0) return;
   // clear interrupt for this channel
-  dma_hw->ints0 = 1u << chan;
-  dma_channel_set_irq0_enabled(chan, false);
+  dma_hw->ints0 = 1u << display_dma_chan;
+  // disable IRQ for this channel
+  dma_channel_set_irq0_enabled(display_dma_chan, false);
   // disable peripheral DMA request
   spi0_hw->dmacr &= ~0x1u;
   // deassert CS
   digitalWrite(KYWY_DISPLAY_CS, LOW);
   // unclaim channel
-  dma_channel_unclaim(chan);
-  display_dma_chan = -1; // Mark channel as free
-  
-  // Release our SPI bus lock (safe from IRQ)
+  dma_channel_unclaim(display_dma_chan);
+  // Mark channel as free/unclaimed
+  display_dma_chan = -1;
+  // Release our SPI bus lock
   spi_bus_locked = false;
 }
 
@@ -95,6 +94,7 @@ void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
   // 3. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
 
   if (!mbedSPI || display_dma_chan >= 0) {
+    // SPI bus busy or not initalized, cannot start transfer
     return;
   }
 
@@ -130,7 +130,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Check if SPI bus is already locked by a DMA transfer
   if(!mbedSPI || spi_bus_locked) {
     // SPI bus busy, drop frame
-    displayPending = true; // Mark update as pending since we couldn't send now
+    displayPending = true; // Mark update as still pending since we couldn't send now
     return;
   }
 
