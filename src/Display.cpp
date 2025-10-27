@@ -373,6 +373,7 @@ void Display::setup() {
 }
 void Display::clear() {
   driver->clearBuffer();
+  displayPending = true;
 }
 
 void Display::update() {
