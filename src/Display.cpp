@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-
 #include "Display.hpp"
 
 extern "C" {
@@ -21,6 +20,10 @@ static volatile bool spi_bus_locked = false;
 // Flag to indicate display update is pending
 static volatile bool displayPending = false;
 
+// DMA IRQ handler to finalize the display transfer
+// This runs after the DMA transfer is complete to clean up and release the SPI bus.
+// This is an IRQ handler, so must be fast and safe.
+// Operates outside of mbed context with hardware calls.
 extern "C" void display_dma_irq(void) {
   int chan = display_dma_chan;
   if (chan < 0) return;
@@ -174,8 +177,6 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
 
   // Transfer happens asynchronously via DMA
   // IRQ will unlock spi_bus_locked when complete
-  // No need to wait - that's the whole point of non-blocking!
-  
   return;
 }
 
