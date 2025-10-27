@@ -14,7 +14,7 @@ extern "C" {
 static volatile int display_dma_chan = -1;
 
 // Our own SPI mutex - simple flag that can be safely accessed from IRQ
-// mbed based mutexes are not safe to use from IRQ context.
+// mbed based mutexes are not safe to use from IRQ context and will crash.
 static volatile bool spi_bus_locked = false;
 
 // Flag to indicate display update is pending
