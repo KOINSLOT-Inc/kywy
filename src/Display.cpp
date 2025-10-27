@@ -10,11 +10,11 @@ extern "C" {
 #include "hardware/regs/dreq.h"
 }
 
-// DMA channel used for display transfers. Accessed from IRQ handler. Default to no channel claimed (-1). 
+// DMA channel used for display transfers. Accessed from IRQ handler. Default to no channel claimed (-1)
 static volatile int display_dma_chan = -1;
 
 // Our own SPI mutex - simple flag that can be safely accessed from IRQ
-// mbed based mutexes are not safe to use from IRQ context and will crash.
+// mbed based mutexes are not safe to use from IRQ context.
 static volatile bool spi_bus_locked = false;
 
 // Flag to indicate display update is pending
@@ -94,7 +94,6 @@ void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
   // 3. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
 
   if (!mbedSPI || display_dma_chan >= 0) {
-    // SPI bus busy or not initalized, cannot start transfer
     return;
   }
 

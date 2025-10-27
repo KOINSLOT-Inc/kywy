@@ -28,8 +28,6 @@
 #define BLACK 0x00
 #define WHITE 0xff
 
-#define DMA_TIMEOUT_MS 100 // Timeout for DMA transfers in milliseconds
-
 namespace Display {
 
 enum class Rotation {
@@ -251,7 +249,6 @@ public:
   void clearBuffer();
   void sendBufferToDisplay();
   void dmaTransferBuffer(uint8_t *buffer, size_t size);
-  void checkSPIMutex();
 
   void setRotation(Rotation rotation);
 
