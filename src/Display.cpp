@@ -159,15 +159,6 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   digitalWrite(KYWY_DISPLAY_CS, HIGH);
   dmaTransferBuffer(txbuf, TX_SIZE);
 
-  // Mutex the transfer until it returns: wait for the DMA IRQ handler to finish
-  // cleanup. This prevents subsequent display updates from racing with an in-
-  // flight DMA and avoids leaving `mbedSPI` locked.
-  // Wait loop yields to allow interrupts to run. A timeout is used as a
-  // fallback to avoid hanging indefinitely.
-  // Compute a safe timeout for the frame transfer. At 2 MHz SPI a full-frame
-  // transfer of ~3362 bytes takes ~14 ms. Use a generous 100 ms timeout to
-  // allow for slower clocks or transient delays, but short enough to avoid noticable freezes
-
   delay(20); // Upstream expects to wait so this is a dirty fix for now
   mbedSPI->unlock();
 
