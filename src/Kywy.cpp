@@ -40,12 +40,13 @@ void Engine::handle(::Actor::Message *message) {
   switch (message->signal) {
     case Events::TICK:
       {
-        // Check if display update is pending and send if bus is free
-        display.checkPendingUpdate();
-        
         // Forward tick to subcomponent actors
         clock.dispatch(message);
         input.dispatch(message);
+
+        // Check if display update is pending and send if bus is free
+        display.checkPendingUpdate();
+
         break;
       }
     default:
