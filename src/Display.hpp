@@ -251,6 +251,7 @@ public:
   void clearBuffer();
   void sendBufferToDisplay();
   void dmaTransferBuffer(uint8_t *buffer, size_t size);
+  void checkSPIMutex();
 
   void setRotation(Rotation rotation);
 
@@ -269,8 +270,9 @@ public:
                            uint16_t height, uint8_t *bitmap,
                            BitmapOptions options = BitmapOptions());
 
+  mbed::SPI *mbedSPI;  // Made public for IRQ handler access
+
 private:
-  mbed::SPI *mbedSPI;
   uint8_t clearCommand = 0x20;
   uint8_t writeCommand = 0x80;
 

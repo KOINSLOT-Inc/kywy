@@ -14,6 +14,10 @@ extern "C" {
 // DMA channel used for display transfers. Accessed from IRQ handler.
 static volatile int display_dma_chan = -1;
 
+// Our own SPI mutex - simple flag that can be safely accessed from IRQ
+// mbed based mutexes are not safe to use from IRQ context.
+static volatile bool spi_bus_locked = false;
+
 extern "C" void display_dma_irq(void) {
   int chan = display_dma_chan;
   if (chan < 0) return;
@@ -26,7 +30,10 @@ extern "C" void display_dma_irq(void) {
   digitalWrite(KYWY_DISPLAY_CS, LOW);
   // unclaim channel
   dma_channel_unclaim(chan);
-  display_dma_chan = -1;
+  display_dma_chan = -1; // Mark channel as free
+  
+  // Release our SPI bus lock (safe from IRQ)
+  spi_bus_locked = false;
 }
 
 namespace Display {
@@ -46,6 +53,7 @@ void MBED_SPI_DRIVER::initializeDisplay() {
   digitalWrite(KYWY_DISPLAY_CS, LOW);
 
   clearBuffer();
+  
   sendBufferToDisplay();
 
   digitalWrite(KYWY_DISPLAY_DISP, HIGH);
@@ -113,9 +121,10 @@ void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
 }
 
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
-  if(!mbedSPI || display_dma_chan != -1) {
-    // Can not get SPI lock or a transfer is already in progress, drop frame
-    delay(20); // Upstream expects to wait so this is a dirty fix for now
+  // Check if SPI bus is already locked by a DMA transfer
+  if(!mbedSPI || spi_bus_locked) {
+    // SPI bus busy, drop frame
+    delay(20); // Upstream expects to wait
     return;
   }
 
@@ -154,14 +163,17 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Tail
   txbuf[TX_SIZE - 1] = 0x00;
 
-  // Assert CS and prepare SPI for DMA TX
-  mbedSPI->lock();
+  // Lock our SPI bus (simple flag, safe for IRQ to unlock)
+  spi_bus_locked = true;
+  
+  // Assert CS and start DMA transfer
   digitalWrite(KYWY_DISPLAY_CS, HIGH);
   dmaTransferBuffer(txbuf, TX_SIZE);
 
-  delay(20); // Upstream expects to wait so this is a dirty fix for now
-  mbedSPI->unlock();
-
+  // Transfer happens asynchronously via DMA
+  // IRQ will unlock spi_bus_locked when complete
+  // No need to wait - that's the whole point of non-blocking!
+  
   return;
 }
 
