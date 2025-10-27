@@ -5,7 +5,6 @@
 
 #include "Display.hpp"
 
-#if defined(ARDUINO_ARCH_RP2040)
 extern "C" {
 #include "hardware/dma.h"
 #include "hardware/spi.h"
@@ -29,7 +28,6 @@ extern "C" void display_dma_irq(void) {
   dma_channel_unclaim(chan);
   display_dma_chan = -1;
 }
-#endif
 
 namespace Display {
 
@@ -72,6 +70,48 @@ void MBED_SPI_DRIVER::clearBuffer() {
   memset(MBED_SPI_DRIVER_BUFFER, 0xff, sizeof(MBED_SPI_DRIVER_BUFFER));
 }
 
+void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
+  // This function uses DMA to transfer a buffer to the display over SPI
+  // without blocking the CPU.
+  // Since default mbed SPI does not support DMA, we directly access the RP2040
+  // hardware registers and DMA controller directly.
+  // At highlevel, the transfer process is:
+  // 1. Configure and start a DMA channel to transfer the buffer to SPI
+  // 2. Enable SPI TX DMA requests
+  // 3. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
+
+  if (!mbedSPI || display_dma_chan >= 0) {
+    return;
+  }
+
+  // Claim a DMA channel and configure it to transfer from buffer -> SPI TX FIFO
+  int dma_chan = dma_claim_unused_channel(true);
+  dma_channel_config c = dma_channel_get_default_config(dma_chan);
+  channel_config_set_read_increment(&c, true);   // read from incrementing memory
+  channel_config_set_write_increment(&c, false); // write to fixed peripheral FIFO
+  channel_config_set_dreq(&c, DREQ_SPI0_TX);
+  channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
+
+  // Enable SPI TX DMA request in the peripheral (TXDMAE)
+  spi0_hw->dmacr |= 0x1; // TXDMAE = bit 0
+
+  // Configure and start the DMA: destination is SPI0->dr (data register)
+  dma_channel_configure(dma_chan, &c,
+                        &spi0_hw->dr, // destination (peripheral FIFO)
+                        buffer,         // source (our buffer)
+                        (uint)size, // transfer count in bytes
+                        true);         // start immediately
+
+  // Install IRQ handler to finish the transfer so we don't block the CPU here.
+  // Use DMA IRQ0 and enable IRQ for this channel.
+  display_dma_chan = dma_chan;
+  // acknowledge/clear any existing interrupt and enable
+  dma_hw->ints0 = 1u << dma_chan;
+  dma_channel_set_irq0_enabled(dma_chan, true);
+  irq_set_exclusive_handler(DMA_IRQ_0, display_dma_irq);
+  irq_set_enabled(DMA_IRQ_0, true);
+}
+
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
   if(!mbedSPI || display_dma_chan != -1) {
     // Can not get SPI lock or a transfer is already in progress, drop frame
@@ -90,7 +130,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // 4. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
 
   // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
-  const size_t LINES = KYWY_DISPLAY_HEIGHT+1;
+  const size_t LINES = KYWY_DISPLAY_HEIGHT + 1;
   const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2; // 18 data + 2 (line addr + trailing 0)
   const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1; // Total size
 
@@ -117,33 +157,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Assert CS and prepare SPI for DMA TX
   mbedSPI->lock();
   digitalWrite(KYWY_DISPLAY_CS, HIGH);
-
-  // Claim a DMA channel and configure it to transfer from txbuf -> SPI TX FIFO
-  int dma_chan = dma_claim_unused_channel(true);
-  dma_channel_config c = dma_channel_get_default_config(dma_chan);
-  channel_config_set_read_increment(&c, true);   // read from incrementing memory
-  channel_config_set_write_increment(&c, false); // write to fixed peripheral FIFO
-  channel_config_set_dreq(&c, DREQ_SPI0_TX);
-  channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-
-  // Enable SPI TX DMA request in the peripheral (TXDMAE)
-  spi0_hw->dmacr |= 0x1; // TXDMAE = bit 0
-
-  // Configure and start the DMA: destination is SPI0->dr (data register)
-  dma_channel_configure(dma_chan, &c,
-                        &spi0_hw->dr, // destination (peripheral FIFO)
-                        txbuf,         // source (our buffer)
-                        (uint)TX_SIZE, // transfer count in bytes
-                        true);         // start immediately
-
-  // Install IRQ handler to finish the transfer so we don't block the CPU here.
-  // Use DMA IRQ0 and enable IRQ for this channel.
-  display_dma_chan = dma_chan;
-  // acknowledge/clear any existing interrupt and enable
-  dma_hw->ints0 = 1u << dma_chan;
-  dma_channel_set_irq0_enabled(dma_chan, true);
-  irq_set_exclusive_handler(DMA_IRQ_0, display_dma_irq);
-  irq_set_enabled(DMA_IRQ_0, true);
+  dmaTransferBuffer(txbuf, TX_SIZE);
 
   // Mutex the transfer until it returns: wait for the DMA IRQ handler to finish
   // cleanup. This prevents subsequent display updates from racing with an in-
@@ -493,5 +507,3 @@ void Display::drawBitmap(int16_t x, int16_t y, uint16_t width, uint16_t height,
 };
 
 }  // namespace Display
-
-

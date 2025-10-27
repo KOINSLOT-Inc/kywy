@@ -250,6 +250,7 @@ public:
   void initializeDisplay();
   void clearBuffer();
   void sendBufferToDisplay();
+  void dmaTransferBuffer(uint8_t *buffer, size_t size);
 
   void setRotation(Rotation rotation);
 
