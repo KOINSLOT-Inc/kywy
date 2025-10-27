@@ -130,6 +130,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Check if SPI bus is already locked by a DMA transfer
   if(!mbedSPI || spi_bus_locked) {
     // SPI bus busy, drop frame
+    displayPending = true; // Mark update as pending since we couldn't send now
     return;
   }
 
@@ -371,9 +372,11 @@ void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
 void Display::setup() {
   driver->initializeDisplay();
 }
+
 void Display::clear() {
+  // Clear the pending flag - don't send frames until update() is called
+  displayPending = false;
   driver->clearBuffer();
-  displayPending = true;
 }
 
 void Display::update() {
