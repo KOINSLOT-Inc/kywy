@@ -40,7 +40,7 @@ void Engine::handle(::Actor::Message *message) {
   switch (message->signal) {
     case Events::TICK:
       {
-        // Forward tick to subcomponent actors
+        // Forward tick to clock's subscribers (game actors)
         clock.dispatch(message);
         input.dispatch(message);
 

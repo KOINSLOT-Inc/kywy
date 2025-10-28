@@ -309,7 +309,6 @@ public:
     switch (message->signal) {
 
       case Kywy::Events::TICK:
-        Serial.println("ShipManager TICK");
         if (engine.input.dPadUpPressed) {
           xVelocity += acceleration * cos(shipAngle * M_PI / 180.0f);
           yVelocity += acceleration * -sin(shipAngle * M_PI / 180.0f);
@@ -540,7 +539,6 @@ public:
 
   int score = 0;
   int highScore = 0;
-  bool gameActive = false;  // Track if game is running
 
   void drawScore(uint16_t color) {
     char msg[16];
@@ -554,11 +552,10 @@ public:
     switch (message->signal) {
       case START_SCREEN:
         {
-          Serial.println("START_SCREEN");
-          gameActive = false;
           shipManager.unsubscribe(&engine.clock);
           asteroidManager.unsubscribe(&engine.clock);
           bulletManager.unsubscribe(&engine.clock);
+          unsubscribe(&engine.clock);
           engine.display.drawBitmap(0, 0, 144, 168, (uint8_t *)asteroidSplashScreen);
           engine.display.update();
           subscribe(&engine.input);
@@ -567,8 +564,6 @@ public:
 
       case Kywy::Events::TICK:
         {
-          if (!gameActive) break;  // Only process ticks when game is active
-          Serial.println("GameManager TICK");
           //Collisions with ship and bullets
           for (int i = 0; i < asteroidManager.numAsteroids; i++) {
 
@@ -584,13 +579,9 @@ public:
               float dx = asteroidManager.asteroids[i].x - bulletManager.bullets[j].x;
               float dy = asteroidManager.asteroids[i].y - bulletManager.bullets[j].y;
               float rSquared = dx * dx + dy * dy;
-              // Asteroid is drawn with radius (2 * asteroids[i].radius) = 10
-              // Bullet is drawn with radius 5
-              // So collision happens when distance < 10 + 5 = 15
-              float radiusMax = (2 * asteroidManager.asteroids[i].radius) + 5;
+              float radiusMax = asteroidManager.asteroids[i].radius + 5;
 
               if (rSquared < radiusMax * radiusMax) {
-                Serial.println("HIT!");
                 asteroidManager.asteroids[i].exist = false;
                 bulletManager.bullets[j].exist = false;
                 score++;
@@ -605,10 +596,10 @@ public:
 
       case GAME_OVER:
         {
-          gameActive = false;
           shipManager.unsubscribe(&engine.clock);
           asteroidManager.unsubscribe(&engine.clock);
           bulletManager.unsubscribe(&engine.clock);
+          unsubscribe(&engine.clock);
           subscribe(&engine.input);
 
           if (score > highScore) highScore = score;
@@ -628,19 +619,18 @@ public:
 
       case Kywy::Events::INPUT_PRESSED:
         {
-          Serial.println("INPUT_PRESSED");
           unsubscribe(&engine.input);
           asteroidManager.initialize();
           shipManager.initialize();
           bulletManager.initialize();
           score = 0;
-          gameActive = true;  // Activate game
 
           engine.display.clear();
 
           shipManager.subscribe(&engine.clock);
           asteroidManager.subscribe(&engine.clock);
           bulletManager.subscribe(&engine.clock);
+          subscribe(&engine.clock);
 
           break;
         }

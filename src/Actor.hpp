@@ -9,7 +9,7 @@
 #include "EventQueue.h"
 
 namespace Actor {
-const uint8_t MAX_SUBSCRIBERS = 100;
+const uint8_t MAX_SUBSCRIBERS = 255;
 
 typedef enum : uint8_t {
   DIRECTIVE_HANDLE,
