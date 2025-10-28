@@ -50,7 +50,7 @@ void MBED_SPI_DRIVER::initializeDisplay() {
     new mbed::SPI((PinName)KYWY_DISPLAY_MOSI, (PinName)KYWY_DISPLAY_MISO,
                   (PinName)KYWY_DISPLAY_SCK);
   mbedSPI->format(8, 0);
-  mbedSPI->frequency(2000000); //max 2MHz for display,  max per datasheet
+  mbedSPI->frequency(2000000);  //max 2MHz for display,  max per datasheet
 
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
@@ -58,7 +58,7 @@ void MBED_SPI_DRIVER::initializeDisplay() {
   digitalWrite(KYWY_DISPLAY_CS, LOW);
 
   clearBuffer();
-  
+
   sendBufferToDisplay();
 
   digitalWrite(KYWY_DISPLAY_DISP, HIGH);
@@ -100,19 +100,19 @@ void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
   // Claim a DMA channel and configure it to transfer from buffer -> SPI TX FIFO
   int dma_chan = dma_claim_unused_channel(true);
   dma_channel_config c = dma_channel_get_default_config(dma_chan);
-  channel_config_set_read_increment(&c, true);   // read from incrementing memory
-  channel_config_set_write_increment(&c, false); // write to fixed peripheral FIFO
+  channel_config_set_read_increment(&c, true);    // read from incrementing memory
+  channel_config_set_write_increment(&c, false);  // write to fixed peripheral FIFO
   channel_config_set_dreq(&c, DREQ_SPI0_TX);
   channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
 
   // Enable SPI TX DMA request in the peripheral (TXDMAE)
-  spi0_hw->dmacr |= 0x1; // TXDMAE = bit 0
+  spi0_hw->dmacr |= 0x1;  // TXDMAE = bit 0
 
   // Configure and start the DMA: destination is SPI0->dr (data register)
   dma_channel_configure(dma_chan, &c,
-                        &spi0_hw->dr, // destination (peripheral FIFO)
-                        buffer,         // source (our buffer)
-                        (uint)size, // transfer count in bytes
+                        &spi0_hw->dr,  // destination (peripheral FIFO)
+                        buffer,        // source (our buffer)
+                        (uint)size,    // transfer count in bytes
                         true);         // start immediately
 
   // Install IRQ handler to finish the transfer so we don't block the CPU here.
@@ -127,14 +127,14 @@ void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
 
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Check if SPI bus is already locked by a DMA transfer
-  if(!mbedSPI || spi_bus_locked) {
+  if (!mbedSPI || spi_bus_locked) {
     // SPI bus busy, drop frame
-    displayPending = true; // Mark update as still pending since we couldn't send now
+    displayPending = true;  // Mark update as still pending since we couldn't send now
     return;
   }
 
   // This function uses DMA to transfer the display buffer to the display
-  // over SPI without blocking the CPU. 
+  // over SPI without blocking the CPU.
   // Since default mbed SPI does not support DMA, we directly access the RP2040
   // hardware registers and DMA controller directly.
   // At highlevel, the transfer process is:
@@ -145,8 +145,8 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
 
   // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
   const size_t LINES = KYWY_DISPLAY_HEIGHT + 1;
-  const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2; // 18 data + 2 (line addr + trailing 0)
-  const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1; // Total size
+  const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2;  // 18 data + 2 (line addr + trailing 0)
+  const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1;   // Total size
 
   // Ensure the TX buffer is 32-bit aligned for DMA peripheral efficiency and to
   // avoid misaligned reads which can corrupt the final bytes on some DMA
@@ -165,12 +165,12 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
     txbuf[base + 19] = 0x00;
   }
 
-    // Tail
+  // Tail
   txbuf[TX_SIZE - 1] = 0x00;
 
   // Lock our SPI bus (simple flag, safe for IRQ to unlock)
   spi_bus_locked = true;
-  
+
   // Assert CS and start DMA transfer
   digitalWrite(KYWY_DISPLAY_CS, HIGH);
   dmaTransferBuffer(txbuf, TX_SIZE);

@@ -278,7 +278,7 @@ private:
   uint8_t vcom = 0x40;  // this value will be toggled between 0x40 and 0x00
 
   uint8_t MBED_SPI_DRIVER_BUFFER[(144 * 168) / 8] = { 0 };
-  
+
   uint8_t MBED_SPI_DRIVER_LINE_BUFFER[20] = { 0 };
   uint8_t MBED_SPI_DRIVER_RX_BUFFER[20] = { 0 };
 

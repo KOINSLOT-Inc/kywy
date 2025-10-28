@@ -20,7 +20,7 @@ void Engine::start(EngineOptions options) {
 
   // Subscribe engine to clock to receive TICK events
   this->subscribe(&clock);
-  
+
   input.subscribe(&clock);  // get inputs for every tick
   input.start();
 
