@@ -15,7 +15,7 @@ void Engine::start(EngineOptions options) {
   // Initialize SPI bus with display pins
   SPIBus::initialize(KYWY_DISPLAY_MOSI, KYWY_DISPLAY_MISO, KYWY_DISPLAY_SCK);
 
-  displayDriver = new Display::Driver::MBED_SPI_DRIVER();
+  displayDriver = new Display::Driver::DISPLAY_DRIVER();
   display = Display::Display(displayDriver);
 
   Actor::Actor::start();

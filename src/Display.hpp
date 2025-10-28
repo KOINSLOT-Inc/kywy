@@ -230,7 +230,7 @@ protected:
   bool cropBlock(int16_t &x, int16_t &y, uint16_t &width, uint16_t &height);
 };
 
-class MBED_SPI_DRIVER : public Driver {
+class DISPLAY_DRIVER : public Driver {
 public:
   uint16_t getWidth() {
     return 144;
@@ -239,8 +239,8 @@ public:
     return 168;
   };
 
-  MBED_SPI_DRIVER() {}
-  ~MBED_SPI_DRIVER() {};
+  DISPLAY_DRIVER() {}
+  ~DISPLAY_DRIVER() {};
 
   void initializeDisplay();
   void clearBuffer();
@@ -271,10 +271,10 @@ private:
   uint8_t vcomCommand = 0x40;
   uint8_t vcom = 0x40;  // this value will be toggled between 0x40 and 0x00
 
-  uint8_t MBED_SPI_DRIVER_BUFFER[(144 * 168) / 8] = { 0 };
+  uint8_t DISPLAY_DRIVER_BUFFER[(144 * 168) / 8] = { 0 };
 
-  uint8_t MBED_SPI_DRIVER_LINE_BUFFER[20] = { 0 };
-  uint8_t MBED_SPI_DRIVER_RX_BUFFER[20] = { 0 };
+  uint8_t DISPLAY_DRIVER_LINE_BUFFER[20] = { 0 };
+  uint8_t DISPLAY_DRIVER_RX_BUFFER[20] = { 0 };
 
   const unsigned char nibbleFlipper[16] = { 0x0, 0x8, 0x4, 0xc, 0x2, 0xa,
                                             0x6, 0xe, 0x1, 0x9, 0x5, 0xd,

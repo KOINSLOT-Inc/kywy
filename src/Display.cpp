@@ -17,7 +17,7 @@ namespace Display {
 
 namespace Driver {
 
-void MBED_SPI_DRIVER::initializeDisplay() {
+void DISPLAY_DRIVER::initializeDisplay() {
   // SPI hardware is initialized by SPIBus::initialize() called from Kywy.cpp
   
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
@@ -34,7 +34,7 @@ void MBED_SPI_DRIVER::initializeDisplay() {
   setRotation(Rotation::DEFAULT);
 }
 
-void MBED_SPI_DRIVER::setRotation(Rotation rotation) {
+void DISPLAY_DRIVER::setRotation(Rotation rotation) {
   switch (rotation) {
     case Rotation::DEFAULT:
       break;
@@ -47,11 +47,11 @@ void MBED_SPI_DRIVER::setRotation(Rotation rotation) {
   }
 }
 
-void MBED_SPI_DRIVER::clearBuffer() {
-  memset(MBED_SPI_DRIVER_BUFFER, 0xff, sizeof(MBED_SPI_DRIVER_BUFFER));
+void DISPLAY_DRIVER::clearBuffer() {
+  memset(DISPLAY_DRIVER_BUFFER, 0xff, sizeof(DISPLAY_DRIVER_BUFFER));
 }
 
-void MBED_SPI_DRIVER::sendBufferToDisplay() {
+void DISPLAY_DRIVER::sendBufferToDisplay() {
   // Check if SPI bus is already locked by a DMA transfer
   if (SPIBus::isBusLocked()) {
     // SPI bus busy, drop frame
@@ -77,7 +77,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   for (size_t line = 0; line < LINES; ++line) {
     size_t base = 1 + line * LINE_BYTES;
     txbuf[base + 0] = reverse(line + 1);
-    memcpy((void *)(txbuf + base + 1), (const void *)(MBED_SPI_DRIVER_BUFFER + 18 * line), 18);
+    memcpy((void *)(txbuf + base + 1), (const void *)(DISPLAY_DRIVER_BUFFER + 18 * line), 18);
     txbuf[base + 19] = 0x00;
   }
 
@@ -98,7 +98,7 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   return;
 }
 
-void MBED_SPI_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
+void DISPLAY_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
   if (x < 0 || x >= 144 || y < 0 || y >= 168) {
     return;
   }
@@ -107,11 +107,11 @@ void MBED_SPI_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
   int bit = x % 8;
 
   if (color) {
-    MBED_SPI_DRIVER_BUFFER[index] =
-      MBED_SPI_DRIVER_BUFFER[index] | (1 << (7 - bit));
+    DISPLAY_DRIVER_BUFFER[index] =
+      DISPLAY_DRIVER_BUFFER[index] | (1 << (7 - bit));
   } else {
-    MBED_SPI_DRIVER_BUFFER[index] =
-      MBED_SPI_DRIVER_BUFFER[index] & (0xff ^ (1 << (7 - bit)));
+    DISPLAY_DRIVER_BUFFER[index] =
+      DISPLAY_DRIVER_BUFFER[index] & (0xff ^ (1 << (7 - bit)));
   }
 }
 
@@ -141,7 +141,7 @@ bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
   return true;
 }
 
-void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
+void DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
   int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
   BitmapOptions options, bool block, uint16_t blockColor) {
 
@@ -159,7 +159,7 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
     return;  // no overlap between bitmap and screen
 
   // get top left corner of block to write on screen
-  uint8_t *buffer = MBED_SPI_DRIVER_BUFFER + (18 * y) + (x / 8);
+  uint8_t *buffer = DISPLAY_DRIVER_BUFFER + (18 * y) + (x / 8);
 
   // index bitmap by bits instead of bytes to handle all the byte splitting
   uint16_t bitmapBitIndex = bitmapWidth * bitmapY + bitmapX;
@@ -272,13 +272,13 @@ void MBED_SPI_DRIVER::writeBitmapOrBlockToBuffer(
   }
 }
 
-void MBED_SPI_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
+void DISPLAY_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
                                      uint16_t height, uint16_t color) {
   writeBitmapOrBlockToBuffer(x, y, width, height, nullptr,
                              BitmapOptions().opaque(true), true, color);
 }
 
-void MBED_SPI_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
+void DISPLAY_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
                                           uint16_t height, uint8_t *bitmap,
                                           BitmapOptions options) {
   writeBitmapOrBlockToBuffer(x, y, width, height, bitmap, options, false, 0x00);
