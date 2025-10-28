@@ -3,12 +3,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Kywy.hpp"
+#include "SPIBus.hpp"
+#include "Display.hpp"
 
 namespace Kywy {
 
 void Engine::start(EngineOptions options) {
   this->options = options;
   Serial.begin(9600);
+
+  // Initialize SPI bus with display pins
+  SPIBus::initialize(KYWY_DISPLAY_MOSI, KYWY_DISPLAY_MISO, KYWY_DISPLAY_SCK);
 
   displayDriver = new Display::Driver::MBED_SPI_DRIVER();
   display = Display::Display(displayDriver);

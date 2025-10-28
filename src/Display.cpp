@@ -3,42 +3,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Display.hpp"
-
-extern "C" {
-#include "hardware/dma.h"
-#include "hardware/spi.h"
-#include "hardware/regs/dreq.h"
-}
-
-// DMA channel used for display transfers. Accessed from IRQ handler. Default to no channel claimed (-1)
-static volatile int display_dma_chan = -1;
-
-// Our own SPI mutex - simple flag that can be safely accessed from IRQ
-// mbed based mutexes are not safe to use from IRQ context.
-static volatile bool spi_bus_locked = false;
+#include "SPIBus.hpp"
 
 // Flag to indicate display update is pending
 static volatile bool displayPending = false;
 
-// DMA IRQ handler to finalize the display transfer
-// This runs after the DMA transfer is complete to clean up and release the SPI bus.
-// This is an IRQ handler, so must be fast and safe.
-// Operates outside of mbed context with hardware calls.
-extern "C" void display_dma_irq(void) {
-  // clear interrupt for this channel
-  dma_hw->ints0 = 1u << display_dma_chan;
-  // disable IRQ for this channel
-  dma_channel_set_irq0_enabled(display_dma_chan, false);
-  // disable peripheral DMA request
-  spi0_hw->dmacr &= ~0x1u;
-  // deassert CS
-  digitalWrite(KYWY_DISPLAY_CS, LOW);
-  // unclaim channel
-  dma_channel_unclaim(display_dma_chan);
-  // Mark channel as free/unclaimed
-  display_dma_chan = -1;
-  // Release our SPI bus lock
-  spi_bus_locked = false;
+// Callback invoked when display DMA transfer completes
+static void displayDMAComplete() {
+  // Transfer complete, CS pin already deasserted by SPIBus IRQ handler
 }
 
 namespace Display {
@@ -46,12 +18,8 @@ namespace Display {
 namespace Driver {
 
 void MBED_SPI_DRIVER::initializeDisplay() {
-  mbedSPI =
-    new mbed::SPI((PinName)KYWY_DISPLAY_MOSI, (PinName)KYWY_DISPLAY_MISO,
-                  (PinName)KYWY_DISPLAY_SCK);
-  mbedSPI->format(8, 0);
-  mbedSPI->frequency(2000000);  //max 2MHz for display,  max per datasheet
-
+  // SPI hardware is initialized by SPIBus::initialize() called from Kywy.cpp
+  
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
 
@@ -83,51 +51,9 @@ void MBED_SPI_DRIVER::clearBuffer() {
   memset(MBED_SPI_DRIVER_BUFFER, 0xff, sizeof(MBED_SPI_DRIVER_BUFFER));
 }
 
-void MBED_SPI_DRIVER::dmaTransferBuffer(uint8_t *buffer, size_t size) {
-  // This function uses DMA to transfer a buffer to the display over SPI
-  // without blocking the CPU.
-  // Since default mbed SPI does not support DMA, we directly access the RP2040
-  // hardware registers and DMA controller directly.
-  // At highlevel, the transfer process is:
-  // 1. Configure and start a DMA channel to transfer the buffer to SPI
-  // 2. Enable SPI TX DMA requests
-  // 3. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
-
-  if (!mbedSPI || display_dma_chan >= 0) {
-    return;
-  }
-
-  // Claim a DMA channel and configure it to transfer from buffer -> SPI TX FIFO
-  int dma_chan = dma_claim_unused_channel(true);
-  dma_channel_config c = dma_channel_get_default_config(dma_chan);
-  channel_config_set_read_increment(&c, true);    // read from incrementing memory
-  channel_config_set_write_increment(&c, false);  // write to fixed peripheral FIFO
-  channel_config_set_dreq(&c, DREQ_SPI0_TX);
-  channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-
-  // Enable SPI TX DMA request in the peripheral (TXDMAE)
-  spi0_hw->dmacr |= 0x1;  // TXDMAE = bit 0
-
-  // Configure and start the DMA: destination is SPI0->dr (data register)
-  dma_channel_configure(dma_chan, &c,
-                        &spi0_hw->dr,  // destination (peripheral FIFO)
-                        buffer,        // source (our buffer)
-                        (uint)size,    // transfer count in bytes
-                        true);         // start immediately
-
-  // Install IRQ handler to finish the transfer so we don't block the CPU here.
-  // Use DMA IRQ0 and enable IRQ for this channel.
-  display_dma_chan = dma_chan;
-  // acknowledge/clear any existing interrupt and enable
-  dma_hw->ints0 = 1u << dma_chan;
-  dma_channel_set_irq0_enabled(dma_chan, true);
-  irq_set_exclusive_handler(DMA_IRQ_0, display_dma_irq);
-  irq_set_enabled(DMA_IRQ_0, true);
-}
-
 void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Check if SPI bus is already locked by a DMA transfer
-  if (!mbedSPI || spi_bus_locked) {
+  if (SPIBus::isBusLocked()) {
     // SPI bus busy, drop frame
     displayPending = true;  // Mark update as still pending since we couldn't send now
     return;
@@ -135,22 +61,12 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
 
   // This function uses DMA to transfer the display buffer to the display
   // over SPI without blocking the CPU.
-  // Since default mbed SPI does not support DMA, we directly access the RP2040
-  // hardware registers and DMA controller directly.
-  // At highlevel, the transfer process is:
-  // 1. Build a contiguous TX buffer with header, line data, and tail
-  // 2. Configure and start a DMA channel to transfer the TX buffer to SPI
-  // 3. Enable SPI TX DMA requests
-  // 4. Wait for DMA IRQ to signal completion and perform cleanup or same on timeout.
-
   // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
   const size_t LINES = KYWY_DISPLAY_HEIGHT + 1;
   const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2;  // 18 data + 2 (line addr + trailing 0)
   const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1;   // Total size
 
-  // Ensure the TX buffer is 32-bit aligned for DMA peripheral efficiency and to
-  // avoid misaligned reads which can corrupt the final bytes on some DMA
-  // controllers.
+  // Ensure the TX buffer is 32-bit aligned for DMA peripheral efficiency
   static uint8_t txbuf[TX_SIZE] __attribute__((aligned(4)));
 
   // Header
@@ -168,15 +84,17 @@ void MBED_SPI_DRIVER::sendBufferToDisplay() {
   // Tail
   txbuf[TX_SIZE - 1] = 0x00;
 
-  // Lock our SPI bus (simple flag, safe for IRQ to unlock)
-  spi_bus_locked = true;
-
-  // Assert CS and start DMA transfer
-  digitalWrite(KYWY_DISPLAY_CS, HIGH);
-  dmaTransferBuffer(txbuf, TX_SIZE);
+  // Start DMA transfer via SPIBus
+  // CS pin will be asserted by SPIBus, deasserted after completion
+  // Display CS is active HIGH (unusual but per Sharp Memory Display datasheet)
+  if (!SPIBus::startDMATransfer(txbuf, TX_SIZE, KYWY_DISPLAY_CS, true, displayDMAComplete)) {
+    // Failed to start transfer, bus was busy
+    displayPending = true;
+    return;
+  }
 
   // Transfer happens asynchronously via DMA
-  // IRQ will unlock spi_bus_locked when complete
+  // SPIBus will call displayDMAComplete() when done
   return;
 }
 
@@ -383,7 +301,7 @@ void Display::update() {
 }
 
 void Display::checkPendingUpdate() {
-  if (displayPending && !spi_bus_locked) {
+  if (displayPending && !SPIBus::isBusLocked()) {
     displayPending = false;
     driver->sendBufferToDisplay();
   }

@@ -7,8 +7,7 @@
 
 #include "Fonts.hpp"
 #include <Arduino.h>
-#include <SPIMaster.h>
-#include <stdint.h>
+#include "SPIBus.hpp"
 
 // for v0.2 version of board
 // #define KYWY_DISPLAY_SCK  18
@@ -241,14 +240,11 @@ public:
   };
 
   MBED_SPI_DRIVER() {}
-  ~MBED_SPI_DRIVER() {
-    delete mbedSPI;
-  };
+  ~MBED_SPI_DRIVER() {};
 
   void initializeDisplay();
   void clearBuffer();
   void sendBufferToDisplay();
-  void dmaTransferBuffer(uint8_t *buffer, size_t size);
 
   void setRotation(Rotation rotation);
 
@@ -266,8 +262,6 @@ public:
   void writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
                            uint16_t height, uint8_t *bitmap,
                            BitmapOptions options = BitmapOptions());
-
-  mbed::SPI *mbedSPI;  // Made public for IRQ handler access
 
 private:
   bool updatePending = false;
