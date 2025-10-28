@@ -11,6 +11,7 @@ extern "C" {
 #include "hardware/spi.h"
 #include "hardware/regs/dreq.h"
 #include "hardware/irq.h"
+#include "hardware/sync.h"
 }
 
 namespace SPIBus {
@@ -86,13 +87,26 @@ bool isBusLocked() {
 
 bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh, 
                       void (*completionCallback)()) {
-  // Check if SPI is initialized and bus is not already locked
-  if (!mbedSPI || busLocked || dmaChan >= 0) {
-    return false;  // Bus is busy or not initialized
+  // Check if SPI is initialized
+  if (!mbedSPI) {
+    return false;  // Not initialized
+  }
+  
+  // Atomically acquire the bus lock using critical section
+  // This is truly atomic and safe in IRQ context
+  uint32_t interrupts = save_and_disable_interrupts();
+  
+  // Check if bus is already locked
+  if (busLocked || dmaChan >= 0) {
+    restore_interrupts(interrupts);
+    return false;  // Bus is busy
   }
   
   // Lock the bus
   busLocked = true;
+  
+  // Restore interrupts - we now own the lock
+  restore_interrupts(interrupts);
   
   // Store CS pin info and callback
   currentCSPin = csPin;
