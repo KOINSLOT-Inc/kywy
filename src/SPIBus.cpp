@@ -84,7 +84,13 @@ void initialize() {
 
   // Asume things are plugged in and we need to deselect them to prevent bus conflicts
   // Assume default EXP devices are active high (eg SD card, common convention)
+  pinMode(KYWY_DISPLAY_CS, OUTPUT);
+  pinMode(KYWY_SDCARD_CS, OUTPUT);
+  pinMode(KYWY_EXP1_CS, OUTPUT);
+  pinMode(KYWY_EXP2_CS, OUTPUT);
+  
   digitalWrite(KYWY_DISPLAY_CS, LOW);
+  digitalWrite(KYWY_SDCARD_CS, HIGH);
   digitalWrite(KYWY_EXP1_CS, HIGH);
   digitalWrite(KYWY_EXP2_CS, HIGH);
 }
