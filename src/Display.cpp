@@ -5,13 +5,8 @@
 #include "Display.hpp"
 #include "SPIBus.hpp"
 
-// Flag to indicate display update is pending
-static volatile bool displayPending = false;
-
 // Callback invoked when display DMA transfer completes
-static void displayDMAComplete() {
-  // Transfer complete, CS pin already deasserted by SPIBus IRQ handler
-}
+void displayDMAComplete() {} // No callback actions needed for now
 
 namespace Display {
 

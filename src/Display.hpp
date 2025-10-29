@@ -357,6 +357,9 @@ private:
                    int16_t &originYOffset, uint16_t &baselineLength);
 };
 
+// Bool to track if a display update is pending
+static volatile bool displayPending = false;
+
 }  // namespace Display
 
 #endif
