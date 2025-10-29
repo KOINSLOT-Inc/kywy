@@ -41,6 +41,12 @@ bool isBusLocked();
 bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh,
                       uint32_t frequency, void (*completionCallback)() = nullptr);
 
+bool startDuplexDMATransfer(uint8_t *txBuffer, uint8_t *rxBuffer, size_t size, int csPin, bool csActiveHigh,
+                            uint32_t frequency, void (*completionCallback)() = nullptr);
+
+bool sendCommandDMATransfer(uint8_t *cmdBuffer, size_t cmdSize, int csPin, bool csActiveHigh,
+                            uint32_t frequency, void (*completionCallback)());
+
 }  // namespace SPIBus
 
 #endif  // SPIBUS_HPP
