@@ -84,17 +84,17 @@ void DISPLAY_DRIVER::sendBufferToDisplay() {
   // Tail
   txbuf[TX_SIZE - 1] = 0x00;
 
-  // Start DMA transfer via SPIBus
-  // CS pin will be asserted by SPIBus, deasserted after completion
-  // Display CS is active HIGH (unusual but per Sharp Memory Display datasheet)
-  if (!SPIBus::startDMATransfer(txbuf, TX_SIZE, KYWY_DISPLAY_CS, true, displayDMAComplete)) {
+  // Start DMA transfer via SPIBus with Sharp Memory Display configuration
+  // CS pin: KYWY_DISPLAY_CS, active HIGH (per Sharp Memory Display datasheet)
+  // Frequency: 2MHz (2000000 Hz)
+  if (!SPIBus::startDMATransfer(txbuf, TX_SIZE, KYWY_DISPLAY_CS, true, 2000000, displayDMAComplete)) {
     // Failed to start transfer, bus was busy
-    displayPending = true;
+    // displayPending flag remains set, will retry on next checkPendingUpdate()
     return;
   }
 
-  // Transfer happens asynchronously via DMA
-  // SPIBus will call displayDMAComplete() when done
+  // Transfer started successfully and happens asynchronously via DMA
+  // SPIBus will call displayDMAComplete() when done, which clears displayPending
   return;
 }
 

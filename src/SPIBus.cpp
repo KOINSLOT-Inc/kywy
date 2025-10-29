@@ -76,17 +76,18 @@ extern "C" void spi_bus_dma_irq_handler(void) {
 
 void initialize(int mosiPin, int misoPin, int sckPin) {
   // Create mbed::SPI object to initialize SPI hardware
+  // Keep this object private to SPIBus - it should only be accessed internally
   mbedSPI = new mbed::SPI((PinName)mosiPin, (PinName)misoPin, (PinName)sckPin);
-  mbedSPI->format(8, 0);         // 8-bit, mode 0
-  mbedSPI->frequency(2000000);   // 2MHz
+  mbedSPI->format(8, 0);         // 8-bit, mode 0 (will be reconfigured per transfer)
+  mbedSPI->frequency(2000000);   // 2MHz default (will be reconfigured per transfer)
 }
 
 bool isBusLocked() {
   return busLocked;
 }
 
-bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh, 
-                      void (*completionCallback)()) {
+bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh,
+                      uint32_t frequency, void (*completionCallback)()) {
   // Check if SPI is initialized
   if (!mbedSPI) {
     return false;  // Not initialized
@@ -107,6 +108,10 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   
   // Restore interrupts - we now own the lock
   restore_interrupts(interrupts);
+  
+  // Configure SPI frequency for this transfer using mbed::SPI
+  // This must be done AFTER acquiring the lock to prevent race conditions
+  mbedSPI->frequency(frequency);
   
   // Store CS pin info and callback
   currentCSPin = csPin;

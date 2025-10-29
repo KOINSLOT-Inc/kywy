@@ -27,9 +27,10 @@ bool isBusLocked();
 //   size: number of bytes to transmit
 //   csPin: chip select pin number
 //   csActiveHigh: true if CS is active high, false if active low
+//   frequency: SPI clock frequency in Hz
 //   completionCallback: optional callback invoked when transfer completes (from IRQ context)
-bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh, 
-                      void (*completionCallback)() = nullptr);
+bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh,
+                      uint32_t frequency, void (*completionCallback)() = nullptr);
 
 }  // namespace SPIBus
 
