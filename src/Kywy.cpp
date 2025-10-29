@@ -13,7 +13,7 @@ void Engine::start(EngineOptions options) {
   Serial.begin(9600);
 
   // Initialize SPI bus with display pins
-  SPIBus::initialize(KYWY_DISPLAY_MOSI, KYWY_DISPLAY_MISO, KYWY_DISPLAY_SCK);
+  SPIBus::initialize();
 
   displayDriver = new Display::Driver::DISPLAY_DRIVER();
   display = Display::Display(displayDriver);

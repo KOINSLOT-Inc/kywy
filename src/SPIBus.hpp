@@ -8,6 +8,15 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define KYWY_SCK 18
+#define KYWY_MOSI 19
+#define KYWY_MISO 16
+
+#define KYWY_DISPLAY_CS 17
+#define KYWY_SDCARD_CS 15 
+#define KYWY_EXP1_CS 15 // expansion port 1 CS (black pins on back) shared with sdcard, cant use pins and card at same time
+#define KYWY_EXP2_CS 14 // expansion port 2 CS (black pins on back)
+
 namespace SPIBus {
 
 // Initialize the SPI bus with mbed::SPI
@@ -15,7 +24,7 @@ namespace SPIBus {
 //   mosiPin: MOSI pin number
 //   misoPin: MISO pin number
 //   sckPin: SCK pin number
-void initialize(int mosiPin, int misoPin, int sckPin);
+void initialize();
 
 // Check if the SPI bus is currently locked by a DMA transfer
 bool isBusLocked();

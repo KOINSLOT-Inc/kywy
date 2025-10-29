@@ -24,7 +24,8 @@ static mbed::SPI *mbedSPI = nullptr;
 static volatile bool busLocked = false;
 
 // DMA channel used for transfers. Default to no channel claimed (-1)
-static volatile int dmaChan = -1;
+static volatile int dmaChan1 = -1; // For write only and duplex
+static volatile int dmaChan2 = -1; // For duplex transfers
 
 // Callback to invoke when DMA transfer completes
 static void (*currentCompletionCallback)() = nullptr;
@@ -38,10 +39,10 @@ static bool currentCSActiveHigh = false;
 // This is an IRQ handler, so must be fast and safe.
 extern "C" void spi_bus_dma_irq_handler(void) {
   // Clear interrupt for this channel
-  dma_hw->ints0 = 1u << dmaChan;
+  dma_hw->ints0 = 1u << dmaChan1;
 
   // Disable IRQ for this channel
-  dma_channel_set_irq0_enabled(dmaChan, false);
+  dma_channel_set_irq0_enabled(dmaChan1, false);
 
   // Disable peripheral DMA request
   spi0_hw->dmacr &= ~0x1u;
@@ -59,10 +60,10 @@ extern "C" void spi_bus_dma_irq_handler(void) {
   }
 
   // Unclaim channel
-  dma_channel_unclaim(dmaChan);
+  dma_channel_unclaim(dmaChan1);
 
   // Mark channel as free
-  dmaChan = -1;
+  dmaChan1 = -1;
 
   // Release the bus lock
   busLocked = false;
@@ -74,12 +75,18 @@ extern "C" void spi_bus_dma_irq_handler(void) {
   }
 }
 
-void initialize(int mosiPin, int misoPin, int sckPin) {
+void initialize() {
   // Create mbed::SPI object to initialize SPI hardware
   // Keep this object private to SPIBus - it should only be accessed internally
-  mbedSPI = new mbed::SPI((PinName)mosiPin, (PinName)misoPin, (PinName)sckPin);
+  mbedSPI = new mbed::SPI((PinName)KYWY_MOSI, (PinName)KYWY_MISO, (PinName)KYWY_SCK);
   mbedSPI->format(8, 0);        // 8-bit, mode 0 (will be reconfigured per transfer)
   mbedSPI->frequency(2000000);  // 2MHz default (will be reconfigured per transfer)
+
+  // Asume things are plugged in and we need to deselect them to prevent bus conflicts
+  // Assume default EXP devices are active high (eg SD card, common convention)
+  digitalWrite(KYWY_DISPLAY_CS, LOW);
+  digitalWrite(KYWY_EXP1_CS, HIGH);
+  digitalWrite(KYWY_EXP2_CS, HIGH);
 }
 
 bool isBusLocked() {
@@ -98,7 +105,7 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   uint32_t interrupts = save_and_disable_interrupts();
 
   // Check if bus is already locked
-  if (busLocked || dmaChan >= 0) {
+  if (busLocked || dmaChan1 >= 0) {
     restore_interrupts(interrupts);
     return false;  // Bus is busy
   }
@@ -143,7 +150,7 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
 
   // Install IRQ handler to finish the transfer
   // Use DMA IRQ0 and enable IRQ for this channel
-  dmaChan = dma_chan;
+  dmaChan1 = dma_chan;
 
   // Acknowledge/clear any existing interrupt and enable
   dma_hw->ints0 = 1u << dma_chan;
