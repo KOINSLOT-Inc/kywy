@@ -13,9 +13,9 @@
 #define KYWY_MISO 16
 
 #define KYWY_DISPLAY_CS 17
-#define KYWY_SDCARD_CS 15 
-#define KYWY_EXP1_CS 15 // expansion port 1 CS (black pins on back) shared with sdcard, cant use pins and card at same time
-#define KYWY_EXP2_CS 14 // expansion port 2 CS (black pins on back)
+#define KYWY_SDCARD_CS 15
+#define KYWY_EXP1_CS 15  // expansion port 1 CS (black pins on back) shared with sdcard, cant use pins and card at same time
+#define KYWY_EXP2_CS 14  // expansion port 2 CS (black pins on back)
 
 namespace SPIBus {
 

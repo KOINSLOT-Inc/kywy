@@ -24,8 +24,8 @@ static mbed::SPI *mbedSPI = nullptr;
 static volatile bool busLocked = false;
 
 // DMA channel used for transfers. Default to no channel claimed (-1)
-static volatile int dmaChan1 = -1; // For write only and duplex
-static volatile int dmaChan2 = -1; // For duplex transfers
+static volatile int dmaChan1 = -1;  // For write only and duplex
+static volatile int dmaChan2 = -1;  // For duplex transfers
 
 // Callback to invoke when DMA transfer completes
 static void (*currentCompletionCallback)() = nullptr;
@@ -208,10 +208,10 @@ bool startDuplexDMATransfer(uint8_t *txBuffer, uint8_t *rxBuffer, size_t size, i
   channel_config_set_dreq(&rxConf, DREQ_SPI0_RX);
   channel_config_set_transfer_data_size(&rxConf, DMA_SIZE_8);
   dma_channel_configure(rxChan, &rxConf,
-                        rxBuffer,           // dest
-                        &spi0_hw->dr,       // src (SPI RX FIFO)
-                        (uint)size,         // count
-                        false);             // don't start yet
+                        rxBuffer,      // dest
+                        &spi0_hw->dr,  // src (SPI RX FIFO)
+                        (uint)size,    // count
+                        false);        // don't start yet
 
   // TX DMA config: txBuffer -> SPI TX FIFO
   dma_channel_config txConf = dma_channel_get_default_config(txChan);
@@ -221,10 +221,10 @@ bool startDuplexDMATransfer(uint8_t *txBuffer, uint8_t *rxBuffer, size_t size, i
   channel_config_set_transfer_data_size(&txConf, DMA_SIZE_8);
   spi0_hw->dmacr |= 0x1;
   dma_channel_configure(txChan, &txConf,
-                        &spi0_hw->dr,        // dest (SPI TX FIFO)
-                        txBuffer,            // src
-                        (uint)size,          // count
-                        false);              // don't start yet
+                        &spi0_hw->dr,  // dest (SPI TX FIFO)
+                        txBuffer,      // src
+                        (uint)size,    // count
+                        false);        // don't start yet
 
   // Enable IRQs for both channels
   dma_hw->ints0 = (1u << txChan) | (1u << rxChan);
