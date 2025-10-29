@@ -64,6 +64,7 @@ extern "C" void spi_bus_dma_irq_handler(void) {
 
   // Mark channel as free
   dmaChan1 = -1;
+  dmaChan2 = -1;
 
   // Release the bus lock
   busLocked = false;
@@ -88,7 +89,7 @@ void initialize() {
   pinMode(KYWY_SDCARD_CS, OUTPUT);
   pinMode(KYWY_EXP1_CS, OUTPUT);
   pinMode(KYWY_EXP2_CS, OUTPUT);
-  
+
   digitalWrite(KYWY_DISPLAY_CS, LOW);
   digitalWrite(KYWY_SDCARD_CS, HIGH);
   digitalWrite(KYWY_EXP1_CS, HIGH);
@@ -165,6 +166,95 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   irq_set_enabled(DMA_IRQ_0, true);
 
   return true;
+}
+
+// Start a full-duplex DMA transfer: write from txBuffer, read to rxBuffer
+// Returns true if transfer started, false if bus was busy
+// txBuffer: pointer to data to send
+// rxBuffer: pointer to buffer to receive data
+// size: number of bytes to transfer
+// csPin: chip select pin number
+// csActiveHigh: true if CS is active high, false if active low
+// frequency: SPI clock frequency in Hz
+// completionCallback: optional callback invoked when transfer completes (from IRQ context)
+bool startDuplexDMATransfer(uint8_t *txBuffer, uint8_t *rxBuffer, size_t size, int csPin, bool csActiveHigh,
+                            uint32_t frequency, void (*completionCallback)()) {
+  if (!mbedSPI) {
+    return false;  // Not initialized
+  }
+  uint32_t interrupts = save_and_disable_interrupts();
+  if (busLocked || dmaChan1 >= 0 || dmaChan2 >= 0) {
+    restore_interrupts(interrupts);
+    return false;  // Bus is busy
+  }
+  busLocked = true;
+  restore_interrupts(interrupts);
+  mbedSPI->frequency(frequency);
+  currentCSPin = csPin;
+  currentCSActiveHigh = csActiveHigh;
+  currentCompletionCallback = completionCallback;
+  if (csPin >= 0) digitalWrite(csPin, csActiveHigh ? HIGH : LOW);
+
+  // Claim two DMA channels: one for TX, one for RX
+  int txChan = dma_claim_unused_channel(true);
+  int rxChan = dma_claim_unused_channel(true);
+  dmaChan1 = txChan;
+  dmaChan2 = rxChan;
+
+  // RX DMA config: SPI RX FIFO -> rxBuffer
+  dma_channel_config rxConf = dma_channel_get_default_config(rxChan);
+  channel_config_set_read_increment(&rxConf, false);
+  channel_config_set_write_increment(&rxConf, true);
+  channel_config_set_dreq(&rxConf, DREQ_SPI0_RX);
+  channel_config_set_transfer_data_size(&rxConf, DMA_SIZE_8);
+  dma_channel_configure(rxChan, &rxConf,
+                        rxBuffer,           // dest
+                        &spi0_hw->dr,       // src (SPI RX FIFO)
+                        (uint)size,         // count
+                        false);             // don't start yet
+
+  // TX DMA config: txBuffer -> SPI TX FIFO
+  dma_channel_config txConf = dma_channel_get_default_config(txChan);
+  channel_config_set_read_increment(&txConf, true);
+  channel_config_set_write_increment(&txConf, false);
+  channel_config_set_dreq(&txConf, DREQ_SPI0_TX);
+  channel_config_set_transfer_data_size(&txConf, DMA_SIZE_8);
+  spi0_hw->dmacr |= 0x1;
+  dma_channel_configure(txChan, &txConf,
+                        &spi0_hw->dr,        // dest (SPI TX FIFO)
+                        txBuffer,            // src
+                        (uint)size,          // count
+                        false);              // don't start yet
+
+  // Enable IRQs for both channels
+  dma_hw->ints0 = (1u << txChan) | (1u << rxChan);
+  dma_channel_set_irq0_enabled(txChan, true);
+  dma_channel_set_irq0_enabled(rxChan, true);
+  irq_set_exclusive_handler(DMA_IRQ_0, spi_bus_dma_irq_handler);
+  irq_set_enabled(DMA_IRQ_0, true);
+
+  // Start RX first, then TX (order matters for SPI)
+  dma_channel_start(rxChan);
+  dma_channel_start(txChan);
+
+  return true;
+}
+
+// Send a command buffer (TX only, RX ignored)
+bool sendCommandDMATransfer(uint8_t *cmdBuffer, size_t cmdSize, int csPin, bool csActiveHigh,
+                            uint32_t frequency, void (*completionCallback)()) {
+  // Just use startDMATransfer (TX only)
+  return startDMATransfer(cmdBuffer, cmdSize, csPin, csActiveHigh, frequency, completionCallback);
+}
+
+// Receive data (RX only, TX sends dummy 0xFF)
+bool receiveDataDMATransfer(uint8_t *rxBuffer, size_t rxSize, int csPin, bool csActiveHigh,
+                            uint32_t frequency, void (*completionCallback)()) {
+  // Allocate a static dummy TX buffer (0xFF)
+  static uint8_t dummyTx[512];
+  if (rxSize > sizeof(dummyTx)) return false;
+  memset(dummyTx, 0xFF, rxSize);
+  return startDuplexDMATransfer(dummyTx, rxBuffer, rxSize, csPin, csActiveHigh, frequency, completionCallback);
 }
 
 }  // namespace SPIBus
