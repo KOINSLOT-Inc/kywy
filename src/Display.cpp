@@ -19,7 +19,7 @@ namespace Driver {
 
 void DISPLAY_DRIVER::initializeDisplay() {
   // SPI hardware is initialized by SPIBus::initialize() called from Kywy.cpp
-  
+
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
 
@@ -273,14 +273,14 @@ void DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
 }
 
 void DISPLAY_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
-                                     uint16_t height, uint16_t color) {
+                                    uint16_t height, uint16_t color) {
   writeBitmapOrBlockToBuffer(x, y, width, height, nullptr,
                              BitmapOptions().opaque(true), true, color);
 }
 
 void DISPLAY_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
-                                          uint16_t height, uint8_t *bitmap,
-                                          BitmapOptions options) {
+                                         uint16_t height, uint8_t *bitmap,
+                                         BitmapOptions options) {
   writeBitmapOrBlockToBuffer(x, y, width, height, bitmap, options, false, 0x00);
 }
 

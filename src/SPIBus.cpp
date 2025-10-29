@@ -39,34 +39,34 @@ static bool currentCSActiveHigh = false;
 extern "C" void spi_bus_dma_irq_handler(void) {
   // Clear interrupt for this channel
   dma_hw->ints0 = 1u << dmaChan;
-  
+
   // Disable IRQ for this channel
   dma_channel_set_irq0_enabled(dmaChan, false);
-  
+
   // Disable peripheral DMA request
   spi0_hw->dmacr &= ~0x1u;
-  
+
   // Wait for SPI to finish transmitting (FIFO empty and not busy)
   // BSY bit (bit 4) is set while SPI is transmitting
   while ((spi0_hw->sr & (1 << 4)) != 0) {
     // Busy wait
   }
-  
+
   // Deassert CS pin
   if (currentCSPin >= 0) {
     digitalWrite(currentCSPin, currentCSActiveHigh ? LOW : HIGH);
     currentCSPin = -1;
   }
-  
+
   // Unclaim channel
   dma_channel_unclaim(dmaChan);
-  
+
   // Mark channel as free
   dmaChan = -1;
-  
+
   // Release the bus lock
   busLocked = false;
-  
+
   // Invoke completion callback if set
   if (currentCompletionCallback) {
     currentCompletionCallback();
@@ -78,8 +78,8 @@ void initialize(int mosiPin, int misoPin, int sckPin) {
   // Create mbed::SPI object to initialize SPI hardware
   // Keep this object private to SPIBus - it should only be accessed internally
   mbedSPI = new mbed::SPI((PinName)mosiPin, (PinName)misoPin, (PinName)sckPin);
-  mbedSPI->format(8, 0);         // 8-bit, mode 0 (will be reconfigured per transfer)
-  mbedSPI->frequency(2000000);   // 2MHz default (will be reconfigured per transfer)
+  mbedSPI->format(8, 0);        // 8-bit, mode 0 (will be reconfigured per transfer)
+  mbedSPI->frequency(2000000);  // 2MHz default (will be reconfigured per transfer)
 }
 
 bool isBusLocked() {
@@ -92,37 +92,37 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   if (!mbedSPI) {
     return false;  // Not initialized
   }
-  
+
   // Atomically acquire the bus lock using critical section
   // This is truly atomic and safe in IRQ context
   uint32_t interrupts = save_and_disable_interrupts();
-  
+
   // Check if bus is already locked
   if (busLocked || dmaChan >= 0) {
     restore_interrupts(interrupts);
     return false;  // Bus is busy
   }
-  
+
   // Lock the bus
   busLocked = true;
-  
+
   // Restore interrupts - we now own the lock
   restore_interrupts(interrupts);
-  
+
   // Configure SPI frequency for this transfer using mbed::SPI
   // This must be done AFTER acquiring the lock to prevent race conditions
   mbedSPI->frequency(frequency);
-  
+
   // Store CS pin info and callback
   currentCSPin = csPin;
   currentCSActiveHigh = csActiveHigh;
   currentCompletionCallback = completionCallback;
-  
+
   // Assert CS pin before starting transfer
   if (csPin >= 0) {
     digitalWrite(csPin, csActiveHigh ? HIGH : LOW);
   }
-  
+
   // Claim a DMA channel and configure it to transfer from buffer -> SPI TX FIFO
   int dma_chan = dma_claim_unused_channel(true);
   dma_channel_config c = dma_channel_get_default_config(dma_chan);
@@ -130,27 +130,27 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   channel_config_set_write_increment(&c, false);  // Write to fixed peripheral FIFO
   channel_config_set_dreq(&c, DREQ_SPI0_TX);
   channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-  
+
   // Enable SPI TX DMA request in the peripheral (TXDMAE)
   spi0_hw->dmacr |= 0x1;  // TXDMAE = bit 0
-  
+
   // Configure and start the DMA: destination is SPI0->dr (data register)
   dma_channel_configure(dma_chan, &c,
                         &spi0_hw->dr,  // Destination (peripheral FIFO)
                         buffer,        // Source (our buffer)
                         (uint)size,    // Transfer count in bytes
                         true);         // Start immediately
-  
+
   // Install IRQ handler to finish the transfer
   // Use DMA IRQ0 and enable IRQ for this channel
   dmaChan = dma_chan;
-  
+
   // Acknowledge/clear any existing interrupt and enable
   dma_hw->ints0 = 1u << dma_chan;
   dma_channel_set_irq0_enabled(dma_chan, true);
   irq_set_exclusive_handler(DMA_IRQ_0, spi_bus_dma_irq_handler);
   irq_set_enabled(DMA_IRQ_0, true);
-  
+
   return true;
 }
 

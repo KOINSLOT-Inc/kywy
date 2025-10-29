@@ -240,7 +240,7 @@ public:
   };
 
   DISPLAY_DRIVER() {}
-  ~DISPLAY_DRIVER() {};
+  ~DISPLAY_DRIVER(){};
 
   void initializeDisplay();
   void clearBuffer();
