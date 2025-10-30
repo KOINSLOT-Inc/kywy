@@ -293,6 +293,7 @@ void Display::clear() {
 
 void Display::update() {
   displayPending = true;
+  checkPendingUpdate();  // Attempt to send the update immediately
 }
 
 void Display::checkPendingUpdate() {
