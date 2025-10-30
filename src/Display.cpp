@@ -300,7 +300,9 @@ void Display::update() {
 }
 
 bool Display::checkPendingUpdate() {
-  driver->sendBufferToDisplay();
+  if (displayPending) {
+    driver->sendBufferToDisplay();
+  }
   return !displayPending;
 }
 
