@@ -12,6 +12,11 @@ namespace Display {
 
 namespace Driver {
 
+// Static buffer definitions for KYWY_DISPLAY_DRIVER
+uint8_t KYWY_DISPLAY_DRIVER::KYWY_DISPLAY_ACTIVE_BUFFER[KYWY_DISPLAY_DRIVER::KYWY_DISPLAY_BUFFER_SIZE];
+uint8_t KYWY_DISPLAY_DRIVER::KYWY_DISPLAY_TRANSFER_BUFFER[KYWY_DISPLAY_DRIVER::KYWY_DISPLAY_BUFFER_SIZE];
+uint8_t KYWY_DISPLAY_DRIVER::KYWY_DISPLAY_DROPPED_FRAME_BUFFER[KYWY_DISPLAY_DRIVER::KYWY_DISPLAY_BUFFER_SIZE];
+
 void KYWY_DISPLAY_DRIVER::initializeDisplay() {
   // SPI hardware is initialized by SPIBus::initialize() called from Kywy.cpp
 
@@ -43,49 +48,68 @@ void KYWY_DISPLAY_DRIVER::setRotation(Rotation rotation) {
 }
 
 void KYWY_DISPLAY_DRIVER::clearBuffer() {
-  memset(KYWY_DISPLAY_DRIVER_BUFFER, 0xff, sizeof(KYWY_DISPLAY_DRIVER_BUFFER));
+  memset(KYWY_DISPLAY_ACTIVE_BUFFER, 0xff, KYWY_DISPLAY_BUFFER_SIZE);
 }
 
 void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
-  // Check if SPI bus is already locked by a DMA transfer
-  if (SPIBus::isBusLocked()) {
-    // SPI bus busy, drop frame
-    displayPending = true;  // Mark update as still pending since we couldn't send now
+  if (!displayPending && !droppedFrame) {
+    // No update pending, and no dropped frame, nothing to do
     return;
   }
 
-  // This function uses DMA to transfer the display buffer to the display
-  // over SPI without blocking the CPU.
-  // Build contiguous TX buffer: 1 byte header + 168 lines * 20 bytes + 1 byte tail
-  const size_t LINES = KYWY_DISPLAY_HEIGHT + 1;
-  const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2;  // 18 data + 2 (line addr + trailing 0)
-  const size_t TX_SIZE = 1 + (LINES * LINE_BYTES) + 1;   // Total size
+  if (!displayPending && droppedFrame) {
+    // No update pending, but we have a dropped frame we can send
+    if (!SPIBus::isBusLocked()) {
+      memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_BUFFER_SIZE); //transfer dropped frame to transfer buffer
+      // continue to send below
+    } else {
+      // SPI bus busy, cannot send dropped frame now
+      return;
+    }
+  }
 
-  // Ensure the TX buffer is 32-bit aligned for DMA peripheral efficiency
-  static uint8_t txbuf[TX_SIZE] __attribute__((aligned(4)));
+  if (displayPending) {
+    if (SPIBus::isBusLocked()) {
+      // SPI bus busy, drop frame
+      displayPending = false;  // Processed the pending update, still pending dropped frame
+      droppedFrame = true;  // Mark that we have a dropped frame to send
+      memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE); //store current buffer as dropped frame
+      return;
+    }
+    if (!SPIBus::isBusLocked()) {
+      // Copy current display buffer to transfer buffer
+      memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
+    }
+  }
 
-  // Header
-  txbuf[0] = vcom | writeCommand;
-  vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom
+  //  Toggle VCOM
+  if (lastTimeVcomToggled + 900 < millis()) {
+    // Ensure VCOM is toggled at 900ms
+    lastTimeVcomToggled = millis();
+  } else {
+    vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom
+  }
+  // SET VCOM AND WRITE COMMAND
+  KYWY_DISPLAY_TRANSFER_BUFFER[0] = vcom | writeCommand;
 
-  // Fill lines
-  for (size_t line = 0; line < LINES; ++line) {
-    size_t base = 1 + line * LINE_BYTES;
-    txbuf[base + 0] = reverse(line + 1);
-    memcpy((void *)(txbuf + base + 1), (const void *)(KYWY_DISPLAY_DRIVER_BUFFER + 18 * line), 18);
-    txbuf[base + 19] = 0x00;
+  // SET LINE ADDRESSES
+  for (uint8_t line = 0; line < KYWY_DISPLAY_HEIGHT; line++) {
+    KYWY_DISPLAY_TRANSFER_BUFFER[1 + line * 20] = line + 1;  // line address
   }
 
   // Tail
-  txbuf[TX_SIZE - 1] = 0x00;
+  KYWY_DISPLAY_TRANSFER_BUFFER[KYWY_DISPLAY_BUFFER_SIZE - 1] = 0x00;
 
   // Start DMA transfer via SPIBus with Sharp Memory Display configuration
   // CS pin: KYWY_DISPLAY_CS, active HIGH (per Sharp Memory Display datasheet)
   // Frequency: 2MHz (2000000 Hz)
-  if (!SPIBus::startDMATransfer(txbuf, TX_SIZE, KYWY_DISPLAY_CS, true, 2000000, displayDMAComplete)) {
-    // Failed to start transfer, bus was busy
+  if (!SPIBus::startDMATransfer(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_BUFFER_SIZE, KYWY_DISPLAY_CS, true, 2000000, displayDMAComplete)) {
+    // Failed to start transfer, bus was busy!!
+    // This happened while we already checked bus was free, so unlikely
+    // Handle by copying current buffer to dropped frame buffer to try again later
     // displayPending flag remains set, will retry on next checkPendingUpdate()
-    displayPending = true;
+    droppedFrame = true;  // Mark that we have a dropped frame to send
+    memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
     return;
   }
 
@@ -93,8 +117,24 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   // SPIBus will call displayDMAComplete() when done
   // Sent displayPending false since dma initiated and we have nothing left to hande cpu side
   displayPending = false;
+  droppedFrame = false;
 
   return;
+}
+
+uint16_t KYWY_DISPLAY_DRIVER::mapDisplayToBufferByte(int16_t x, int16_t y) {
+  // Map the display to the current buffer for drawing
+  // Implementation depends on how buffers are managed
+  int index = (20 * y) + (x / 8) + 2; // +1 for line address byte, +1 for vcom+command byte
+  return index;
+}
+
+uint8_t KYWY_DISPLAY_DRIVER::mapDisplayToBufferBit(int16_t x, int16_t y) {
+  // Map the display to the current buffer for drawing
+  // Implementation depends on how buffers are managed
+  int bit = x % 8;
+  uint8_t edianswapped = 7 - bit; // Swap bit order for display (big-endian to little-endian or vice versa)
+  return edianswapped;
 }
 
 void KYWY_DISPLAY_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
@@ -102,15 +142,15 @@ void KYWY_DISPLAY_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
     return;
   }
 
-  int index = (18 * y) + (x / 8);
-  int bit = x % 8;
+  int index = mapDisplayToBufferByte(x, y);
+  int bit = mapDisplayToBufferBit(x, y);
 
   if (color) {
-    KYWY_DISPLAY_DRIVER_BUFFER[index] =
-      KYWY_DISPLAY_DRIVER_BUFFER[index] | (1 << (7 - bit));
+    KYWY_DISPLAY_ACTIVE_BUFFER[index] =
+      KYWY_DISPLAY_ACTIVE_BUFFER[index] | (1 << bit);
   } else {
-    KYWY_DISPLAY_DRIVER_BUFFER[index] =
-      KYWY_DISPLAY_DRIVER_BUFFER[index] & (0xff ^ (1 << (7 - bit)));
+    KYWY_DISPLAY_ACTIVE_BUFFER[index] =
+      KYWY_DISPLAY_ACTIVE_BUFFER[index] & (0xff ^ (1 << bit));
   }
 }
 
@@ -140,6 +180,8 @@ bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
   return true;
 }
 
+
+
 void KYWY_DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
   int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
   BitmapOptions options, bool block, uint16_t blockColor) {
@@ -158,18 +200,18 @@ void KYWY_DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
     return;  // no overlap between bitmap and screen
 
   // get top left corner of block to write on screen
-  uint8_t *buffer = KYWY_DISPLAY_DRIVER_BUFFER + (18 * y) + (x / 8);
+  uint8_t *buffer = KYWY_DISPLAY_ACTIVE_BUFFER + mapDisplayToBufferByte(x, y);
 
   // index bitmap by bits instead of bytes to handle all the byte splitting
   uint16_t bitmapBitIndex = bitmapWidth * bitmapY + bitmapX;
 
   // precomputed values
-  uint8_t bufferBitsNotToWriteToInLeftByteColumn = x % 8;
-  uint8_t bufferBitsToWriteToInLeftByteColumn = 8 - x % 8;
+  uint8_t bufferBitsNotToWriteToInLeftByteColumn = mapDisplayToBufferBit(x, y);
+  uint8_t bufferBitsToWriteToInLeftByteColumn = 8 - bufferBitsNotToWriteToInLeftByteColumn;
 
   // buffer wrap distance calculation
   int splitLeftBits =
-    8 - x % 8;  // how many bits of the left most byte column need to be filled
+    8 - bufferBitsNotToWriteToInLeftByteColumn;  // how many bits of the left most byte column need to be filled
   splitLeftBits =
     splitLeftBits == 8
       ? 0
@@ -295,7 +337,7 @@ void Display::clear() {
 }
 
 void Display::update() {
-  displayPending = true;
+  displayPending = true;  
   checkPendingUpdate();  // Attempt to send the update immediately
 }
 
