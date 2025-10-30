@@ -295,7 +295,7 @@ public:
   void setup();
   void clear();
   void update();
-  void checkPendingUpdate();
+  bool checkPendingUpdate();
 
   void setRotation(Rotation rotation);
 

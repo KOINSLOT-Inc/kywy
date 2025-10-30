@@ -85,11 +85,14 @@ void DISPLAY_DRIVER::sendBufferToDisplay() {
   if (!SPIBus::startDMATransfer(txbuf, TX_SIZE, KYWY_DISPLAY_CS, true, 2000000, displayDMAComplete)) {
     // Failed to start transfer, bus was busy
     // displayPending flag remains set, will retry on next checkPendingUpdate()
+    displayPending = true;
     return;
   }
 
   // Transfer started successfully and happens asynchronously via DMA
   // SPIBus will call displayDMAComplete() when done, which clears displayPending
+  displayPending = false;
+
   return;
 }
 
@@ -296,11 +299,9 @@ void Display::update() {
   checkPendingUpdate();  // Attempt to send the update immediately
 }
 
-void Display::checkPendingUpdate() {
-  if (displayPending && !SPIBus::isBusLocked()) {
-    displayPending = false;
-    driver->sendBufferToDisplay();
-  }
+bool Display::checkPendingUpdate() {
+  driver->sendBufferToDisplay();
+  return !displayPending;
 }
 
 void Display::setRotation(Rotation rotation) {
