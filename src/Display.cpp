@@ -90,7 +90,8 @@ void DISPLAY_DRIVER::sendBufferToDisplay() {
   }
 
   // Transfer started successfully and happens asynchronously via DMA
-  // SPIBus will call displayDMAComplete() when done, which clears displayPending
+  // SPIBus will call displayDMAComplete() when done
+  // Sent displayPending false since dma initiated and we have nothing left to hande cpu side
   displayPending = false;
 
   return;
