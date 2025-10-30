@@ -6,7 +6,7 @@
 #include "SPIBus.hpp"
 
 // Callback invoked when display DMA transfer completes
-void displayDMAComplete() {} // No callback actions needed for now
+void displayDMAComplete() {}  // No callback actions needed for now
 
 namespace Display {
 
