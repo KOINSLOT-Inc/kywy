@@ -23,7 +23,7 @@ void Engine::start(EngineOptions options) {
   clock.options.clickToTick(options.getClickToClick());
   clock.start();
 
-  this->subscribe(&clock); // Subscribe engine to clock to receive TICK events
+  this->subscribe(&clock);  // Subscribe engine to clock to receive TICK events
 
   input.subscribe(&clock);  // get inputs for every tick
   input.start();
@@ -53,7 +53,6 @@ void Engine::handle(::Actor::Message *message) {
         break;
       }
   }
-  
 };
 
 }  // namespace Kywy

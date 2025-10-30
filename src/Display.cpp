@@ -72,7 +72,7 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   for (size_t line = 0; line < LINES; ++line) {
     size_t base = 1 + line * LINE_BYTES;
     txbuf[base + 0] = reverse(line + 1);
-  memcpy((void *)(txbuf + base + 1), (const void *)(KYWY_DISPLAY_DRIVER_BUFFER + 18 * line), 18);
+    memcpy((void *)(txbuf + base + 1), (const void *)(KYWY_DISPLAY_DRIVER_BUFFER + 18 * line), 18);
     txbuf[base + 19] = 0x00;
   }
 
@@ -272,14 +272,14 @@ void KYWY_DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
 }
 
 void KYWY_DISPLAY_DRIVER::setBufferBlock(int16_t x, int16_t y, uint16_t width,
-                                    uint16_t height, uint16_t color) {
+                                         uint16_t height, uint16_t color) {
   writeBitmapOrBlockToBuffer(x, y, width, height, nullptr,
                              BitmapOptions().opaque(true), true, color);
 }
 
 void KYWY_DISPLAY_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width,
-                                         uint16_t height, uint8_t *bitmap,
-                                         BitmapOptions options) {
+                                              uint16_t height, uint8_t *bitmap,
+                                              BitmapOptions options) {
   writeBitmapOrBlockToBuffer(x, y, width, height, bitmap, options, false, 0x00);
 }
 
