@@ -540,7 +540,7 @@ public:
 } gameManager;
 
 void setup() {
-  engine.clock.setTickDuration(30);  // Difficulty can be set here by changing tick duration (lower = harder)
+  engine.clock.setTickDuration(5);  // Difficulty can be set here by changing tick duration (lower = harder)
   engine.start();
 
   // make sure column manager subscribes to the ticker before the spelunkerManager so that

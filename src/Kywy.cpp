@@ -23,8 +23,7 @@ void Engine::start(EngineOptions options) {
   clock.options.clickToTick(options.getClickToClick());
   clock.start();
 
-  // Subscribe engine to clock to receive TICK events
-  this->subscribe(&clock);
+  this->subscribe(&clock); // Subscribe engine to clock to receive TICK events
 
   input.subscribe(&clock);  // get inputs for every tick
   input.start();
@@ -41,17 +40,10 @@ void Engine::handle(::Actor::Message *message) {
     delete this->displayDriver;
     return;
   }
-
   switch (message->signal) {
-    case Events::TICK:
+    case Kywy::Events::TICK:
       {
-        // Forward tick to clock's subscribers (game actors)
-        clock.dispatch(message);
-        input.dispatch(message);
-
-        // Check if display update is pending and send if bus is free
         display.checkPendingUpdate();
-
         break;
       }
     default:
@@ -61,6 +53,7 @@ void Engine::handle(::Actor::Message *message) {
         break;
       }
   }
+  
 };
 
 }  // namespace Kywy
