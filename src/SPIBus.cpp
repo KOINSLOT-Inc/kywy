@@ -38,13 +38,46 @@ static bool currentCSActiveHigh = false;
 // This runs after the DMA transfer is complete to clean up and release the SPI bus.
 // This is an IRQ handler, so must be fast and safe.
 extern "C" void spi_bus_dma_irq_handler(void) {
-  // Clear interrupt for this channel
-  dma_hw->ints0 = 1u << dmaChan1;
+  // Read pending interrupts for DMA channels
+  uint32_t pending = dma_hw->ints0;
 
-  // Disable IRQ for this channel
-  dma_channel_set_irq0_enabled(dmaChan1, false);
+  bool handledAny = false;
 
-  // Disable peripheral DMA request
+  // If dmaChan1 is active and its interrupt is pending, handle it
+  if (dmaChan1 >= 0 && (pending & (1u << dmaChan1))) {
+    // Clear interrupt for this channel
+    dma_hw->ints0 = 1u << dmaChan1;
+
+    // Disable IRQ for this channel
+    dma_channel_set_irq0_enabled(dmaChan1, false);
+
+    // Mark that we handled something
+    handledAny = true;
+    // Unclaim channel
+    dma_channel_unclaim(dmaChan1);
+    dmaChan1 = -1;
+  }
+
+  // If dmaChan2 is active and its interrupt is pending, handle it
+  if (dmaChan2 >= 0 && (pending & (1u << dmaChan2))) {
+    // Clear interrupt for this channel
+    dma_hw->ints0 = 1u << dmaChan2;
+
+    // Disable IRQ for this channel
+    dma_channel_set_irq0_enabled(dmaChan2, false);
+
+    handledAny = true;
+    // Unclaim channel
+    dma_channel_unclaim(dmaChan2);
+    dmaChan2 = -1;
+  }
+
+  // If nothing to handle, just return
+  if (!handledAny) {
+    return;
+  }
+
+  // Disable peripheral DMA request (TX) - safe even if duplex
   spi0_hw->dmacr &= ~0x1u;
 
   // Wait for SPI to finish transmitting (FIFO empty and not busy)
@@ -53,26 +86,21 @@ extern "C" void spi_bus_dma_irq_handler(void) {
     // Busy wait
   }
 
-  // Deassert CS pin
+  // Deassert CS pin (only once transfers are complete)
   if (currentCSPin >= 0) {
     digitalWrite(currentCSPin, currentCSActiveHigh ? LOW : HIGH);
     currentCSPin = -1;
   }
-
-  // Unclaim channel
-  dma_channel_unclaim(dmaChan1);
-
-  // Mark channel as free
-  dmaChan1 = -1;
-  dmaChan2 = -1;
 
   // Release the bus lock
   busLocked = false;
 
   // Invoke completion callback if set
   if (currentCompletionCallback) {
-    currentCompletionCallback();
+    // Capture and clear before calling to avoid reentrancy issues
+    void (*cb)() = currentCompletionCallback;
     currentCompletionCallback = nullptr;
+    cb();
   }
 }
 
