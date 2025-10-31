@@ -341,22 +341,20 @@ public:
   }
 
   void countdown() {
-    delay(20);  // need delay here incase transfer was still pending from last frame
     engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
     engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "3", Display::TextOptions().origin(Display::Origin::Text::CENTER));
     engine.display.update();
-    delay(750);  // note that delay is not ideal as it blocks ticks
+    delay(500);
     engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
     engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "2", Display::TextOptions().origin(Display::Origin::Text::CENTER));
     engine.display.update();
-    delay(750);
+    delay(500);
     engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
     engine.display.drawText(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, "1", Display::TextOptions().origin(Display::Origin::Text::CENTER));
     engine.display.update();
-    delay(750);
+    delay(500);
     engine.display.fillRectangle(KYWY_DISPLAY_WIDTH / 2, KYWY_DISPLAY_HEIGHT / 2, 10, 10, Display::Object2DOptions().origin(Display::Origin::Object2D::CENTER).color(WHITE));
     engine.display.update();
-    delay(100);
     ballXVelocity = random(2) == 1 ? -5 : 5;
     ballYVelocity = (random(2) == 1 ? -1 : 1) * random(3);
     inPoint = true;

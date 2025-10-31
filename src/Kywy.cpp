@@ -23,8 +23,6 @@ void Engine::start(EngineOptions options) {
   clock.options.clickToTick(options.getClickToClick());
   clock.start();
 
-  this->subscribe(&clock);  // Subscribe engine to clock to receive TICK events
-
   input.subscribe(&clock);  // get inputs for every tick
   input.start();
 
@@ -41,11 +39,6 @@ void Engine::handle(::Actor::Message *message) {
     return;
   }
   switch (message->signal) {
-    case Kywy::Events::TICK:
-      {
-        display.checkPendingUpdate();
-        break;  // dont forward tick messages to subcomponents
-      }
     default:
       {  // forward to subcomponent actors
         clock.dispatch(message);

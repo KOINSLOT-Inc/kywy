@@ -4,9 +4,27 @@
 
 #include "Display.hpp"
 #include "SPIBus.hpp"
+#include "mbed.h"
+
+// Global event queue for display operations
+static events::EventQueue displayEventQueue;
+static rtos::Thread displayThread;
+
+// Global reference to the driver for callback access
+static Display::Driver::Driver* globalDisplayDriver = nullptr;
+
+// Function to process display updates in event queue context
+void processDisplayUpdate() {
+  if (globalDisplayDriver) {
+    globalDisplayDriver->sendBufferToDisplay();
+  }
+}
 
 // Callback invoked when display DMA transfer completes
-void displayDMAComplete() {}  // No callback actions needed for now
+void displayDMAComplete() {
+  // Post display check to event queue to be processed outside interrupt context
+  displayEventQueue.call(processDisplayUpdate);
+}
 
 namespace Display {
 
@@ -366,6 +384,16 @@ void KYWY_DISPLAY_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t wid
 }  // namespace Driver
 
 void Display::setup() {
+  // Initialize global driver reference for callback access
+  globalDisplayDriver = driver;
+  
+  // Start display event queue thread if not already started
+  static bool displayThreadStarted = false;
+  if (!displayThreadStarted) {
+    displayThread.start(mbed::callback(&displayEventQueue, &events::EventQueue::dispatch_forever));
+    displayThreadStarted = true;
+  }
+  
   driver->initializeDisplay();
 }
 
