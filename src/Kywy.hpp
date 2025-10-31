@@ -18,8 +18,8 @@
 #include "SpriteSheet.hpp"
 
 // Hook function declarations - these are weak symbols that users can override in their sketches
-extern "C" void onTick(::Actor::Message *message) __attribute__((weak));
-extern "C" void onInput(::Actor::Message *message) __attribute__((weak));
+void onTick(::Actor::Message *message) __attribute__((weak));
+void onInput(::Actor::Message *message) __attribute__((weak));
 
 namespace Kywy {
 
