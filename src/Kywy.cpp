@@ -43,6 +43,21 @@ void Engine::handle(::Actor::Message *message) {
     case Events::TICK:
       callOnTick(message); // call user-defined onTick hook
       break;
+    case Events::BUTTON_LEFT_PRESSED:
+    case Events::BUTTON_LEFT_RELEASED:
+    case Events::BUTTON_RIGHT_PRESSED:
+    case Events::BUTTON_RIGHT_RELEASED:
+    case Events::D_PAD_LEFT_PRESSED:
+    case Events::D_PAD_LEFT_RELEASED:
+    case Events::D_PAD_RIGHT_PRESSED:
+    case Events::D_PAD_RIGHT_RELEASED:
+    case Events::D_PAD_UP_PRESSED:
+    case Events::D_PAD_UP_RELEASED:
+    case Events::D_PAD_DOWN_PRESSED:
+    case Events::D_PAD_DOWN_RELEASED:
+    case Events::D_PAD_CENTER_PRESSED:
+    case Events::D_PAD_CENTER_RELEASED:
+    case Events::INPUT_PRESSED:
     case Events::INPUT:
       callOnInput(message); // call user-defined onInput hook
       break;
