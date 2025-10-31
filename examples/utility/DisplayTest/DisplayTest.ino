@@ -119,35 +119,70 @@ void loop() {
         break;
       }
 
-    case 1:  // Fast animation test
+    case 1:  // Fast animation test with delta time and varying delays
       {
         engine.display.clear();
         engine.display.drawText(0, 0, "2: Animation Test");
 
-        // Bouncing ball animation
-        static int ballX = 20, ballY = 30;
-        static int velX = 2, velY = 1;
+        // Delta time calculation
+        static unsigned long lastFrameTime = 0;
+        if (lastFrameTime == 0) lastFrameTime = currentTime;
+        float deltaT = (currentTime - lastFrameTime) / 1000.0f; // Convert to seconds
+        lastFrameTime = currentTime;
 
-        ballX += velX;
-        ballY += velY;
+        // Bouncing ball animation with delta time
+        static float ballX = 20.0f, ballY = 30.0f;
+        static float velX = 50.0f, velY = 30.0f; // pixels per second
+        
+        ballX += velX * deltaT;
+        ballY += velY * deltaT;
 
         // Bounce off edges
         if (ballX <= 0 || ballX >= KYWY_DISPLAY_WIDTH - 10) velX = -velX;
         if (ballY <= 20 || ballY >= KYWY_DISPLAY_HEIGHT - 10) velY = -velY;
 
         // Draw ball
-        engine.display.fillCircle(ballX, ballY, 10);
+        engine.display.fillCircle((int)ballX, (int)ballY, 10);
 
-        // Draw rotating line
-        float angle = (frameCount * 0.1);
+        // Draw rotating line with delta time
+        static float rotationAngle = 0.0f;
+        rotationAngle += 2.0f * deltaT; // 2 radians per second
         int centerX = KYWY_DISPLAY_WIDTH - 30;
         int centerY = 40;
-        int lineX = centerX + cos(angle) * 15;
-        int lineY = centerY + sin(angle) * 15;
+        int lineX = centerX + cos(rotationAngle) * 15;
+        int lineY = centerY + sin(rotationAngle) * 15;
         engine.display.drawLine((int16_t)centerX, (int16_t)centerY, (int16_t)lineX, (int16_t)lineY);
+
+        // Varying delay pattern to stress test timing (0-100ms)
+        static int delayPattern = 0;
+        static unsigned long lastFPSTime = 0;
+        static int lastFrameCount = 0;
+        static float actualFPS = 0.0f;
+        
+        // Calculate actual frame rate every second
+        if (currentTime - lastFPSTime >= 1000) {
+          actualFPS = (frameCount - lastFrameCount) * 1000.0f / (currentTime - lastFPSTime);
+          lastFPSTime = currentTime;
+          lastFrameCount = frameCount;
+        }
+
+        // Display delay and FPS on bottom right
+        String delayText = String("Delay: " + String(elapsed / 300) + "ms");
+        String fpsText = String("FPS: " + String(actualFPS, 1));
+        
+        // Position text at bottom right
+        int delayTextX = KYWY_DISPLAY_WIDTH - delayText.length() * 8 - 2;  // Approximate character width
+        int fpsTextX = KYWY_DISPLAY_WIDTH - fpsText.length() * 8 - 2;
+        int bottomY = KYWY_DISPLAY_HEIGHT - 20;
+        
+        engine.display.drawText(delayTextX, bottomY, delayText.c_str());
+        engine.display.drawText(fpsTextX, bottomY + 10, fpsText.c_str());
 
         engine.display.update();
         updateCount++;
+
+        delay(elapsed/300);  // Vary Delay
+        delayPattern++;
 
         // Check if the frame was actually sent
         if (engine.display.update()) {
@@ -156,8 +191,8 @@ void loop() {
 
         frameCount++;
 
-        // Switch to FPS test after 15 seconds
-        if (elapsed > 15000) {
+        // Switch to FPS test after 30 seconds
+        if (elapsed > 30000) {
           testPhase = 2;
           phaseStartTime = currentTime;
           frameCount = 0;
