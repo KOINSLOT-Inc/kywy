@@ -11,7 +11,7 @@ static events::EventQueue displayEventQueue;
 static rtos::Thread displayThread;
 
 // Global reference to the driver for callback access
-static Display::Driver::Driver* globalDisplayDriver = nullptr;
+static Display::Driver::Driver *globalDisplayDriver = nullptr;
 
 // Global counters for tracking display performance
 volatile int displayTotalCallbackSends = 0;
@@ -394,14 +394,14 @@ void KYWY_DISPLAY_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t wid
 void Display::setup() {
   // Initialize global driver reference for callback access
   globalDisplayDriver = driver;
-  
+
   // Start display event queue thread if not already started
   static bool displayThreadStarted = false;
   if (!displayThreadStarted) {
     displayThread.start(mbed::callback(&displayEventQueue, &events::EventQueue::dispatch_forever));
     displayThreadStarted = true;
   }
-  
+
   driver->initializeDisplay();
 }
 
@@ -423,7 +423,7 @@ bool Display::checkPendingUpdate() {
     // Return true if no more updates are pending (either sent successfully or still pending)
     return !(displayPending || droppedFrame);
   }
-  return true; // No updates pending
+  return true;  // No updates pending
 }
 
 void Display::setRotation(Rotation rotation) {

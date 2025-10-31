@@ -22,7 +22,7 @@
 #define KYWY_DISPLAY_CS 17
 #define KYWY_DISPLAY_DISP 22
 
-#define KYWY_DISPLAY_FREQUENCY 2000000 // 2 MHz, per Sharp Memory Display datasheet, overclock possibly tolerated, not guaranteed stable or safe above 2 MHz
+#define KYWY_DISPLAY_FREQUENCY 2000000  // 2 MHz, per Sharp Memory Display datasheet, overclock possibly tolerated, not guaranteed stable or safe above 2 MHz
 
 #define KYWY_DISPLAY_WIDTH 144
 #define KYWY_DISPLAY_HEIGHT 168
@@ -316,7 +316,7 @@ public:
   void clear();
   void update();
   bool checkPendingUpdate();
-  
+
   // Performance monitoring functions
   static int getTotalCallbackSends();
   static int getTotalSuccessfulSends();
