@@ -359,8 +359,6 @@ public:
             engine.display.fillCircle(x, y, radius);
           }
         }
-
-        engine.display.update();
         break;
     }
   }

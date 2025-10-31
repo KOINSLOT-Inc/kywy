@@ -93,23 +93,31 @@ void KYWY_DISPLAY_DRIVER::clearBuffer() {
 }
 
 bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
-  if (!droppedFrame) {
-    // No dropped frame, send current active buffer
+  // Check that there is something to send (callback needs to do in case of dropped frames)
+  if (!displayPending && !droppedFrame) {
+    // No update pending and no dropped frame, nothing to send
+    return true;  // Nothing to do, but not a failure
+  }
+
+  // Check if we have a fresh frame to display
+  if (displayPending) {
+    // Copy Active buffer to Transfer buffer to prepare for sending
     if (SPIBus::isBusLocked()) {
       // SPI bus busy, drop frame
       droppedFrame = true;  // Mark that we have a dropped frame to send
       memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
       return false;
     }
-    // Copy command-structured active buffer to transfer buffer
     memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
-  } else {
-    // We have a dropped frame to send
+  } 
+  
+  // check that we have a dropped frame to send (ignore if we have a fresh frame)
+  if (!displayPending && droppedFrame) {
+    // Copy dropped frame buffer (command-structured) to transfer buffer
     if (SPIBus::isBusLocked()) {
-      // SPI bus busy, cannot send dropped frame now
+      // SPI bus busy, cannot send dropped frame now, it will remain dropped
       return false;
     }
-    // Copy dropped frame buffer (command-structured) to transfer buffer
     memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
   }
 
@@ -128,17 +136,18 @@ bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   // CS pin: KYWY_DISPLAY_CS, active HIGH (per Sharp Memory Display datasheet)
   // Frequency: 2MHz (2000000 Hz)
   if (!SPIBus::startDMATransfer(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_BUFFER_SIZE, KYWY_DISPLAY_CS, true, KYWY_DISPLAY_FREQUENCY, displayDMAComplete)) {
-    // Failed to start transfer, bus was busy!!
-    // This happened while we already checked bus was free, so unlikely
-    // Handle by copying current buffer to dropped frame buffer to try again later
+    // Failed to start transfer, bus was busy!! This should be rare since we checked bus was free
     droppedFrame = true;  // Mark that we have a dropped frame to send
-    memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
+    memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE); // Copy current buffer to dropped frame buffer
     return false;
   }
 
+  // Clear flags since transfer was started
+  displayPending = false;
+  droppedFrame = false;
+
   // Transfer started successfully and happens asynchronously via DMA
   // SPIBus will call displayDMAComplete() when done
-  droppedFrame = false;
 
   return true;
 }
@@ -222,8 +231,6 @@ bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
 
   return true;
 }
-
-
 
 void KYWY_DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
   int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *bitmap,
@@ -392,10 +399,12 @@ void Display::setup() {
 }
 
 void Display::clear() {
+  displayPending = false; // ensure no accidental update after clear
   driver->clearBuffer();
 }
 
 bool Display::update() {
+  displayPending = true; // flag display needs updating
   droppedFrame = false;  // No longer trying to send a dropped frame since we have a new update
   return driver->sendBufferToDisplay();  // Return true if frame was sent immediately, false if dropped
 }
