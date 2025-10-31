@@ -90,7 +90,7 @@ void loop() {
           updateCount++;
 
           // Check if the frame was actually sent
-          if (engine.display.checkPendingUpdate()) {
+          if (engine.display.update()) {
             successfulFrames++;
           }
         }
@@ -150,14 +150,14 @@ void loop() {
         updateCount++;
 
         // Check if the frame was actually sent
-        if (engine.display.checkPendingUpdate()) {
+        if (engine.display.update()) {
           successfulFrames++;
         }
 
         frameCount++;
 
-        // Switch to FPS test after 5 seconds
-        if (elapsed > 5000) {
+        // Switch to FPS test after 15 seconds
+        if (elapsed > 15000) {
           testPhase = 2;
           phaseStartTime = currentTime;
           frameCount = 0;
@@ -252,7 +252,7 @@ void loop() {
         updateCount++;
 
         // Check if the frame was actually sent
-        if (engine.display.checkPendingUpdate()) {
+        if (engine.display.update()) {
           successfulFrames++;
         }
 

@@ -314,8 +314,7 @@ public:
 
   void setup();
   void clear();
-  void update();
-  bool checkPendingUpdate();
+  bool update();
 
   // Performance monitoring functions
   static int getTotalCallbackSends();

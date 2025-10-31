@@ -93,35 +93,24 @@ void KYWY_DISPLAY_DRIVER::clearBuffer() {
 }
 
 bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
-  if (!displayPending && !droppedFrame) {
-    // No update pending, and no dropped frame, nothing to do
-    return false;
-  }
-
-  if (!displayPending && droppedFrame) {
-    // No update pending, but we have a dropped frame we can send
-    if (!SPIBus::isBusLocked()) {
-      // Copy dropped frame buffer (command-structured) to transfer buffer
-      memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
-      // continue to send below
-    } else {
+  if (!droppedFrame) {
+    // No dropped frame, send current active buffer
+    if (SPIBus::isBusLocked()) {
+      // SPI bus busy, drop frame
+      droppedFrame = true;  // Mark that we have a dropped frame to send
+      memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
+      return false;
+    }
+    // Copy command-structured active buffer to transfer buffer
+    memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
+  } else {
+    // We have a dropped frame to send
+    if (SPIBus::isBusLocked()) {
       // SPI bus busy, cannot send dropped frame now
       return false;
     }
-  }
-
-  if (displayPending) {
-    if (SPIBus::isBusLocked()) {
-      // SPI bus busy, drop frame
-      displayPending = false;                                                                           // Processed the pending update, still pending dropped frame
-      droppedFrame = true;                                                                              // Mark that we have a dropped frame to send
-      memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);  //store current buffer as dropped frame
-      return false;
-    }
-    if (!SPIBus::isBusLocked()) {
-      // Copy command-structured active buffer to transfer buffer
-      memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
-    }
+    // Copy dropped frame buffer (command-structured) to transfer buffer
+    memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
   }
 
   //  Toggle VCOM
@@ -142,7 +131,6 @@ bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
     // Failed to start transfer, bus was busy!!
     // This happened while we already checked bus was free, so unlikely
     // Handle by copying current buffer to dropped frame buffer to try again later
-    // displayPending flag remains set, will retry on next checkPendingUpdate()
     droppedFrame = true;  // Mark that we have a dropped frame to send
     memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
     return false;
@@ -150,8 +138,6 @@ bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
 
   // Transfer started successfully and happens asynchronously via DMA
   // SPIBus will call displayDMAComplete() when done
-  // Sent displayPending false since dma initiated and we have nothing left to hande cpu side
-  displayPending = false;
   droppedFrame = false;
 
   return true;
@@ -409,20 +395,9 @@ void Display::clear() {
   driver->clearBuffer();
 }
 
-void Display::update() {
-  displayPending = true;
+bool Display::update() {
   droppedFrame = false;  // No longer trying to send a dropped frame since we have a new update
-  checkPendingUpdate();  // Attempt to send the update immediately
-}
-
-bool Display::checkPendingUpdate() {
-  // Check if there is a pending update or dropped frame to send
-  if (displayPending || droppedFrame) {
-    bool success = driver->sendBufferToDisplay();
-    // Return true if no more updates are pending (either sent successfully or still pending)
-    return !(displayPending || droppedFrame);
-  }
-  return true;  // No updates pending
+  return driver->sendBufferToDisplay();  // Return true if frame was sent immediately, false if dropped
 }
 
 void Display::setRotation(Rotation rotation) {
