@@ -82,5 +82,5 @@ void loop() {
   engine.display.update();
 
   // Small delay to make loop run at a reasonable speed
-  delay(0);
+  delay(20);
 }
