@@ -280,7 +280,8 @@ private:
   unsigned long lastTimeVcomToggled = 0;
 
   //  Display command buffers, one for current drawing, and one for writing
-  static const uint16_t KYWY_DISPLAY_BUFFER_SIZE = (KYWY_DISPLAY_HEIGHT + 1) * (KYWY_DISPLAY_WIDTH/8 + 2) + 2; //3382
+  // Buffer format: 1 header + 168 lines * 20 bytes + 1 tail = 3362 bytes
+  static const uint16_t KYWY_DISPLAY_BUFFER_SIZE = 1 + (KYWY_DISPLAY_HEIGHT * (KYWY_DISPLAY_WIDTH/8 + 2)) + 1; // 3362
   static uint8_t KYWY_DISPLAY_ACTIVE_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
   static uint8_t KYWY_DISPLAY_TRANSFER_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
   static uint8_t KYWY_DISPLAY_DROPPED_FRAME_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
