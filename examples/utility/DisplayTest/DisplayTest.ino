@@ -80,7 +80,7 @@ void loop() {
               engine.display.drawRectangle(x, y, squareSize - 1, squareSize - 1);
             }
             delay(row);
-            engine.update();
+            engine.display.update();
             updateCount++;
           }
 
