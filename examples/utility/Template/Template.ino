@@ -54,8 +54,5 @@ void onInput(Actor::Message *message) {
 
     case Kywy::Events::D_PAD_DOWN_RELEASED:
       break;
-
-    case Kywy::Events::BUTTON_LEFT_PRESSED:
-      break;
   }
 }
