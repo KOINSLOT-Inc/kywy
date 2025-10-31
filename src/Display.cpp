@@ -114,8 +114,8 @@ bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   }
 
   //  Toggle VCOM
-  if (lastTimeVcomToggled + 900 < millis()) {
-    // Ensure VCOM is toggled at 900ms
+  if (lastTimeVcomToggled + 950 < millis()) {
+    // Ensure VCOM is toggled at 950ms
     lastTimeVcomToggled = millis();
   } else {
     vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom
