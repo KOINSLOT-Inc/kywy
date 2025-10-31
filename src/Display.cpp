@@ -49,7 +49,8 @@ void KYWY_DISPLAY_DRIVER::initializeDisplay() {
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
 
-  digitalWrite(KYWY_DISPLAY_CS, LOW);
+  digitalWrite(KYWY_DISPLAY_CS, LOW); // Keep CS low (disabled) for Sharp Memory Display
+  digitalWrite(KYWY_DISPLAY_DISP, LOW); //ensure display is off during init
 
   addCommandsToBuffer(KYWY_DISPLAY_ACTIVE_BUFFER);
   addCommandsToBuffer(KYWY_DISPLAY_TRANSFER_BUFFER);
@@ -59,7 +60,7 @@ void KYWY_DISPLAY_DRIVER::initializeDisplay() {
 
   sendBufferToDisplay();
 
-  digitalWrite(KYWY_DISPLAY_DISP, HIGH);
+  digitalWrite(KYWY_DISPLAY_DISP, HIGH); // turn on display
 
   setRotation(Rotation::DEFAULT);
 }
