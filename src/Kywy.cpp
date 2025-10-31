@@ -44,7 +44,7 @@ void Engine::handle(::Actor::Message *message) {
     case Kywy::Events::TICK:
       {
         display.checkPendingUpdate();
-        break; // dont forward tick messages to subcomponents
+        break;  // dont forward tick messages to subcomponents
       }
     default:
       {  // forward to subcomponent actors

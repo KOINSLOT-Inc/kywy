@@ -266,7 +266,7 @@ public:
   // Buffer management helper functions
   uint16_t mapDisplayToBufferByte(int16_t x, int16_t y);
   uint8_t mapDisplayToBufferBit(int16_t x, int16_t y);
-  void addCommandsToBuffer(uint8_t* buffer);
+  void addCommandsToBuffer(uint8_t *buffer);
 
 private:
   uint8_t clearCommand = 0x20;
@@ -274,14 +274,14 @@ private:
 
   uint8_t vcomCommand = 0x40;
   uint8_t vcom = 0x40;  // this value will be toggled between 0x40 and 0x00
-  
+
   // Variables for dropped frame management and VCOM timing
 
   unsigned long lastTimeVcomToggled = 0;
 
   //  Display command buffers, one for current drawing, and one for writing
   // Buffer format: 1 header + 168 lines * 20 bytes + 1 tail = 3362 bytes
-  static const uint16_t KYWY_DISPLAY_BUFFER_SIZE = 1 + (KYWY_DISPLAY_HEIGHT * (KYWY_DISPLAY_WIDTH/8 + 2)) + 1; // 3362
+  static const uint16_t KYWY_DISPLAY_BUFFER_SIZE = 1 + (KYWY_DISPLAY_HEIGHT * (KYWY_DISPLAY_WIDTH / 8 + 2)) + 1;  // 3362
   static uint8_t KYWY_DISPLAY_ACTIVE_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
   static uint8_t KYWY_DISPLAY_TRANSFER_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
   static uint8_t KYWY_DISPLAY_DROPPED_FRAME_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));

@@ -54,11 +54,11 @@ void KYWY_DISPLAY_DRIVER::setRotation(Rotation rotation) {
 void KYWY_DISPLAY_DRIVER::clearBuffer() {
   // Initialize the buffer with the exact DMA-ready format
   addCommandsToBuffer(KYWY_DISPLAY_ACTIVE_BUFFER);
-  
+
   // Clear the pixel data areas to white (0xff)
-  const size_t LINES = KYWY_DISPLAY_HEIGHT; // 168 lines
+  const size_t LINES = KYWY_DISPLAY_HEIGHT;              // 168 lines
   const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2;  // 20 bytes per line
-  
+
   for (size_t line = 0; line < LINES; ++line) {
     size_t base = 1 + line * LINE_BYTES;
     // Clear the 18 pixel data bytes (0xff = white pixels)
@@ -87,9 +87,9 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   if (displayPending) {
     if (SPIBus::isBusLocked()) {
       // SPI bus busy, drop frame
-      displayPending = false;  // Processed the pending update, still pending dropped frame
-      droppedFrame = true;  // Mark that we have a dropped frame to send
-      memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE); //store current buffer as dropped frame
+      displayPending = false;                                                                           // Processed the pending update, still pending dropped frame
+      droppedFrame = true;                                                                              // Mark that we have a dropped frame to send
+      memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);  //store current buffer as dropped frame
       return;
     }
     if (!SPIBus::isBusLocked()) {
@@ -107,7 +107,7 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   }
   // SET VCOM AND WRITE COMMAND in transfer buffer
   KYWY_DISPLAY_TRANSFER_BUFFER[0] = vcom | writeCommand;
-  addCommandsToBuffer(KYWY_DISPLAY_TRANSFER_BUFFER); // ensure commands are correct
+  addCommandsToBuffer(KYWY_DISPLAY_TRANSFER_BUFFER);  // ensure commands are correct
 
   // Start DMA transfer via SPIBus with Sharp Memory Display configuration
   // CS pin: KYWY_DISPLAY_CS, active HIGH (per Sharp Memory Display datasheet)
@@ -165,11 +165,11 @@ void KYWY_DISPLAY_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
   }
 }
 
-void KYWY_DISPLAY_DRIVER::addCommandsToBuffer(uint8_t* buffer) {
+void KYWY_DISPLAY_DRIVER::addCommandsToBuffer(uint8_t *buffer) {
   // Build the exact DMA-ready buffer format
-  const size_t LINES = KYWY_DISPLAY_HEIGHT; // 168 lines
+  const size_t LINES = KYWY_DISPLAY_HEIGHT;              // 168 lines
   const size_t LINE_BYTES = KYWY_DISPLAY_WIDTH / 8 + 2;  // 18 data + 2 (line addr + trailing 0)
-  
+
   // Header (will be updated with VCOM in sendBufferToDisplay)
   buffer[0] = writeCommand;
 
@@ -178,9 +178,9 @@ void KYWY_DISPLAY_DRIVER::addCommandsToBuffer(uint8_t* buffer) {
     size_t base = 1 + line * LINE_BYTES;
     buffer[base + 0] = reverse(line + 1);
     // Note: pixel data at buffer[base + 1] to buffer[base + 18] will be set by drawing functions
-    buffer[base + 19] = 0x00; // trailing byte for this line
+    buffer[base + 19] = 0x00;  // trailing byte for this line
   }
-  
+
   // Final tail byte
   buffer[1 + (LINES * LINE_BYTES)] = 0x00;
 }
@@ -252,15 +252,15 @@ void KYWY_DISPLAY_DRIVER::writeBitmapOrBlockToBuffer(
     (x + width) % 8;  // how many bits of the right most byte column need to be filled
   uint16_t innerBytes =
     (width - splitLeftBits - splitRightBits) / 8;  // how many bytes are between the right and left column
-  
+
   // Buffer wrap distance for new command-structured buffer:
   // Each line has 20 bytes: 1 address + 18 data + 1 padding
   // We need to account for:
   // 1. Bytes from current position to end of current line's pixel data
-  // 2. Skip over padding byte and next line's address byte  
+  // 2. Skip over padding byte and next line's address byte
   // 3. Position at start of next line's pixel data
   uint16_t remainingBytesInLine = 18 - innerBytes - (splitLeftBits ? 1 : 0) - (splitRightBits ? 1 : 0);
-  uint16_t bufferWrapDistance = remainingBytesInLine + 2; // +2 for padding + address
+  uint16_t bufferWrapDistance = remainingBytesInLine + 2;  // +2 for padding + address
 
   // iterate over each line
   for (int16_t j = 0; j < height; j++) {
@@ -375,8 +375,8 @@ void Display::clear() {
 }
 
 void Display::update() {
-  displayPending = true;  
-  droppedFrame = false; // No longer trying to send a dropped frame since we have a new update
+  displayPending = true;
+  droppedFrame = false;  // No longer trying to send a dropped frame since we have a new update
   checkPendingUpdate();  // Attempt to send the update immediately
 }
 
