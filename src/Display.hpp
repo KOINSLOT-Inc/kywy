@@ -22,6 +22,8 @@
 #define KYWY_DISPLAY_CS 17
 #define KYWY_DISPLAY_DISP 22
 
+#define KYWY_DISPLAY_FREQUENCY 2000000 // 2 MHz, per Sharp Memory Display datasheet, overclock possibly tolerated, not guaranteed stable or safe above 2 MHz
+
 #define KYWY_DISPLAY_WIDTH 144
 #define KYWY_DISPLAY_HEIGHT 168
 #define BLACK 0x00
@@ -208,7 +210,7 @@ public:
 
   virtual void initializeDisplay() = 0;
   virtual void clearBuffer() = 0;
-  virtual void sendBufferToDisplay() = 0;
+  virtual bool sendBufferToDisplay() = 0;
 
   virtual void setRotation(Rotation rotation) = 0;
 
@@ -244,7 +246,7 @@ public:
 
   void initializeDisplay();
   void clearBuffer();
-  void sendBufferToDisplay();
+  bool sendBufferToDisplay();
 
   void setRotation(Rotation rotation);
 
@@ -314,6 +316,11 @@ public:
   void clear();
   void update();
   bool checkPendingUpdate();
+  
+  // Performance monitoring functions
+  static int getTotalCallbackSends();
+  static int getTotalSuccessfulSends();
+  static void resetPerformanceCounters();
 
   void setRotation(Rotation rotation);
 

@@ -13,10 +13,18 @@ static rtos::Thread displayThread;
 // Global reference to the driver for callback access
 static Display::Driver::Driver* globalDisplayDriver = nullptr;
 
+// Global counters for tracking display performance
+volatile int displayTotalCallbackSends = 0;
+volatile int displayTotalSuccessfulSends = 0;
+
 // Function to process display updates in event queue context
 void processDisplayUpdate() {
   if (globalDisplayDriver) {
-    globalDisplayDriver->sendBufferToDisplay();
+    displayTotalCallbackSends++;
+    bool success = globalDisplayDriver->sendBufferToDisplay();
+    if (success) {
+      displayTotalSuccessfulSends++;
+    }
   }
 }
 
@@ -84,10 +92,10 @@ void KYWY_DISPLAY_DRIVER::clearBuffer() {
   }
 }
 
-void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
+bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   if (!displayPending && !droppedFrame) {
     // No update pending, and no dropped frame, nothing to do
-    return;
+    return false;
   }
 
   if (!displayPending && droppedFrame) {
@@ -98,7 +106,7 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
       // continue to send below
     } else {
       // SPI bus busy, cannot send dropped frame now
-      return;
+      return false;
     }
   }
 
@@ -108,7 +116,7 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
       displayPending = false;                                                                           // Processed the pending update, still pending dropped frame
       droppedFrame = true;                                                                              // Mark that we have a dropped frame to send
       memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);  //store current buffer as dropped frame
-      return;
+      return false;
     }
     if (!SPIBus::isBusLocked()) {
       // Copy command-structured active buffer to transfer buffer
@@ -130,14 +138,14 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   // Start DMA transfer via SPIBus with Sharp Memory Display configuration
   // CS pin: KYWY_DISPLAY_CS, active HIGH (per Sharp Memory Display datasheet)
   // Frequency: 2MHz (2000000 Hz)
-  if (!SPIBus::startDMATransfer(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_BUFFER_SIZE, KYWY_DISPLAY_CS, true, 2000000, displayDMAComplete)) {
+  if (!SPIBus::startDMATransfer(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_BUFFER_SIZE, KYWY_DISPLAY_CS, true, KYWY_DISPLAY_FREQUENCY, displayDMAComplete)) {
     // Failed to start transfer, bus was busy!!
     // This happened while we already checked bus was free, so unlikely
     // Handle by copying current buffer to dropped frame buffer to try again later
     // displayPending flag remains set, will retry on next checkPendingUpdate()
     droppedFrame = true;  // Mark that we have a dropped frame to send
     memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
-    return;
+    return false;
   }
 
   // Transfer started successfully and happens asynchronously via DMA
@@ -146,7 +154,7 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   displayPending = false;
   droppedFrame = false;
 
-  return;
+  return true;
 }
 
 uint16_t KYWY_DISPLAY_DRIVER::mapDisplayToBufferByte(int16_t x, int16_t y) {
@@ -411,13 +419,29 @@ void Display::update() {
 bool Display::checkPendingUpdate() {
   // Check if there is a pending update or dropped frame to send
   if (displayPending || droppedFrame) {
-    driver->sendBufferToDisplay();
+    bool success = driver->sendBufferToDisplay();
+    // Return true if no more updates are pending (either sent successfully or still pending)
+    return !(displayPending || droppedFrame);
   }
-  return !(displayPending || droppedFrame);
+  return true; // No updates pending
 }
 
 void Display::setRotation(Rotation rotation) {
   driver->setRotation(rotation);
+}
+
+// Performance monitoring functions
+int Display::getTotalCallbackSends() {
+  return displayTotalCallbackSends;
+}
+
+int Display::getTotalSuccessfulSends() {
+  return displayTotalSuccessfulSends;
+}
+
+void Display::resetPerformanceCounters() {
+  displayTotalCallbackSends = 0;
+  displayTotalSuccessfulSends = 0;
 }
 void Display::drawPixel(int16_t x, int16_t y, uint16_t color) {
   driver->setBufferPixel(x, y, color);
