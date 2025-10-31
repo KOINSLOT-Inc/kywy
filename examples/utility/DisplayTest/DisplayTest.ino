@@ -127,13 +127,13 @@ void loop() {
         // Delta time calculation
         static unsigned long lastFrameTime = 0;
         if (lastFrameTime == 0) lastFrameTime = currentTime;
-        float deltaT = (currentTime - lastFrameTime) / 1000.0f; // Convert to seconds
+        float deltaT = (currentTime - lastFrameTime) / 1000.0f;  // Convert to seconds
         lastFrameTime = currentTime;
 
         // Bouncing ball animation with delta time
         static float ballX = 20.0f, ballY = 30.0f;
-        static float velX = 50.0f, velY = 30.0f; // pixels per second
-        
+        static float velX = 50.0f, velY = 30.0f;  // pixels per second
+
         ballX += velX * deltaT;
         ballY += velY * deltaT;
 
@@ -146,7 +146,7 @@ void loop() {
 
         // Draw rotating line with delta time
         static float rotationAngle = 0.0f;
-        rotationAngle += 2.0f * deltaT; // 2 radians per second
+        rotationAngle += 2.0f * deltaT;  // 2 radians per second
         int centerX = KYWY_DISPLAY_WIDTH - 30;
         int centerY = 40;
         int lineX = centerX + cos(rotationAngle) * 15;
@@ -158,7 +158,7 @@ void loop() {
         static unsigned long lastFPSTime = 0;
         static int lastFrameCount = 0;
         static float actualFPS = 0.0f;
-        
+
         // Calculate actual frame rate every second
         if (currentTime - lastFPSTime >= 1000) {
           actualFPS = (frameCount - lastFrameCount) * 1000.0f / (currentTime - lastFPSTime);
@@ -169,19 +169,19 @@ void loop() {
         // Display delay and FPS on bottom right
         String delayText = String("Delay: " + String(elapsed / 300) + "ms");
         String fpsText = String("FPS: " + String(actualFPS, 1));
-        
+
         // Position text at bottom right
         int delayTextX = KYWY_DISPLAY_WIDTH - delayText.length() * 8 - 2;  // Approximate character width
         int fpsTextX = KYWY_DISPLAY_WIDTH - fpsText.length() * 8 - 2;
         int bottomY = KYWY_DISPLAY_HEIGHT - 20;
-        
+
         engine.display.drawText(delayTextX, bottomY, delayText.c_str());
         engine.display.drawText(fpsTextX, bottomY + 10, fpsText.c_str());
 
         engine.display.update();
         updateCount++;
 
-        delay(elapsed/300);  // Vary Delay
+        delay(elapsed / 300);  // Vary Delay
         delayPattern++;
 
         // Check if the frame was actually sent

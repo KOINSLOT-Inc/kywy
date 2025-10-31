@@ -49,8 +49,8 @@ void KYWY_DISPLAY_DRIVER::initializeDisplay() {
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
   pinMode(KYWY_DISPLAY_DISP, OUTPUT);
 
-  digitalWrite(KYWY_DISPLAY_CS, LOW); // Keep CS low (disabled) for Sharp Memory Display
-  digitalWrite(KYWY_DISPLAY_DISP, LOW); //ensure display is off during init
+  digitalWrite(KYWY_DISPLAY_CS, LOW);    // Keep CS low (disabled) for Sharp Memory Display
+  digitalWrite(KYWY_DISPLAY_DISP, LOW);  //ensure display is off during init
 
   addCommandsToBuffer(KYWY_DISPLAY_ACTIVE_BUFFER);
   addCommandsToBuffer(KYWY_DISPLAY_TRANSFER_BUFFER);
@@ -60,7 +60,7 @@ void KYWY_DISPLAY_DRIVER::initializeDisplay() {
 
   sendBufferToDisplay();
 
-  digitalWrite(KYWY_DISPLAY_DISP, HIGH); // turn on display
+  digitalWrite(KYWY_DISPLAY_DISP, HIGH);  // turn on display
 
   setRotation(Rotation::DEFAULT);
 }
@@ -110,8 +110,8 @@ bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
       return false;
     }
     memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
-  } 
-  
+  }
+
   // check that we have a dropped frame to send (ignore if we have a fresh frame)
   if (!displayPending && droppedFrame) {
     // Copy dropped frame buffer (command-structured) to transfer buffer
@@ -138,8 +138,8 @@ bool KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   // Frequency: 2MHz (2000000 Hz)
   if (!SPIBus::startDMATransfer(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_BUFFER_SIZE, KYWY_DISPLAY_CS, true, KYWY_DISPLAY_FREQUENCY, displayDMAComplete)) {
     // Failed to start transfer, bus was busy!! This should be rare since we checked bus was free
-    droppedFrame = true;  // Mark that we have a dropped frame to send
-    memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE); // Copy current buffer to dropped frame buffer
+    droppedFrame = true;                                                                              // Mark that we have a dropped frame to send
+    memcpy(KYWY_DISPLAY_DROPPED_FRAME_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);  // Copy current buffer to dropped frame buffer
     return false;
   }
 
@@ -400,13 +400,13 @@ void Display::setup() {
 }
 
 void Display::clear() {
-  displayPending = false; // ensure no accidental update after clear
+  displayPending = false;  // ensure no accidental update after clear
   driver->clearBuffer();
 }
 
 bool Display::update() {
-  displayPending = true; // flag display needs updating
-  droppedFrame = false;  // No longer trying to send a dropped frame since we have a new update
+  displayPending = true;                 // flag display needs updating
+  droppedFrame = false;                  // No longer trying to send a dropped frame since we have a new update
   return driver->sendBufferToDisplay();  // Return true if frame was sent immediately, false if dropped
 }
 
