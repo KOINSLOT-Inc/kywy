@@ -406,7 +406,6 @@ void Display::setup() {
 }
 
 void Display::clear() {
-  displayPending = false;  // Don't send frames until update() is called
   driver->clearBuffer();
 }
 
