@@ -21,6 +21,11 @@ void Engine::start(EngineOptions options) {
   input.subscribe(&clock);  // get inputs for every tick
   input.start();
 
+  // Subscribe the engine to clock events so we can call hooks
+  this->subscribe(&clock);
+  // Subscribe the engine to input events so we can call input hooks
+  this->subscribe(&input);
+
   display.setup();
   battery.setup();
 }
@@ -35,13 +40,44 @@ void Engine::handle(::Actor::Message *message) {
   }
 
   switch (message->signal) {
+    case Events::TICK:
+      callOnTick(message); // call user-defined onTick hook
+      break;
+    case Events::BUTTON_LEFT_PRESSED:
+    case Events::BUTTON_LEFT_RELEASED:
+    case Events::BUTTON_RIGHT_PRESSED:
+    case Events::BUTTON_RIGHT_RELEASED:
+    case Events::D_PAD_LEFT_PRESSED:
+    case Events::D_PAD_LEFT_RELEASED:
+    case Events::D_PAD_RIGHT_PRESSED:
+    case Events::D_PAD_RIGHT_RELEASED:
+    case Events::D_PAD_UP_PRESSED:
+    case Events::D_PAD_UP_RELEASED:
+    case Events::D_PAD_DOWN_PRESSED:
+    case Events::D_PAD_DOWN_RELEASED:
+    case Events::D_PAD_CENTER_PRESSED:
+    case Events::D_PAD_CENTER_RELEASED:
+      callOnInput(message); // call user-defined onInput hook
+      break;
     default:
-      {  // forward to subcomponent actors
-        clock.dispatch(message);
-        input.dispatch(message);
-        break;
-      }
+      break;
   }
+  
+  // Always forward to subcomponent actors
+  clock.dispatch(message);
+  input.dispatch(message);
 };
+
+void Engine::callOnTick(::Actor::Message *message) {
+  if (onTick) {
+    onTick(message);
+  }
+}
+
+void Engine::callOnInput(::Actor::Message *message) {
+  if (onInput) {
+    onInput(message);
+  }
+}
 
 }  // namespace Kywy
