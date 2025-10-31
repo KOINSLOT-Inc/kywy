@@ -266,9 +266,9 @@ public:
   // Buffer management helper functions
   uint16_t mapDisplayToBufferByte(int16_t x, int16_t y);
   uint8_t mapDisplayToBufferBit(int16_t x, int16_t y);
+  void addCommandsToBuffer(uint8_t* buffer);
 
 private:
-  bool updatePending = false;
   uint8_t clearCommand = 0x20;
   uint8_t writeCommand = 0x80;
 
@@ -276,7 +276,7 @@ private:
   uint8_t vcom = 0x40;  // this value will be toggled between 0x40 and 0x00
   
   // Variables for dropped frame management and VCOM timing
-  bool droppedFrame = false;
+
   unsigned long lastTimeVcomToggled = 0;
 
   //  Display command buffers, one for current drawing, and one for writing
@@ -288,7 +288,9 @@ private:
   // mapping: 0: VCOM+COMMAND
   //          1: LINE 0 ADDRESS
   //         2-19: LINE 0 PIXEL DATA
+  //         20: PADDING BYTE
   //        ... REPEATED FOR EACH LINE ...
+  //        trailing byte
   // x, y -> pixel at (x,y) is at byte index: (y * (20 * 2)) + 1 + floor(x / 8)
 
   const unsigned char nibbleFlipper[16] = { 0x0, 0x8, 0x4, 0xc, 0x2, 0xa,
@@ -374,6 +376,8 @@ private:
 
 // Bool to track if a display update is pending
 static volatile bool displayPending = false;
+// Bool to track if a dropped frame is pending
+static volatile bool droppedFrame = false;
 
 }  // namespace Display
 

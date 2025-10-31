@@ -32,6 +32,8 @@ void KYWY_DISPLAY_DRIVER::initializeDisplay() {
   digitalWrite(KYWY_DISPLAY_DISP, HIGH);
 
   setRotation(Rotation::DEFAULT);
+
+  addCommandsToBuffer(KYWY_DISPLAY_ACTIVE_BUFFER);
 }
 
 void KYWY_DISPLAY_DRIVER::setRotation(Rotation rotation) {
@@ -48,7 +50,8 @@ void KYWY_DISPLAY_DRIVER::setRotation(Rotation rotation) {
 }
 
 void KYWY_DISPLAY_DRIVER::clearBuffer() {
-  memset(KYWY_DISPLAY_ACTIVE_BUFFER, 0xff, KYWY_DISPLAY_BUFFER_SIZE);
+  // Simple clear like the old function - just clear 18 bytes per line
+  memset(KYWY_DISPLAY_ACTIVE_BUFFER, 0xff, 18 * KYWY_DISPLAY_HEIGHT);
 }
 
 void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
@@ -77,8 +80,8 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
       return;
     }
     if (!SPIBus::isBusLocked()) {
-      // Copy current display buffer to transfer buffer
-      memcpy(KYWY_DISPLAY_TRANSFER_BUFFER, KYWY_DISPLAY_ACTIVE_BUFFER, KYWY_DISPLAY_BUFFER_SIZE);
+      // Convert simple active buffer to command-structured transfer buffer
+      addCommandsToBuffer(KYWY_DISPLAY_TRANSFER_BUFFER);
     }
   }
 
@@ -89,16 +92,8 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
   } else {
     vcom = vcom ? 0x00 : vcomCommand;  // toggle vcom
   }
-  // SET VCOM AND WRITE COMMAND
+  // SET VCOM AND WRITE COMMAND in transfer buffer
   KYWY_DISPLAY_TRANSFER_BUFFER[0] = vcom | writeCommand;
-
-  // SET LINE ADDRESSES
-  for (uint8_t line = 0; line < KYWY_DISPLAY_HEIGHT; line++) {
-    KYWY_DISPLAY_TRANSFER_BUFFER[1 + line * 20] = line + 1;  // line address
-  }
-
-  // Tail
-  KYWY_DISPLAY_TRANSFER_BUFFER[KYWY_DISPLAY_BUFFER_SIZE - 1] = 0x00;
 
   // Start DMA transfer via SPIBus with Sharp Memory Display configuration
   // CS pin: KYWY_DISPLAY_CS, active HIGH (per Sharp Memory Display datasheet)
@@ -123,18 +118,16 @@ void KYWY_DISPLAY_DRIVER::sendBufferToDisplay() {
 }
 
 uint16_t KYWY_DISPLAY_DRIVER::mapDisplayToBufferByte(int16_t x, int16_t y) {
-  // Map the display to the current buffer for drawing
-  // Implementation depends on how buffers are managed
-  int index = (20 * y) + (x / 8) + 2; // +1 for line address byte, +1 for vcom+command byte
+  // Map to simple buffer structure like the old function:
+  // 18 bytes per line, no command structure in active buffer
+  int index = (18 * y) + (x / 8);
   return index;
 }
 
 uint8_t KYWY_DISPLAY_DRIVER::mapDisplayToBufferBit(int16_t x, int16_t y) {
-  // Map the display to the current buffer for drawing
-  // Implementation depends on how buffers are managed
+  // Return the raw bit position - bit reversal will be handled in setBufferPixel
   int bit = x % 8;
-  uint8_t edianswapped = 7 - bit; // Swap bit order for display (big-endian to little-endian or vice versa)
-  return edianswapped;
+  return bit;
 }
 
 void KYWY_DISPLAY_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
@@ -147,11 +140,33 @@ void KYWY_DISPLAY_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
 
   if (color) {
     KYWY_DISPLAY_ACTIVE_BUFFER[index] =
-      KYWY_DISPLAY_ACTIVE_BUFFER[index] | (1 << bit);
+      KYWY_DISPLAY_ACTIVE_BUFFER[index] | (1 << (7 - bit));
   } else {
     KYWY_DISPLAY_ACTIVE_BUFFER[index] =
-      KYWY_DISPLAY_ACTIVE_BUFFER[index] & (0xff ^ (1 << bit));
+      KYWY_DISPLAY_ACTIVE_BUFFER[index] & (0xff ^ (1 << (7 - bit)));
   }
+}
+
+void KYWY_DISPLAY_DRIVER::addCommandsToBuffer(uint8_t* buffer) {
+  // Convert simple pixel buffer to Sharp Memory Display command structure
+  
+  // Byte 0: VCOM+COMMAND (will be updated with VCOM in sendBufferToDisplay)
+  buffer[0] = writeCommand;
+  
+  // Copy pixel data from simple active buffer to command-structured buffer
+  for (uint16_t line = 0; line < KYWY_DISPLAY_HEIGHT; line++) {
+    size_t base = 1 + line * 20; // Each line: 1 address + 18 data + 1 padding
+    buffer[base + 0] = reverse(line + 1); // line address (reversed)
+    
+    // Copy 18 bytes of pixel data for this line from simple buffer
+    memcpy(buffer + base + 1, 
+           KYWY_DISPLAY_ACTIVE_BUFFER + (18 * line), 18);
+    
+    buffer[base + 19] = 0x00; // padding byte
+  }
+  
+  // Set final trailing byte
+  buffer[KYWY_DISPLAY_BUFFER_SIZE - 1] = 0x00;
 }
 
 bool Driver::cropBlock(int16_t &x, int16_t &y, uint16_t &width,
@@ -338,14 +353,16 @@ void Display::clear() {
 
 void Display::update() {
   displayPending = true;  
+  droppedFrame = false; // No longer trying to send a dropped frame since we have a new update
   checkPendingUpdate();  // Attempt to send the update immediately
 }
 
 bool Display::checkPendingUpdate() {
-  if (displayPending) {
+  // Check if there is a pending update or dropped frame to send
+  if (displayPending || droppedFrame) {
     driver->sendBufferToDisplay();
   }
-  return !displayPending;
+  return !(displayPending || droppedFrame);
 }
 
 void Display::setRotation(Rotation rotation) {
