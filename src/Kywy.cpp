@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Kywy.hpp"
+#include "SPIBus.hpp"
+#include "Display.hpp"
 
 namespace Kywy {
 
@@ -10,7 +12,10 @@ void Engine::start(EngineOptions options) {
   this->options = options;
   Serial.begin(9600);
 
-  displayDriver = new Display::Driver::MBED_SPI_DRIVER();
+  // Initialize SPI bus with display pins
+  SPIBus::initialize();
+
+  displayDriver = new Display::Driver::KYWY_DISPLAY_DRIVER();
   display = Display::Display(displayDriver);
 
   Actor::Actor::start();
@@ -38,7 +43,6 @@ void Engine::handle(::Actor::Message *message) {
     delete this->displayDriver;
     return;
   }
-
   switch (message->signal) {
     case Events::TICK:
       callOnTick(message); // call user-defined onTick hook
