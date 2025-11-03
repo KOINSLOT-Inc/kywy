@@ -38,31 +38,31 @@ void onTick(Actor::Message *message) {
 void onInput(Actor::Message *message) {
   // Do stuff when buttons are pressed/released
   switch (message->signal) {
-    case Kywy::Events::BUTTON_LEFT_PRESSED:    //  🟢 (LEFT PRESSED)
+    case Kywy::Events::BUTTON_LEFT_PRESSED:  //  🟢 (LEFT PRESSED)
       //  Handle Left button press here
       break;
 
-    case Kywy::Events::BUTTON_RIGHT_PRESSED:   //  🟢 (RIGHT PRESSED)
+    case Kywy::Events::BUTTON_RIGHT_PRESSED:  //  🟢 (RIGHT PRESSED)
       //  Handle Right button press here
       break;
 
-    case Kywy::Events::D_PAD_LEFT_PRESSED:     //  ◀️ (D-PAD LEFT PRESSED)
+    case Kywy::Events::D_PAD_LEFT_PRESSED:  //  ◀️ (D-PAD LEFT PRESSED)
       //  Handle D-Pad Left press here
       break;
 
-    case Kywy::Events::D_PAD_RIGHT_PRESSED:    //  ▶️ (D-PAD RIGHT PRESSED)
+    case Kywy::Events::D_PAD_RIGHT_PRESSED:  //  ▶️ (D-PAD RIGHT PRESSED)
       //  Handle D-Pad Right press here
       break;
 
-    case Kywy::Events::D_PAD_UP_PRESSED:       //  🔼 (D-PAD UP PRESSED)
+    case Kywy::Events::D_PAD_UP_PRESSED:  //  🔼 (D-PAD UP PRESSED)
       //  Handle D-Pad Up press here
       break;
 
-    case Kywy::Events::D_PAD_DOWN_PRESSED:     //  🔽 (D-PAD DOWN PRESSED)
+    case Kywy::Events::D_PAD_DOWN_PRESSED:  //  🔽 (D-PAD DOWN PRESSED)
       //  Handle D-Pad Down press here
       break;
 
-    case Kywy::Events::BUTTON_LEFT_RELEASED:   //  🔴 (LEFT RELEASED)
+    case Kywy::Events::BUTTON_LEFT_RELEASED:  //  🔴 (LEFT RELEASED)
       //  Handle Left button release here
       break;
 
@@ -70,19 +70,19 @@ void onInput(Actor::Message *message) {
       //  Handle Right button release here
       break;
 
-    case Kywy::Events::D_PAD_LEFT_RELEASED:    //  ⬅️ (D-PAD LEFT RELEASED)
+    case Kywy::Events::D_PAD_LEFT_RELEASED:  //  ⬅️ (D-PAD LEFT RELEASED)
       //  Handle D-Pad Left release here
       break;
 
-    case Kywy::Events::D_PAD_RIGHT_RELEASED:   //  ➡️ (D-PAD RIGHT RELEASED)
+    case Kywy::Events::D_PAD_RIGHT_RELEASED:  //  ➡️ (D-PAD RIGHT RELEASED)
       //  Handle D-Pad Right release here
       break;
 
-    case Kywy::Events::D_PAD_UP_RELEASED:      //  ⬆️ (D-PAD UP RELEASED)
+    case Kywy::Events::D_PAD_UP_RELEASED:  //  ⬆️ (D-PAD UP RELEASED)
       //  Handle D-Pad Up release here
       break;
 
-    case Kywy::Events::D_PAD_DOWN_RELEASED:    //  ⬇️ (D-PAD DOWN RELEASED)
+    case Kywy::Events::D_PAD_DOWN_RELEASED:  //  ⬇️ (D-PAD DOWN RELEASED)
       //  Handle D-Pad Down release here
       break;
 
