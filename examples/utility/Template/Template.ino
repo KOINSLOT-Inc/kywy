@@ -23,10 +23,10 @@ void onInput(Actor::Message *message) {
   switch (message->signal) {
     case Kywy::Events::BUTTON_RIGHT_PRESSED:
       break;
-    
+
     case Kywy::Events::BUTTON_LEFT_PRESSED:
       break;
-    
+
     case Kywy::Events::D_PAD_LEFT_PRESSED:
       break;
 

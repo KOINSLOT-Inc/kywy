@@ -45,7 +45,7 @@ void Engine::handle(::Actor::Message *message) {
   }
   switch (message->signal) {
     case Events::TICK:
-      callOnTick(message); // call user-defined onTick hook
+      callOnTick(message);  // call user-defined onTick hook
       break;
     case Events::BUTTON_LEFT_PRESSED:
     case Events::BUTTON_LEFT_RELEASED:
@@ -63,12 +63,12 @@ void Engine::handle(::Actor::Message *message) {
     case Events::D_PAD_CENTER_RELEASED:
     case Events::INPUT_PRESSED:
     case Events::INPUT:
-      callOnInput(message); // call user-defined onInput hook
+      callOnInput(message);  // call user-defined onInput hook
       break;
     default:
       break;
   }
-  
+
   // Always forward to subcomponent actors
   clock.dispatch(message);
   input.dispatch(message);

@@ -49,7 +49,7 @@ public:
 
 private:
   Display::Driver::Driver *displayDriver;
-  
+
   // Hook helpers
   void callOnTick(::Actor::Message *message);
   void callOnInput(::Actor::Message *message);
