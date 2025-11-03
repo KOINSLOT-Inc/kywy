@@ -75,6 +75,7 @@ void Actor::addSubscriber(Actor *actor) {
 
   if (i == MAX_SUBSCRIBERS) {
     // TODO: error
+    Serial.println("Sub limit reached");
     return;  // subscriber limit reached
   }
 

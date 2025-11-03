@@ -80,4 +80,7 @@ void loop() {
 
   // Show everything on screen
   engine.display.update();
+
+  // Small delay to make loop run at a reasonable speed
+  delay(20);
 }
