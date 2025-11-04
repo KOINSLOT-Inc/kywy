@@ -37,6 +37,14 @@ void onTick(Actor::Message *message) {  //                 ⏱️ (ONTICK)
 void onInput(Actor::Message *message) {  //                🎮 (ONINPUT)
   // Do stuff when buttons are pressed/released
   switch (message->signal) {
+    case Kywy::Events::INPUT:  //                 ⭐ (INPUT)
+      //  Handle any input change here
+      break;
+
+    case Kywy::Events::INPUT_PRESSED:  //         ⏬ (INPUT PRESSED)
+      //  Handle any input pressed event here
+      break;
+
     case Kywy::Events::BUTTON_LEFT_PRESSED:  //   🟢 (LEFT PRESSED)
       //  Handle Left button press here
       break;
