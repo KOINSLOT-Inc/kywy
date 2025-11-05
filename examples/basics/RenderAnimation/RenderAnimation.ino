@@ -19,7 +19,7 @@ void setup() {
 }
 
 void onTick() {
-    // Clear the display to get rid of the last frame
+  // Clear the display to get rid of the last frame
   engine.display.clear();
 
   // Draw the current frame
