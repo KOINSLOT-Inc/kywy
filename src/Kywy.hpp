@@ -18,7 +18,7 @@
 #include "SpriteSheet.hpp"
 
 // Hook function declarations - these are weak symbols that users can override in their sketches
-void onTick(::Actor::Message *message) __attribute__((weak));
+void onTick() __attribute__((weak));
 void onInput(::Actor::Message *message) __attribute__((weak));
 
 namespace Kywy {
@@ -51,7 +51,7 @@ private:
   Display::Driver::Driver *displayDriver;
 
   // Hook helpers
-  void callOnTick(::Actor::Message *message);
+  void callOnTick();
   void callOnInput(::Actor::Message *message);
 };
 

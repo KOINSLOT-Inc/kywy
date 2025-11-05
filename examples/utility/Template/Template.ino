@@ -32,6 +32,15 @@ void loop() {  //                                          🔄 (LOOP)
 void onTick() {  //                 ⏱️ (ONTICK)
   // Run every clock tick i.e. draw to display
   // See display functions here: https://docs.kywy.io/api_reference/
+
+  // Clear the display
+  engine.display.clear();
+
+  // Add your drawing code here
+
+  // Update the display
+  engine.display.update();
+
 }  // end onTick
 
 void onInput(Actor::Message *message) {  //                🎮 (ONINPUT)

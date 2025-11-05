@@ -74,7 +74,7 @@ void Engine::handle(::Actor::Message *message) {
   input.dispatch(message);
 };
 
-void Engine::callOnTick(::Actor::Message *message) {
+void Engine::callOnTick() {
   if (onTick) {
     onTick();
   }
