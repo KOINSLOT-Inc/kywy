@@ -111,6 +111,9 @@ void initialize() {
   mbedSPI->format(8, 0);        // 8-bit, mode 0 (will be reconfigured per transfer)
   mbedSPI->frequency(2000000);  // 2MHz default (will be reconfigured per transfer)
 
+  // Configure MISO with pull-down to reduce crosstalk from SD card
+  pinMode(KYWY_MISO, INPUT_PULLDOWN);
+
   // Asume things are plugged in and we need to deselect them to prevent bus conflicts
   // Assume default EXP devices are active high (eg SD card, common convention)
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
@@ -122,6 +125,39 @@ void initialize() {
   digitalWrite(KYWY_SDCARD_CS, HIGH);
   digitalWrite(KYWY_EXP1_CS, HIGH);
   digitalWrite(KYWY_EXP2_CS, HIGH);
+
+  // Put SD card into proper SPI mode by sending CMD0 (GO_IDLE_STATE)
+  // This ensures SD card MISO output is properly tri-stated
+  delay(10);  // Power-on delay
+  
+  // Send 80+ dummy clocks with CS high (per SD spec requirement)
+  for (int i = 0; i < 10; i++) {
+    mbedSPI->write(0xFF);
+  }
+  
+  // Send CMD0 to reset SD card into SPI mode
+  digitalWrite(KYWY_SDCARD_CS, LOW);
+  delayMicroseconds(10);
+  mbedSPI->write(0x40);  // CMD0
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x95);  // CRC for CMD0
+  
+  // Wait for and read R1 response
+  for (int i = 0; i < 10; i++) {
+    uint8_t response = mbedSPI->write(0xFF);
+    if (response != 0xFF) break;
+  }
+  
+  digitalWrite(KYWY_SDCARD_CS, HIGH);
+  delay(1);
+  
+  // Send additional clocks to complete initialization
+  for (int i = 0; i < 10; i++) {
+    mbedSPI->write(0xFF);
+  }
 }
 
 bool isBusLocked() {
@@ -151,8 +187,7 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   // Restore interrupts - we now own the lock
   restore_interrupts(interrupts);
 
-  // Configure SPI frequency for this transfer using mbed::SPI
-  // This must be done AFTER acquiring the lock to prevent race conditions
+  // Configure SPI frequency for this transfer
   mbedSPI->frequency(frequency);
 
   // Store CS pin info and callback
@@ -217,10 +252,12 @@ bool startDuplexDMATransfer(uint8_t *txBuffer, uint8_t *rxBuffer, size_t size, i
   }
   busLocked = true;
   restore_interrupts(interrupts);
+
   mbedSPI->frequency(frequency);
   currentCSPin = csPin;
   currentCSActiveHigh = csActiveHigh;
   currentCompletionCallback = completionCallback;
+
   if (csPin >= 0) digitalWrite(csPin, csActiveHigh ? HIGH : LOW);
 
   // Claim two DMA channels: one for TX, one for RX
