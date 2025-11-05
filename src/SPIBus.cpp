@@ -105,12 +105,13 @@ extern "C" void spi_bus_dma_irq_handler(void) {
 }
 
 void resetSDCard() {
+  // TODO: implement this function on an sdcard insertion if we can try to detect it periodically
+
   if (!mbedSPI) {
     return;  // SPI not initialized yet
   }
 
   // Put SD card into proper SPI mode by sending CMD0 (GO_IDLE_STATE)
-
   // Very handy source: https://elm-chan.org/docs/mmc/mmc_e.html
 
   // Send 80+ dummy clocks with CS high (per SD spec requirement)
@@ -156,8 +157,8 @@ void initialize() {
   // Assume things are plugged in and we need to deselect them to prevent bus conflicts
   // Assume default EXP devices are active high (eg SD card, common convention)
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
-  pinMode(KYWY_EXP1_CS, OUTPUT);
-  pinMode(KYWY_EXP2_CS, OUTPUT);
+  pinMode(KYWY_EXP1_CS, OUTPUT); // expansion port 1 CS (black pins on back) shared with sdcard, cant use pins and card at same time
+  pinMode(KYWY_EXP2_CS, OUTPUT); // expansion port 2 CS (black pins on back)
 
   digitalWrite(KYWY_DISPLAY_CS, LOW);   // Active low
   digitalWrite(KYWY_EXP1_CS, HIGH);     // Active high
