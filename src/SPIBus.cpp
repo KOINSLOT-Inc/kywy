@@ -104,6 +104,45 @@ extern "C" void spi_bus_dma_irq_handler(void) {
   }
 }
 
+void resetSDCard() {
+  if (!mbedSPI) {
+    return;  // SPI not initialized yet
+  }
+
+  // Put SD card into proper SPI mode by sending CMD0 (GO_IDLE_STATE)
+
+  // Very handy source: https://elm-chan.org/docs/mmc/mmc_e.html
+
+  // Send 80+ dummy clocks with CS high (per SD spec requirement)
+  for (int i = 0; i < 12; i++) {
+    mbedSPI->write(0xFF);
+  }
+  
+  // Send CMD0 to reset SD card into SPI mode
+  digitalWrite(KYWY_EXP1_CS, LOW);
+  delayMicroseconds(10);
+  mbedSPI->write(0x40);  // CMD0
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x95);  // CRC for CMD0
+  mbedSPI->write(0xFF);  // Throwaway bit
+  
+  // Wait for and read R1 response or timeout
+  for (int i = 0; i < 20; i++) { // timeout at 20 tries (possibly no sdcard)
+    uint8_t response = mbedSPI->write(0xFF);
+    if (response != 0xFF) break;
+  }
+  
+  digitalWrite(KYWY_EXP1_CS, HIGH);  // Disable SD card CS
+  
+  // Send additional clocks to complete initialization
+  for (int i = 0; i < 10; i++) {
+    mbedSPI->write(0xFF);
+  }
+}
+
 void initialize() {
   // Create mbed::SPI object to initialize SPI hardware
   // Keep this object private to SPIBus - it should only be accessed internally
@@ -114,50 +153,18 @@ void initialize() {
   // Configure MISO with pull-down to reduce crosstalk from SD card
   pinMode(KYWY_MISO, INPUT_PULLDOWN);
 
-  // Asume things are plugged in and we need to deselect them to prevent bus conflicts
+  // Assume things are plugged in and we need to deselect them to prevent bus conflicts
   // Assume default EXP devices are active high (eg SD card, common convention)
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
-  pinMode(KYWY_SDCARD_CS, OUTPUT);
   pinMode(KYWY_EXP1_CS, OUTPUT);
   pinMode(KYWY_EXP2_CS, OUTPUT);
 
-  digitalWrite(KYWY_DISPLAY_CS, LOW);
-  digitalWrite(KYWY_SDCARD_CS, HIGH);
-  digitalWrite(KYWY_EXP1_CS, HIGH);
-  digitalWrite(KYWY_EXP2_CS, HIGH);
+  digitalWrite(KYWY_DISPLAY_CS, LOW);   // Active low
+  digitalWrite(KYWY_EXP1_CS, HIGH);     // Active high
+  digitalWrite(KYWY_EXP2_CS, HIGH);     // Active high
 
-  // Put SD card into proper SPI mode by sending CMD0 (GO_IDLE_STATE)
-  // This ensures SD card MISO output is properly tri-stated
-  delay(10);  // Power-on delay
-  
-  // Send 80+ dummy clocks with CS high (per SD spec requirement)
-  for (int i = 0; i < 10; i++) {
-    mbedSPI->write(0xFF);
-  }
-  
-  // Send CMD0 to reset SD card into SPI mode
-  digitalWrite(KYWY_SDCARD_CS, LOW);
-  delayMicroseconds(10);
-  mbedSPI->write(0x40);  // CMD0
-  mbedSPI->write(0x00);
-  mbedSPI->write(0x00);
-  mbedSPI->write(0x00);
-  mbedSPI->write(0x00);
-  mbedSPI->write(0x95);  // CRC for CMD0
-  
-  // Wait for and read R1 response
-  for (int i = 0; i < 10; i++) {
-    uint8_t response = mbedSPI->write(0xFF);
-    if (response != 0xFF) break;
-  }
-  
-  digitalWrite(KYWY_SDCARD_CS, HIGH);
-  delay(1);
-  
-  // Send additional clocks to complete initialization
-  for (int i = 0; i < 10; i++) {
-    mbedSPI->write(0xFF);
-  }
+  // Initialize SD card to prevent display artifacts
+  resetSDCard();
 }
 
 bool isBusLocked() {
