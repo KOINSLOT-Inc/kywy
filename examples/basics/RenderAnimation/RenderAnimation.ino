@@ -18,7 +18,7 @@ void setup() {
   engine.start();
 }
 
-void onTick(Actor::Message *message) {
+void onTick() {
     // Clear the display to get rid of the last frame
   engine.display.clear();
 

@@ -29,7 +29,7 @@ void loop() {  //                                          🔄 (LOOP)
   // Run continuously (no delay)
 }  // end loop
 
-void onTick(Actor::Message *message) {  //                 ⏱️ (ONTICK)
+void onTick() {  //                 ⏱️ (ONTICK)
   // Run every clock tick i.e. draw to display
   // See display functions here: https://docs.kywy.io/api_reference/
 }  // end onTick

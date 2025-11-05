@@ -45,7 +45,7 @@ void Engine::handle(::Actor::Message *message) {
   }
   switch (message->signal) {
     case Events::TICK:
-      callOnTick(message);  // call user-defined onTick hook
+      callOnTick();  // call user-defined onTick hook
       break;
     case Events::BUTTON_LEFT_PRESSED:
     case Events::BUTTON_LEFT_RELEASED:
@@ -76,7 +76,7 @@ void Engine::handle(::Actor::Message *message) {
 
 void Engine::callOnTick(::Actor::Message *message) {
   if (onTick) {
-    onTick(message);
+    onTick();
   }
 }
 

@@ -30,7 +30,7 @@ void loop() {
 }
 
 // Called every frame - handle movement and drawing
-void onTick(Actor::Message *message) {
+void onTick() {
   // Update ball position based on velocity
   ballX += velocityX;
   ballY += velocityY;
