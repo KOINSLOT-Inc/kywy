@@ -7,7 +7,7 @@
 //                      Name:  Your Name
 //                      Date:  Today
 //                   Project:  Your Project Name
-//               Description:  Your project description
+//               Description:  Your Project Description
 //
 // =================================================================== //
 
