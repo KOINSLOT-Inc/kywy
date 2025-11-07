@@ -615,7 +615,7 @@ void MenuSystem::onSceneExit() {
     exitingScene->cleanup();
   }
 
-  if(!currentScene->isPersistent()) {
+  if (!currentScene->isPersistent()) {
     // If the scene is not persistent, delete it to free memory
     delete currentScene;
   }

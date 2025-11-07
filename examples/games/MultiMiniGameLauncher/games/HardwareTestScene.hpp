@@ -16,8 +16,8 @@ private:
   int rightCount = 0;
   int upCount = 0;
   int downCount = 0;
-  int leftDCount = 0; // dpad left
-  int rightDCount = 0; // dpad right
+  int leftDCount = 0;   // dpad left
+  int rightDCount = 0;  // dpad right
   int centerCount = 0;
 
   // Completed (pressed then released) flags
@@ -39,14 +39,15 @@ private:
   bool lastDCenter = false;
 
   unsigned long lastUpdate = 0;
-  const unsigned long UPDATE_INTERVAL = 100; // ms
+  const unsigned long UPDATE_INTERVAL = 100;  // ms
 
   // Actor to poll on TICK messages
   class PollActor : public Actor::Actor {
   private:
     HardwareTestScene* scene;
   public:
-    PollActor(HardwareTestScene* s) : Actor::Actor(), scene(s) {
+    PollActor(HardwareTestScene* s)
+      : Actor::Actor(), scene(s) {
       scene->Scene::add(this, false, false);
     }
 
@@ -70,35 +71,36 @@ private:
         if (input.dPadRightPressed && !scene->lastDRight) scene->rightDCount++;
         if (input.dPadCenterPressed && !scene->lastDCenter) scene->centerCount++;
 
-  // Release detection (pressed then released => done)
-  if (!input.buttonLeftPressed && scene->lastLeft) scene->leftDone = true;
-  if (!input.buttonRightPressed && scene->lastRight) scene->rightDone = true;
-  if (!input.dPadUpPressed && scene->lastDUp) scene->upDone = true;
-  if (!input.dPadDownPressed && scene->lastDDown) scene->downDone = true;
-  if (!input.dPadLeftPressed && scene->lastDLeft) scene->leftDDone = true;
-  if (!input.dPadRightPressed && scene->lastDRight) scene->rightDDone = true;
-  if (!input.dPadCenterPressed && scene->lastDCenter) scene->centerDone = true;
+        // Release detection (pressed then released => done)
+        if (!input.buttonLeftPressed && scene->lastLeft) scene->leftDone = true;
+        if (!input.buttonRightPressed && scene->lastRight) scene->rightDone = true;
+        if (!input.dPadUpPressed && scene->lastDUp) scene->upDone = true;
+        if (!input.dPadDownPressed && scene->lastDDown) scene->downDone = true;
+        if (!input.dPadLeftPressed && scene->lastDLeft) scene->leftDDone = true;
+        if (!input.dPadRightPressed && scene->lastDRight) scene->rightDDone = true;
+        if (!input.dPadCenterPressed && scene->lastDCenter) scene->centerDone = true;
 
-  // Update last state
-  scene->lastLeft = input.buttonLeftPressed;
-  scene->lastRight = input.buttonRightPressed;
-  scene->lastDUp = input.dPadUpPressed;
-  scene->lastDDown = input.dPadDownPressed;
-  scene->lastDLeft = input.dPadLeftPressed;
-  scene->lastDRight = input.dPadRightPressed;
-  scene->lastDCenter = input.dPadCenterPressed;
+        // Update last state
+        scene->lastLeft = input.buttonLeftPressed;
+        scene->lastRight = input.buttonRightPressed;
+        scene->lastDUp = input.dPadUpPressed;
+        scene->lastDDown = input.dPadDownPressed;
+        scene->lastDLeft = input.dPadLeftPressed;
+        scene->lastDRight = input.dPadRightPressed;
+        scene->lastDCenter = input.dPadCenterPressed;
 
-  unsigned long now = millis();
+        unsigned long now = millis();
         if (now - scene->lastUpdate >= scene->UPDATE_INTERVAL) {
           scene->lastUpdate = now;
           scene->updateDisplay();
         }
       }
     }
-  } pollActor{this};
+  } pollActor{ this };
 
 public:
-  HardwareTestScene() : Scene(true), pollActor(this) {}
+  HardwareTestScene()
+    : Scene(true), pollActor(this) {}
 
   void onEnter() override {
     // Reset counters and states
@@ -122,32 +124,32 @@ public:
     char buf[32];
     Input& input = eng->input;
 
-  snprintf(buf, sizeof(buf), "Left:   %c  (%d)   %c", input.buttonLeftPressed ? 'P' : ' ', leftCount, leftDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "Left:   %c  (%d)   %c", input.buttonLeftPressed ? 'P' : ' ', leftCount, leftDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 10;
 
-  snprintf(buf, sizeof(buf), "Right:  %c  (%d)   %c", input.buttonRightPressed ? 'P' : ' ', rightCount, rightDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "Right:  %c  (%d)   %c", input.buttonRightPressed ? 'P' : ' ', rightCount, rightDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 10;
 
-  snprintf(buf, sizeof(buf), "D-Up:   %c  (%d)   %c", input.dPadUpPressed ? 'P' : ' ', upCount, upDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "D-Up:   %c  (%d)   %c", input.dPadUpPressed ? 'P' : ' ', upCount, upDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 10;
 
-  snprintf(buf, sizeof(buf), "D-Down: %c  (%d)   %c", input.dPadDownPressed ? 'P' : ' ', downCount, downDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "D-Down: %c  (%d)   %c", input.dPadDownPressed ? 'P' : ' ', downCount, downDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 10;
 
-  snprintf(buf, sizeof(buf), "D-Left: %c  (%d)   %c", input.dPadLeftPressed ? 'P' : ' ', leftDCount, leftDDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "D-Left: %c  (%d)   %c", input.dPadLeftPressed ? 'P' : ' ', leftDCount, leftDDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 10;
 
-  snprintf(buf, sizeof(buf), "D-Right:%c  (%d)   %c", input.dPadRightPressed ? 'P' : ' ', rightDCount, rightDDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "D-Right:%c  (%d)   %c", input.dPadRightPressed ? 'P' : ' ', rightDCount, rightDDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 10;
 
-  snprintf(buf, sizeof(buf), "Center: %c  (%d)   %c", input.dPadCenterPressed ? 'P' : ' ', centerCount, centerDone ? 'V' : ' ');
-  display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
+    snprintf(buf, sizeof(buf), "Center: %c  (%d)   %c", input.dPadCenterPressed ? 'P' : ' ', centerCount, centerDone ? 'V' : ' ');
+    display.drawText(2, y, buf, Display::TextOptions().origin(Display::Origin::Text::BASELINE_LEFT));
     y += 12;
 
     // Battery status

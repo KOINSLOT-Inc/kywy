@@ -70,7 +70,8 @@ private:
   TopRightCircle topRightCircle;
 
 public:
-  TopCirclesScene() : Scene(false, false) {}  // not persistent, don't auto-clear display
+  TopCirclesScene()
+    : Scene(false, false) {}  // not persistent, don't auto-clear display
 
   void onEnter() {
     // Add actors to the scene
@@ -84,7 +85,8 @@ private:
   BottomCircles bottomCircles;
 
 public:
-  BottomCirclesScene() : Scene(false, false) {}  // not persistent, don't auto-clear display
+  BottomCirclesScene()
+    : Scene(false, false) {}  // not persistent, don't auto-clear display
 
   void onEnter() {
     // Add actors to the scene
