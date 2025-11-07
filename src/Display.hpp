@@ -7,8 +7,7 @@
 
 #include "Fonts.hpp"
 #include <Arduino.h>
-#include <SPIMaster.h>
-#include <stdint.h>
+#include "SPIBus.hpp"
 
 // for v0.2 version of board
 // #define KYWY_DISPLAY_SCK  18
@@ -22,6 +21,8 @@
 #define KYWY_DISPLAY_MISO 16
 #define KYWY_DISPLAY_CS 17
 #define KYWY_DISPLAY_DISP 22
+
+#define KYWY_DISPLAY_FREQUENCY 2000000  // 2 MHz, per Sharp Memory Display datasheet, overclock possibly tolerated, not guaranteed stable or safe above 2 MHz
 
 #define KYWY_DISPLAY_WIDTH 144
 #define KYWY_DISPLAY_HEIGHT 168
@@ -227,7 +228,7 @@ public:
 
   virtual void initializeDisplay() = 0;
   virtual void clearBuffer() = 0;
-  virtual void sendBufferToDisplay() = 0;
+  virtual bool sendBufferToDisplay() = 0;
 
   virtual void setRotation(Rotation rotation) = 0;
 
@@ -249,7 +250,7 @@ protected:
   bool cropBlock(int16_t &x, int16_t &y, uint16_t &width, uint16_t &height);
 };
 
-class MBED_SPI_DRIVER : public Driver {
+class KYWY_DISPLAY_DRIVER : public Driver {
 public:
   uint16_t getWidth() {
     return 144;
@@ -258,14 +259,12 @@ public:
     return 168;
   };
 
-  MBED_SPI_DRIVER() {}
-  ~MBED_SPI_DRIVER() {
-    delete mbedSPI;
-  };
+  KYWY_DISPLAY_DRIVER() {}
+  ~KYWY_DISPLAY_DRIVER(){};
 
   void initializeDisplay();
   void clearBuffer();
-  void sendBufferToDisplay();
+  bool sendBufferToDisplay();
 
   void setRotation(Rotation rotation);
 
@@ -284,17 +283,36 @@ public:
                            uint16_t height, uint8_t *bitmap,
                            BitmapOptions options = BitmapOptions());
 
+  // Buffer management helper functions
+  uint16_t mapDisplayToBufferByte(int16_t x, int16_t y);
+  uint8_t mapDisplayToBufferBit(int16_t x, int16_t y);
+  void addCommandsToBuffer(uint8_t *buffer);
+
 private:
-  mbed::SPI *mbedSPI;
   uint8_t clearCommand = 0x20;
   uint8_t writeCommand = 0x80;
 
   uint8_t vcomCommand = 0x40;
   uint8_t vcom = 0x40;  // this value will be toggled between 0x40 and 0x00
 
-  uint8_t MBED_SPI_DRIVER_BUFFER[(144 * 168) / 8] = { 0 };
-  uint8_t MBED_SPI_DRIVER_LINE_BUFFER[20] = { 0 };
-  uint8_t MBED_SPI_DRIVER_RX_BUFFER[20] = { 0 };
+  // Variables for dropped frame management and VCOM timing
+
+  unsigned long lastTimeVcomToggled = 0;
+
+  //  Display command buffers, one for current drawing, and one for writing
+  // Buffer format: 1 header + 168 lines * 20 bytes + 1 tail = 3362 bytes
+  static const uint16_t KYWY_DISPLAY_BUFFER_SIZE = 1 + (KYWY_DISPLAY_HEIGHT * (KYWY_DISPLAY_WIDTH / 8 + 2)) + 1;  // 3362
+  static uint8_t KYWY_DISPLAY_ACTIVE_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
+  static uint8_t KYWY_DISPLAY_TRANSFER_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
+  static uint8_t KYWY_DISPLAY_DROPPED_FRAME_BUFFER[KYWY_DISPLAY_BUFFER_SIZE] __attribute__((aligned(4)));
+  // VCOM+COMMAND + LINE ADDRESSES, PIXEL DATA x WIDTH/8, TRAILING BYTE xHEIGHT
+  // mapping: 0: VCOM+COMMAND
+  //          1: LINE 0 ADDRESS
+  //         2-19: LINE 0 PIXEL DATA
+  //         20: PADDING BYTE
+  //        ... REPEATED FOR EACH LINE ...
+  //        trailing byte
+  // x, y -> pixel at (x,y) is at byte index: (y * (20 * 2)) + 1 + floor(x / 8)
 
   const unsigned char nibbleFlipper[16] = { 0x0, 0x8, 0x4, 0xc, 0x2, 0xa,
                                             0x6, 0xe, 0x1, 0x9, 0x5, 0xd,
@@ -314,7 +332,12 @@ public:
 
   void setup();
   void clear();
-  void update();
+  bool update();
+
+  // Performance monitoring functions
+  static int getTotalCallbackSends();
+  static int getTotalSuccessfulSends();
+  static void resetPerformanceCounters();
 
   void setRotation(Rotation rotation);
 
@@ -375,6 +398,11 @@ private:
                    uint16_t &height, int16_t &originXOffset,
                    int16_t &originYOffset, uint16_t &baselineLength);
 };
+
+// Bool to track if a display update is pending
+static volatile bool displayPending = false;
+// Bool to track if a dropped frame is pending
+static volatile bool droppedFrame = false;
 
 }  // namespace Display
 

@@ -1,6 +1,17 @@
-# SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
-#
-# SPDX-License-Identifier: GPL-3.0-or-later
+---
+title: "Part 6: Code Explanation"
+---
+
+<!-- hide next page button that links outside of tutorial -->
+<style>
+  .md-footer__link--next:not([hidden]) { display: none }
+</style>
+
+<!--
+SPDX-FileCopyrightText: 2025 KOINSLOT, Inc.
+
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
 
 # Bonus: Understanding Helper Functions
 

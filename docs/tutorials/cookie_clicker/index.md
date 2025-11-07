@@ -440,6 +440,15 @@ Now that you understand the basics, you could try:
 - **More Animations**: Adding particle effects, color changes, or moving elements
 - **Multiple Levels**: Different backgrounds or challenges as you progress
 
+### Learn More About Graphics
+
+Want to understand how computer graphics work? Check out our **[Image Format Tutorial](../../guides/images.md)**:
+
+- How pixels and colors work in computers
+- Why we use hexadecimal numbers for colors
+- How to optimize images for small devices
+- Advanced drawing techniques and animations
+
 ## Common Questions
 
 **Q: Why do we need `wasButtonPressed`?**

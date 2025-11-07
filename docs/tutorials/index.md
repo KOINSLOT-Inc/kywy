@@ -41,4 +41,10 @@ Master advanced Kywy concepts including bit-packed collision detection, custom i
 
 ### [The Basics with a Bouncing Ball](./bouncing_ball/part_1.md)
 
+Learn basic Kywy concepts by making a ball bounce around the screen.
 
+### [Choose Your Own Adventure](./adventure/part_1.md)
+
+_audience: beginner to intermediate_
+
+Create interactive stories and games! Learn about game structure, user input, branching narratives, and advanced features while building your own choose-your-own-adventure game. **Bonus:** Part 6 covers helper functions in detail - essential programming concepts!
