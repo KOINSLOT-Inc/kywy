@@ -60,6 +60,8 @@ void KYWY_DISPLAY_DRIVER::initializeDisplay() {
 
   sendBufferToDisplay();
 
+  delay(20);  // Wait for buffer to send before turning on display
+
   digitalWrite(KYWY_DISPLAY_DISP, HIGH);  // turn on display
 
   setRotation(Rotation::DEFAULT);
