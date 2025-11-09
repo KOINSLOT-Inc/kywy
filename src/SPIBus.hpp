@@ -13,7 +13,6 @@
 #define KYWY_MISO 16
 
 #define KYWY_DISPLAY_CS 17
-#define KYWY_SDCARD_CS 15
 #define KYWY_EXP1_CS 15  // expansion port 1 CS (black pins on back) shared with sdcard, cant use pins and card at same time
 #define KYWY_EXP2_CS 14  // expansion port 2 CS (black pins on back)
 
@@ -25,6 +24,10 @@ namespace SPIBus {
 //   misoPin: MISO pin number
 //   sckPin: SCK pin number
 void initialize();
+
+// Reset SD card into SPI mode to prevent MISO crosstalk
+// Sends CMD0 to tri-state SD card MISO output
+void resetSDCard();
 
 // Check if the SPI bus is currently locked by a DMA transfer
 bool isBusLocked();

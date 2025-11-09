@@ -104,6 +104,46 @@ extern "C" void spi_bus_dma_irq_handler(void) {
   }
 }
 
+void resetSDCard() {
+  // TODO: implement this function on an sdcard insertion if we can try to detect it periodically
+
+  if (!mbedSPI) {
+    return;  // SPI not initialized yet
+  }
+
+  // Put SD card into proper SPI mode by sending CMD0 (GO_IDLE_STATE)
+  // Very handy source: https://elm-chan.org/docs/mmc/mmc_e.html
+
+  // Send 80+ dummy clocks with CS high (per SD spec requirement)
+  for (int i = 0; i < 12; i++) {
+    mbedSPI->write(0xFF);
+  }
+
+  // Send CMD0 to reset SD card into SPI mode
+  digitalWrite(KYWY_EXP1_CS, LOW);
+  delayMicroseconds(10);
+  mbedSPI->write(0x40);  // CMD0
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x00);
+  mbedSPI->write(0x95);  // CRC for CMD0
+  mbedSPI->write(0xFF);  // Throwaway bit
+
+  // Wait for and read R1 response or timeout
+  for (int i = 0; i < 20; i++) {  // timeout at 20 tries (possibly no sdcard)
+    uint8_t response = mbedSPI->write(0xFF);
+    if (response != 0xFF) break;
+  }
+
+  digitalWrite(KYWY_EXP1_CS, HIGH);  // Disable SD card CS
+
+  // Send additional clocks to complete initialization
+  for (int i = 0; i < 10; i++) {
+    mbedSPI->write(0xFF);
+  }
+}
+
 void initialize() {
   // Create mbed::SPI object to initialize SPI hardware
   // Keep this object private to SPIBus - it should only be accessed internally
@@ -111,17 +151,21 @@ void initialize() {
   mbedSPI->format(8, 0);        // 8-bit, mode 0 (will be reconfigured per transfer)
   mbedSPI->frequency(2000000);  // 2MHz default (will be reconfigured per transfer)
 
-  // Asume things are plugged in and we need to deselect them to prevent bus conflicts
+  // Configure MISO with pull-down to reduce crosstalk from SD card
+  pinMode(KYWY_MISO, INPUT_PULLDOWN);
+
+  // Assume things are plugged in and we need to deselect them to prevent bus conflicts
   // Assume default EXP devices are active high (eg SD card, common convention)
   pinMode(KYWY_DISPLAY_CS, OUTPUT);
-  pinMode(KYWY_SDCARD_CS, OUTPUT);
-  pinMode(KYWY_EXP1_CS, OUTPUT);
-  pinMode(KYWY_EXP2_CS, OUTPUT);
+  pinMode(KYWY_EXP1_CS, OUTPUT);  // expansion port 1 CS (black pins on back) shared with sdcard, cant use pins and card at same time
+  pinMode(KYWY_EXP2_CS, OUTPUT);  // expansion port 2 CS (black pins on back)
 
-  digitalWrite(KYWY_DISPLAY_CS, LOW);
-  digitalWrite(KYWY_SDCARD_CS, HIGH);
-  digitalWrite(KYWY_EXP1_CS, HIGH);
-  digitalWrite(KYWY_EXP2_CS, HIGH);
+  digitalWrite(KYWY_DISPLAY_CS, LOW);  // Active low
+  digitalWrite(KYWY_EXP1_CS, HIGH);    // Active high
+  digitalWrite(KYWY_EXP2_CS, HIGH);    // Active high
+
+  // Initialize SD card to prevent display artifacts
+  resetSDCard();
 }
 
 bool isBusLocked() {
@@ -151,8 +195,7 @@ bool startDMATransfer(uint8_t *buffer, size_t size, int csPin, bool csActiveHigh
   // Restore interrupts - we now own the lock
   restore_interrupts(interrupts);
 
-  // Configure SPI frequency for this transfer using mbed::SPI
-  // This must be done AFTER acquiring the lock to prevent race conditions
+  // Configure SPI frequency for this transfer
   mbedSPI->frequency(frequency);
 
   // Store CS pin info and callback
@@ -217,10 +260,12 @@ bool startDuplexDMATransfer(uint8_t *txBuffer, uint8_t *rxBuffer, size_t size, i
   }
   busLocked = true;
   restore_interrupts(interrupts);
+
   mbedSPI->frequency(frequency);
   currentCSPin = csPin;
   currentCSActiveHigh = csActiveHigh;
   currentCompletionCallback = completionCallback;
+
   if (csPin >= 0) digitalWrite(csPin, csActiveHigh ? HIGH : LOW);
 
   // Claim two DMA channels: one for TX, one for RX
