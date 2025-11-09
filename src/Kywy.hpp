@@ -19,6 +19,10 @@
 #include "StateMachine.hpp"
 #include "MenuSystem.hpp"
 
+// Hook function declarations - these are weak symbols that users can override in their sketches
+void onTick() __attribute__((weak));
+void onInput(::Actor::Message *message) __attribute__((weak));
+
 namespace Kywy {
 
 struct EngineOptions {
@@ -47,6 +51,10 @@ public:
 
 private:
   Display::Driver::Driver *displayDriver;
+
+  // Hook helpers
+  void callOnTick();
+  void callOnInput(::Actor::Message *message);
 };
 
 }  // namespace Kywy
