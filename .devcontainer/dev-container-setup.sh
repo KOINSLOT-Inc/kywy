@@ -15,13 +15,38 @@ echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.bashrc
 echo 'source /workspaces/kywy/.devcontainer/welcome-message.sh' >> ~/.zshrc
 
 
-# Install from makefile
-make install
+# Parse args
+SKIP_MAKE=0
+for arg in "$@"; do
+  case "$arg" in
+    --skip-make)
+      SKIP_MAKE=1
+      ;;
+  esac
+done
 
-# Clean up to save space
-sudo apt-get clean
-sudo rm -rf /var/lib/apt/lists/*
-pip cache purge
+# Install from makefile unless skipped
+if [ "$SKIP_MAKE" -ne 1 ]; then
+  echo "Running make install (this may install Python deps and can be large)..."
+  if make install; then
+    echo "make install finished"
+  else
+    echo "make install failed or was skipped"
+  fi
+else
+  echo "Skipping make install (invoked with --skip-make)"
+fi
+
+# Clean up to save space (best-effort, non-fatal)
+set +e
+if command -v apt-get >/dev/null 2>&1; then
+  sudo apt-get clean || true
+  sudo rm -rf /var/lib/apt/lists/* || true
+fi
+if command -v pip >/dev/null 2>&1; then
+  pip cache purge || true
+fi
+set -e
 
 # Install arduino-cli directly from arduino
 if ! command -v arduino-cli &> /dev/null; then

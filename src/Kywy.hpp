@@ -16,6 +16,8 @@
 #include "Input.hpp"
 #include "Sprite.hpp"
 #include "SpriteSheet.hpp"
+#include "StateMachine.hpp"
+#include "MenuSystem.hpp"
 
 // Hook function declarations - these are weak symbols that users can override in their sketches
 void onTick() __attribute__((weak));

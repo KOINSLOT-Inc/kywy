@@ -1,7 +1,7 @@
 {
 	"image": "mcr.microsoft.com/devcontainers/universal:2",
-	"features": {
-		"ghcr.io/jungaretti/features/make:1": {}
-	},
-	"postCreateCommand": "bash .devcontainer/dev-container-setup.sh",
+	// Removed features to avoid build-time feature image layers that can inflate disk usage.
+	// If you need the `make` feature, consider enabling it locally or adding it to a prebuilt image.
+	"features": {},
+	"postCreateCommand": "bash .devcontainer/dev-container-setup.sh --skip-make"
 }

@@ -7,11 +7,12 @@ help:
 	@echo "Kywy Makefile"
 	@echo ""
 	@echo "Commands:"
+	@echo "- 'all': compiles all examples in the examples directory"
+	@echo "- 'compile t=examples/<category>/<example>': builds the specified '<example>'"
+	@echo "- 'upload t=examples/<category>/<example>': uploads the specified '<example>'"
 	@echo "- 'check-licenses': runs 'reuse' to check licenses"
 	@echo "- 'update-licenses': runs 'reuse' to update licenses"
 	@echo "- 'lint': lints all files (code, config, license, etc.)"
-	@echo "- 'upload t=examples/<example>': uploads the specified '<example>'"
-	@echo "- 'compile t=examples/<example>': builds the specified '<example>'"
 
 CACHE := .cache
 $(CACHE):
@@ -51,6 +52,26 @@ DOXYGEN := $(CACHE)/.doxygen
 $(DOXYGEN): $(CACHE)
 	@which doxygen 2>&1 > /dev/null || (echo "no doxygen found, try `brew install doxygen`" && exit 1)
 	@touch $(DOXYGEN)
+
+.PHONY: clean
+clean:
+	@rm -rf ./output
+	@rm -rf $(CACHE)
+	@rm -rf .clang-format
+	@rm -rf _site
+
+.PHONY: all
+all: $(ARDUINO_CLI)
+	@start=$$(date +%s); \
+	examples=$$(find examples -name "*.ino" -exec dirname {} \;); \
+	num_examples=$$(echo "$$examples" | wc -l | xargs); \
+	num=0; \
+	for example in $$examples; do \
+		num=$$((num + 1)); \
+		echo "($${num}/$${num_examples}) compiling $${example}..."; \
+		$(MAKE) compile t=$${example} || exit $$?; \
+	done; \
+	echo "compiled $$num_examples examples in $$(($$(date +%s) - start)) seconds"
 
 .PHONY: install
 install: $(PYTHON_DEPS)

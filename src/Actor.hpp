@@ -55,6 +55,9 @@ public:
 
   void enable();
   void disable();
+  bool isEnabled() {
+    return enabled;
+  }
 
   void dispatch(Message *message);
   void publish(Message *message);
